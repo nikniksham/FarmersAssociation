@@ -5,17 +5,13 @@ from sqlalchemy import orm
 from datetime import datetime
 
 
-class NewsBlocks(SqlAlchemyBase, SerializerMixin):
-    __tablename__ = 'newsblock'
+class AuditLog(SqlAlchemyBase, SerializerMixin):
+    __tablename__ = 'auditlog'
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    heading = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    text = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    link = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    image = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    tags = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    event = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    user = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    info = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.now())
-    author_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("admin.id"))
-    author = orm.relation('Admin')
 
     def formatted_date(self):
         d = self.created_date

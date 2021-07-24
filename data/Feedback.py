@@ -5,17 +5,14 @@ from sqlalchemy import orm
 from datetime import datetime
 
 
-class NewsBlocks(SqlAlchemyBase, SerializerMixin):
-    __tablename__ = 'newsblock'
+class Feedback(SqlAlchemyBase, SerializerMixin):
+    __tablename__ = 'feedback'
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    heading = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    text = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    link = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    fullname = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    email = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     image = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    tags = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    text = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.now())
-    author_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("admin.id"))
-    author = orm.relation('Admin')
 
     def formatted_date(self):
         d = self.created_date

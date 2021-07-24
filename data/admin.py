@@ -16,8 +16,9 @@ class Admin(SqlAlchemyBase, UserMixin, SerializerMixin):
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime)
     newsblocks = orm.relation('NewsBlocks')
-    # developers_diary = orm.relation('DevelopersDiary')
-    # comments = orm.relation('Comments')
+    partner = orm.relation('Partner')
+    smartpage = orm.relation('SmartPage')
+    content = orm.relation('Content')
 
     def __repr__(self):
         return f'<Admin> {self.id} Админ {self.id} {self.email}'
