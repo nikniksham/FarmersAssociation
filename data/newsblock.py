@@ -1,11 +1,11 @@
 import sqlalchemy
 from sqlalchemy_serializer import SerializerMixin
-from db_session import SqlAlchemyBase
+from data.db_session import SqlAlchemyBase
 from sqlalchemy import orm
 from datetime import datetime
 
 
-class NewsBlocks(SqlAlchemyBase, SerializerMixin):
+class Newsblock(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'newsblock'
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     heading = sqlalchemy.Column(sqlalchemy.String, nullable=True)
@@ -14,6 +14,7 @@ class NewsBlocks(SqlAlchemyBase, SerializerMixin):
     image = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     tags = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.now())
+    newspage = orm.relation('Newspage')
     author_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("admin.id"))
     author = orm.relation('Admin')
 

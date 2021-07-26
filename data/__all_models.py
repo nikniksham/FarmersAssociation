@@ -1,1 +1,1 @@
-from . import admin, partner, newsblock
+from . import admin, partner, newsblock, newspage, smartpage, content, auditlog, feedback
