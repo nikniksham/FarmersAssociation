@@ -8,7 +8,7 @@ class AuditLog(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'auditlog'
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     event = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    user = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    user = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
     info = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.now())
 

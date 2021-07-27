@@ -7,6 +7,9 @@ from requests import put, delete
 from werkzeug.utils import redirect
 from data import db_session
 from data.API.AdminAPI.AdminResource import CreateAdminResource, AdminResource, AdminListRecourse, UserResourceAdmin
+from data.API.SmartpageAPI.SmartpageResource import CreateSmartpageResource, SmartpageResource, SmartpageListRecourse
+from data.API.ContentAPI.ContentResource import CreateContentResource, ContentResource, ContentListRecourse
+from data.API.AuditlogAPI.AuditlogResource import AuditlogResource, AuditlogListRecourse
 from data.admin import Admin
 from data.auditlog import AuditLog
 from data.content import Content
@@ -21,12 +24,22 @@ api = Api(app)
 api.add_resource(CreateAdminResource, "/api/admin/<string:email>/<string:password>")
 api.add_resource(AdminResource, "/api/admin/<string:email>/<string:password>")
 api.add_resource(UserResourceAdmin, "/api/admin/<string:email>/<string:password>/<int:user_id>")
-api.add_resource(AdminListRecourse, "/api/admin/<string:email>/<string:password>")
+api.add_resource(AdminListRecourse, "/api/admin/list/<string:email>/<string:password>")
+api.add_resource(CreateSmartpageResource, "/api/smartpage/<string:email>/<string:password>")
+api.add_resource(SmartpageResource, "/api/smartpage/<string:email>/<string:password>/<int:smartpage_id>")
+api.add_resource(SmartpageListRecourse, "/api/smartpage")
+api.add_resource(CreateContentResource, "/api/content/<string:email>/<string:password>")
+api.add_resource(ContentResource, "/api/content/<string:email>/<string:password>/<int:content_id>")
+api.add_resource(ContentListRecourse, "/api/content")
+api.add_resource(AuditlogResource, "/api/auditlog/<string:email>/<string:password>/<auditlog_id>")
+api.add_resource(AuditlogListRecourse, "/api/auditlog/<string:email>/<string:password>")
 login_manager = LoginManager()
 db_session.global_init("db/FarmersAssociation.sqlite")
 
 
 def main(port=8000):
+    """session = db_session.create_session()
+    session.execute("alter table admin add column 'confirmation_time' 'datetime'")"""
     app.run(port=port)
 
 

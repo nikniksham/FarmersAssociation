@@ -4,6 +4,8 @@ from flask_restful import Resource, abort
 from data import db_session
 from data.admin import Admin
 from data.API.AdminAPI.parser_admin import parser_admin
+from data.API.AdminAPI.put_parser_admin import put_parser_admin
+from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 
 
 def raise_error(error):
@@ -58,11 +60,14 @@ class AdminResource(Resource):
         name, surname = admin.name, admin.surname
         session.delete(admin)
         session.commit()
+        add_auditlog("Удаление", f"Админ {name} {surname} удаляет свой аккаунт", admin, datetime.datetime.now())
         return jsonify({"success": f"Пользователь {name} {surname} успешно удалён"})
 
     def put(self, email, password):
         admin, session = check_admin(email, password)
         args, count = parser_admin.parse_args(), 0
+        keys = list(filter(lambda key: args[key] is not None, list(args.keys())))
+        admin_dict = admin.to_dict(only=('id', 'name', 'surname', 'status', 'email'))
         for key in list(args.keys()):
             if args[key] is not None:
                 count += 1
@@ -80,7 +85,11 @@ class AdminResource(Resource):
                     admin.surname = args["surname"]
         if count == 0:
             return raise_error("Пустой запрос")
+        admin_dict_2 = admin.to_dict(only=('id', 'name', 'surname', 'status', 'email'))
+        list_chang = [f'изменяет {key} с {admin_dict[key]} на {admin_dict_2[key]}' for key in keys]
         session.commit()
+        add_auditlog("Изменение", f"Пользователь {admin.name} {admin.surname} изменяет сам себя: {', '.join(list_chang)}", admin,
+                     datetime.datetime.now())
         return jsonify({"success": f"Пользователь {admin.name} {admin.surname} успешно изменён"})
 
 
@@ -105,20 +114,19 @@ class UserResourceAdmin(Resource):
         name, surname = user.name, user.surname
         session.delete(user)
         session.commit()
+        add_auditlog("Удаление", f"Админ {admin.name} {admin.surname} удаляет админа {name} {surname}", admin,
+                     datetime.datetime.now())
         return jsonify({"success": f"Пользователь {name} {surname} успешно удалён"})
 
     def put(self, email, password, user_id):
-        print(123)
         admin, session = check_admin_status(email, password)
         user, session = find_by_id(user_id, session, admin.status)
         args, count = parser_admin.parse_args(), 0
+        keys = list(filter(lambda key: args[key] is not None, list(args.keys())))
+        user_dict = user.to_dict(only=('id', 'name', 'surname', 'status', 'email'))
         for key in list(args.keys()):
             if args[key] is not None:
                 count += 1
-                if key == 'id':
-                    if session.query(Admin).filter(Admin.id == args["id"]).first():
-                        raise_error("Этот id уже занят")
-                    user.id = args['id']
                 if key == 'email':
                     if session.query(Admin).filter(Admin.id == args["email"]).first():
                         raise_error("Этот email уже занят")
@@ -133,16 +141,20 @@ class UserResourceAdmin(Resource):
                     user.status = args["status"]
         if count == 0:
             return raise_error("Пустой запрос")
+        user_dict_2 = user.to_dict(only=('id', 'name', 'surname', 'status', 'email'))
+        list_chang = [f'изменяет {key} с {user_dict[key]} на {user_dict_2[key]}' for key in keys]
         session.commit()
+        add_auditlog("Изменение",
+                     f"Админ {admin.name} {admin.surname} изменяет пользователя {user.name} {user.surname}: {', '.join(list_chang)}",
+                     admin, datetime.datetime.now())
         return jsonify({"success": f"Пользователь {user.name} {user.surname} успешно изменён"})
 
 
 class CreateAdminResource(Resource):
     def post(self, email, password):
         admin, session = check_admin_status(email, password)
-        session = db_session.create_session()
-        args = parser_admin.parse_args()
-        if not all(key in args for key in ['surname', 'name', 'email', 'password']):
+        args = put_parser_admin.parse_args()
+        if not all(args[key] is not None for key in ['surname', 'name', 'email', 'password']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания пользователя')
         if session.query(Admin).filter(Admin.email == args['email']).first():
             raise_error("Этот email уже занят")
@@ -152,6 +164,10 @@ class CreateAdminResource(Resource):
         new_admin.surname = args["surname"]
         new_admin.email = args['email']
         new_admin.set_password(args['password'])
+        if args["id"] is not None:
+            if session.query(Admin).get(args["id"]) is not None:
+                raise_error("Этот id уже занят")
+            new_admin.id = args["id"]
         if args['status'] is not None and admin.status > args['status']:
             new_admin.status = args['status']
         else:
@@ -159,4 +175,7 @@ class CreateAdminResource(Resource):
         new_admin.created_date = datetime.datetime.now()
         session.add(new_admin)
         session.commit()
+        add_auditlog("Создание",
+                     f"Админ {admin.name} {admin.surname} создаёт админа {new_admin.name} {new_admin.surname}: {new_admin.to_dict(only=('id', 'name', 'surname', 'status', 'email'))}",
+                     admin, datetime.datetime.now())
         return jsonify({'success': f'Пользователь {new_admin.name} {new_admin.surname} создан'})

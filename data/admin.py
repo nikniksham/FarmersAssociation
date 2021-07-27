@@ -4,6 +4,7 @@ from sqlalchemy_serializer import SerializerMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from data.db_session import SqlAlchemyBase
 from sqlalchemy import orm
+import datetime
 
 
 class Admin(SqlAlchemyBase, UserMixin, SerializerMixin):
@@ -14,6 +15,7 @@ class Admin(SqlAlchemyBase, UserMixin, SerializerMixin):
     status = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
     email = sqlalchemy.Column(sqlalchemy.String, index=True, unique=True, nullable=True)
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    confirmation_time = sqlalchemy.Column(sqlalchemy.DateTime)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime)
     smartpage = orm.relation('Smartpage')
     newsblocks = orm.relation('Newsblock')
@@ -33,3 +35,6 @@ class Admin(SqlAlchemyBase, UserMixin, SerializerMixin):
     def formatted_date(self):
         d = self.created_date
         return f"{str(d.year).rjust(2, '0')}.{str(d.month).rjust(2, '0')}.{d.day} {str(d.hour).rjust(2, '0')}:{str(d.minute).rjust(2, '0')}"
+
+    def check_time(self):
+        return self.confirmation_time is not None and (datetime.datetime.now() - self.confirmation_time).total_seconds() < 3600
