@@ -16,8 +16,6 @@ class Newspage(SqlAlchemyBase, SerializerMixin):
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.now())
     author_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("admin.id"))
     author = orm.relation('Admin')
-    newsblock = orm.relation('Newsblock')
-    newsblock_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("newsblock.id"))
 
     def formatted_date(self):
         d = self.created_date

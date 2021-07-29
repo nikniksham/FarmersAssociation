@@ -18,7 +18,6 @@ class Admin(SqlAlchemyBase, UserMixin, SerializerMixin):
     confirmation_time = sqlalchemy.Column(sqlalchemy.DateTime)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime)
     smartpage = orm.relation('Smartpage')
-    newsblocks = orm.relation('Newsblock')
     partner = orm.relation('Partner')
     content = orm.relation('Content')
     newspage = orm.relation('Newspage')

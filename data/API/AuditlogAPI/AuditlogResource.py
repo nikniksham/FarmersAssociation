@@ -46,7 +46,7 @@ class AuditlogListRecourse(Resource):
         admin, session = check_admin_status(email, password)
         contents = session.query(AuditLog).order_by(AuditLog.created_date).all()
         return jsonify(
-            {'Запись': [item.to_dict(only=('id', 'event', 'info', 'user', 'created_date')) for item in contents]})
+            {'Записи': [item.to_dict(only=('id', 'event', 'info', 'user', 'created_date')) for item in contents]})
 
 
 def add_auditlog(event, info, user, datetime):
@@ -54,7 +54,8 @@ def add_auditlog(event, info, user, datetime):
     new_auditlog = AuditLog()
     new_auditlog.event = event
     new_auditlog.info = info
-    new_auditlog.user = user.id
+    if user:
+        new_auditlog.user = user.id
     new_auditlog.datetime = datetime
     session.add(new_auditlog)
     session.commit()
