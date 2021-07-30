@@ -10,7 +10,7 @@ from werkzeug.utils import redirect
 from data import db_session
 from data.API.AdminAPI.AdminResource import CreateAdminResource, AdminResource, AdminListRecourse, UserResourceAdmin
 from data.API.AuditlogAPI.AuditlogResource import AuditlogResource, AuditlogListRecourse
-from data.API.ConfirmationCodeAPI.ConfirmationcodeResource import create_code, clear_codes
+from data.API.ConfirmationCodeAPI.ConfirmationcodeResource import CodeForConfirmation
 from data.API.ContentAPI.ContentResource import CreateContentResource, ContentResource, ContentListRecourse
 from data.API.FeedbackAPI.FeedbackResource import FeedbackResource, FeedbackListRecourse, CreateFeedbackResource
 from data.API.NewspageAPI.NewspageResource import NewspageResource, NewspageListRecourse, CreateNewspageResource, NewspageResourceUsual
@@ -51,17 +51,13 @@ api.add_resource(FeedbackListRecourse, "/api/feedback/<string:email>/<string:pas
 api.add_resource(CreateFeedbackResource, "/api/feedback/<string:code>")
 login_manager = LoginManager()
 db_session.global_init("db/FarmersAssociation.sqlite")
-date = datetime.datetime.now()
-print(create_code("admin@gmail.com"))
-a = False
-while a:
-    time.sleep(1)
-    print(clear_codes(),  (datetime.datetime.now() - date).total_seconds())
+code_helper = CodeForConfirmation()
 
 
 def main(port=8000):
     """session = db_session.create_session()
     session.execute("alter table confirmationcode add column 'email' 'varchar'")"""
+    print(code_helper.create_code("nikniksham@gmail.com"))
     app.run(port=port)
 
 

@@ -11,16 +11,14 @@ test_post = True
 test_put = True
 test_delete = True
 
-test_admin_api = True
-test_smartpage_api = True
-test_content = True
-test_newspage = True
-test_partner = True
+test_admin_api = False
+test_smartpage_api = False
+test_content = False
+test_newspage = False
+test_partner = False
 test_feedback = True
-test_auditlog = True
+test_auditlog = False
 
-# x17dfWqpc94
-# farmersassociationmoscowregion
 # pbkdf2:sha256:150000$ienbNff2$f899740f7999e24b06b519d5305cf8f2e34643033b6e3086fff3e0c8e39d795b
 if test_admin_api:
     if test_post:
@@ -208,8 +206,8 @@ if test_partner:
             f"{link_website}api/partner/{test_admin['email']}/{test_admin['password']}/{page_id}").json())
 
 if test_feedback:
-    print(post(f"{link_website}api/feedback/WMN1E6",
-               json={"email": "admin@gmail.com", "fullname": "Шамков Николай Николаевич",
+    print(post(f"{link_website}api/feedback/CELDEY",
+               json={"email": "nikniksham@gmail.com", "fullname": "Шамков Николай Николаевич",
                      "heading": "Какой-то заголовок", "image": "standard.png",
                      "text": "Мне нравиться ваш сайт!"}).json())
 
