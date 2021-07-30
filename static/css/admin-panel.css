@@ -1,0 +1,160 @@
+.main-block {
+    background: #eee;
+    display: flex;
+}
+
+.admin-nav-block {
+    width: 300px;
+    color: #eca137;
+    font-size: 18px;
+    background: #1e2f37;
+    border-right: solid;
+    border-color: #eca137;
+    border-width: 1px;
+}
+
+.admin-nav:hover {
+    color: #eca137;
+    text-decoration: none;
+}
+
+.admin-nav div {
+    width: 100%;
+    padding: 5px 10px;
+    border-bottom: 1px solid;
+}
+
+.admin-settings {
+    display: none;
+}
+
+.admin-settings-block {
+    flex: 1 0;
+}
+
+.settings {
+    padding: 10px;
+}
+
+.settings p {
+    margin: 0;
+}
+
+.settings input {
+    margin-bottom: 10px;
+}
+
+.settings textarea {
+    margin-bottom: 10px;
+    outline: none;
+    background: transparent;
+}
+
+.settings input[type="text"] {
+    outline: none;
+    border: none;
+    background: transparent;
+    border-bottom: 1px solid black;
+}
+
+.settings button[type="submit"] {
+    background: transparent;
+    padding: 7px 10px;
+    border-radius: 5px;
+    outline: none;
+    border: 1px solid black;
+}
+
+
+.settings-title {
+    padding: 10px;
+    width: 100%;
+    text-align: center;
+    font-size: 24px;
+}
+
+.submit-block {
+    padding: 10px 0;
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.input-file-row-1:after {
+    content: ".";
+    display: block;
+    clear: both;
+    visibility: hidden;
+    line-height: 0;
+    height: 0;
+}
+
+.input-file-row-1{
+    display: inline-block;
+    margin-top: 25px;
+    position: relative;
+}
+
+html[xmlns] .input-file-row-1{
+    display: block;
+}
+
+* html .input-file-row-1 {
+    height: 1%;
+}
+
+.upload-file-container {
+    position: relative;
+    width: 100px;
+    height: 137px;
+    overflow: hidden;
+    background: url(http://i.imgur.com/AeUEdJb.png) top center no-repeat;
+    float: left;
+    margin-left: 23px;
+}
+
+.upload-file-container:first-child {
+    margin-left: 0;
+}
+
+.upload-file-container > img {
+    width: 93px;
+    height: 93px;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+}
+
+.upload-file-container-text{
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    color: #719d2b;
+    line-height: 17px;
+    text-align: center;
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100px;
+    height: 35px;
+}
+
+.upload-file-container-text > span{
+    border-bottom: 1px solid #719d2b;
+    cursor: pointer;
+}
+
+.upload-file-container input  {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    font-size: 1px;
+    opacity: 0;
+    filter: alpha(opacity=0);
+    margin: 0;
+    padding: 0;
+    border: none;
+    width: 70px;
+    height: 50px;
+    cursor: pointer;
+}

@@ -1,0 +1,396 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+}
+
+button { border: none; }
+button:focus { outline: none; }
+
+body {
+    padding-top: 40px;
+    min-height: 100vh;
+    background: #f4f4f4;
+    display: flex;
+    flex-direction: column;
+}
+
+#toTop {
+    position absolute;
+    font-size: 30px;
+
+}
+
+.stop-scroll {
+    overflow: hidden;
+}
+
+div.visible {
+    display: block;
+}
+
+p {
+    font-family: 'Yanone Kaffeesatz', sans-serif;
+    font-weight: 300;
+}
+
+a {
+    font-family: 'Yanone Kaffeesatz', sans-serif;
+    font-weight: 300;
+    color: inherit;
+    text-decoration: none;
+}
+
+.navigation {
+    display: none;
+    position: fixed;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	z-index: 20;
+    background: rgba(0,0,0,.9);
+}
+
+.navigation-hrefs {
+    height: 100%;
+    display: flex;
+    padding-top: 40px;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
+.navigation-hrefs a {
+    padding: 10px;
+    color: white;
+}
+
+.visible {
+    display: block;
+}
+
+header {
+    position: fixed;
+	width: 100%;
+	top: 0;
+	left: 0;
+	z-index: 20;
+    height: 40px;
+    background: #1e2f37;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #eca137;
+}
+
+header img {
+    height: 35px;
+}
+
+.main-news {
+    width: 100%;
+}
+
+.main-news-item {
+    width: 100%;
+    position: relative;
+    padding-bottom: 35  %;
+    background-size: cover;
+    background-position: center;
+}
+
+.partners-carousel {
+    margin-bottom: 20px;
+}
+
+.main-news-container {
+    position: absolute;
+    z-index: 20;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.main-news-container img {
+    padding-left: 5%;
+    height: 120px;
+}
+
+.main-news-text {
+    padding-left: 10px;
+    color: #eca137;
+}
+
+.main-news-text p:first-child {
+    font-size: 28px;
+    margin-bottom: 2px;
+    font-family: 'Oswald';
+}
+
+.main-news-text p:last-child {
+    margin: 0;
+    font-size: 16px;
+}
+
+.main-news-item:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 2;
+}
+
+.partner-item {
+    height: 80px;
+    width: 288px;
+    padding: 0 10px;
+}
+
+.partner-item-image {
+    height: 100%;
+    display: inline-block;
+}
+
+.partner-item-text {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.partner-item-text p:first-child {
+    font-size: 28px;
+    margin-bottom: 2px;
+    font-family: 'Oswald';
+}
+
+.partner-item-text p:last-child {
+    margin: 0;
+}
+
+
+.news-2, .news {
+    color: white;
+    margin-bottom: 10px;
+    border-radius: 15px;
+    padding: 10px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.news-img {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-size: cover;
+    background-position: center;
+    z-index: -1;
+}
+
+.news-img:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 2;
+}
+
+.news-title {
+    flex: 0 0;
+    font-family: 'Oswald', sans-serif;
+    font-size: 24px;
+    text-align: center;
+}
+
+.news-text {
+    padding-top: 40px;
+    padding: 10px;
+    flex: 1 0;
+    font-size: 18px;
+    font-family: 'Yanone Kaffeesatz', sans-serif;
+    font-weight: 300;
+}
+
+.news-navigation span {
+    color: #eca137;
+    font-size: 16px;
+    font-family: 'Yanone Kaffeesatz', sans-serif;
+    font-weight: 300;
+    text-decoration: underline;
+}
+
+.news-2:hover .news-img:after, .news:hover .news-img:after {
+    background: rgba(0,0,0,.7);
+}
+
+.news-2{
+    height: 690px;
+}
+.news {
+    height: 340px;
+}
+
+.more-news {
+    text-align: center;
+    padding: 10px 0;
+}
+
+.more-news button {
+    font-family: 'Yanone Kaffeesatz', sans-serif;
+    font-weight: 300;
+    font-size: 24px;
+    color: #eca137;
+    background: #1e2f37;
+    padding: 10px 20px;
+    border-radius: 10px;
+}
+
+.title {
+    font-family: 'Oswald', sans-serif;
+}
+
+.main-block {
+    flex: 1 0 auto;
+}
+
+footer {
+    flex: 0 0;
+    background: #1e2f37;
+    color: white;
+    border-top: 2px solid #eca137;
+}
+
+footer p {
+    margin-bottom: 0.25rem;
+}
+
+.footer-title {
+    margin-top: 0.5rem;
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.15rem;
+}
+
+.social {
+    display: inline-block;
+}
+
+.social * {
+    display: inline-block;
+}
+
+.social a {
+    margin: 10px;
+    margin-right: 0;
+}
+
+#nav-icon2 {
+  width: 29px;
+  height: 30px;
+  position: relative;
+  margin: 7px;
+  -webkit-transform: rotate(0deg);
+  -moz-transform: rotate(0deg);
+  -o-transform: rotate(0deg);
+  transform: rotate(0deg);
+  -webkit-transition: .5s ease-in-out;
+  -moz-transition: .5s ease-in-out;
+  -o-transition: .5s ease-in-out;
+  transition: .5s ease-in-out;
+  cursor: pointer;
+}
+
+#nav-icon2 span {
+  display: block;
+  position: absolute;
+  height: 3px;
+  width: 50%;
+  background: #eca137;
+  opacity: 1;
+  -webkit-transform: rotate(0deg);
+  -moz-transform: rotate(0deg);
+  -o-transform: rotate(0deg);
+  transform: rotate(0deg);
+  -webkit-transition: .25s ease-in-out;
+  -moz-transition: .25s ease-in-out;
+  -o-transition: .25s ease-in-out;
+  transition: .25s ease-in-out;
+}
+
+#nav-icon2 span:nth-child(even) {
+  left: 50%;
+  border-radius: 0 3px 3px 0;
+}
+
+#nav-icon2 span:nth-child(odd) {
+  left:0px;
+  border-radius: 3px 0 0 3px;
+}
+
+#nav-icon2 span:nth-child(1), #nav-icon2 span:nth-child(2) {
+  top: 0px;
+}
+
+#nav-icon2 span:nth-child(3), #nav-icon2 span:nth-child(4) {
+  top: 9px;
+}
+
+#nav-icon2 span:nth-child(5), #nav-icon2 span:nth-child(6) {
+  top: 18px;
+}
+
+#nav-icon2.open span:nth-child(1),#nav-icon2.open span:nth-child(6) {
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+  -o-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
+
+#nav-icon2.open span:nth-child(2),#nav-icon2.open span:nth-child(5) {
+  -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
+  -o-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+}
+
+#nav-icon2.open span:nth-child(1) {
+  left: 5px;
+  top: 5px;
+}
+
+#nav-icon2.open span:nth-child(2) {
+  left: calc(50% - 2px);
+  top: 5px;
+}
+
+#nav-icon2.open span:nth-child(3) {
+  left: -50%;
+  opacity: 0;
+}
+
+#nav-icon2.open span:nth-child(4) {
+  left: 100%;
+  opacity: 0;
+}
+
+#nav-icon2.open span:nth-child(5) {
+  left: 5px;
+  top: 14px;
+}
+
+#nav-icon2.open span:nth-child(6) {
+  left: calc(50% - 2px);
+  top: 14px;
+}

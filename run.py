@@ -67,7 +67,7 @@ def main(port=8000):
 
 @app.route("/")
 def website_main():
-    return render_template('pattern.html', title='Главная страница', style=url_for('static', filename='css/style.css'))
+    return render_template('main.html', title='Главная страница', style=url_for('static', filename='css/style.css'))
 
 
 @app.route("/next")
@@ -76,7 +76,14 @@ def test_page():
                            style=url_for('static', filename='css/style.css'))
 
 
+@app.route("/admin")
+def admin():
+    return render_template('admin-panel.html', title='Наследник от главной страницы',
+                           style=url_for('static', filename='css/style.css'))
+
+
 if __name__ == '__main__':
+    print("http://127.0.0.1:8000/admin")
     main()
     create_new_db = False
     if create_new_db:
