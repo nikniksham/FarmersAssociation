@@ -109,7 +109,7 @@ class UserResourceAdmin(Resource):
         return jsonify({"admin": user.to_dict(only=('id', 'surname', 'name', 'status', 'email', 'created_date'))})
 
     def delete(self, email, password, user_id):
-        admin, session = check_admin_status(email, password)
+        admin, session = check_admin_status(email, password, 2)
         user, session = find_by_id(user_id, session, admin.status)
         name, surname = user.name, user.surname
         session.delete(user)
@@ -119,7 +119,7 @@ class UserResourceAdmin(Resource):
         return jsonify({"success": f"Пользователь {name} {surname} успешно удалён"})
 
     def put(self, email, password, user_id):
-        admin, session = check_admin_status(email, password)
+        admin, session = check_admin_status(email, password, 2)
         user, session = find_by_id(user_id, session, admin.status)
         args, count = parser_admin.parse_args(), 0
         keys = list(filter(lambda key: args[key] is not None, list(args.keys())))

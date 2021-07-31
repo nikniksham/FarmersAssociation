@@ -47,17 +47,18 @@ a {
     display: none;
     position: fixed;
 	width: 100%;
-	height: 100%;
-	top: 0;
+    height: calc(100% - 50px);
+	top: 50;
 	left: 0;
 	z-index: 20;
     background: rgba(0,0,0,.9);
 }
 
 .navigation-hrefs {
+    overflow-y: auto;
     height: 100%;
     display: flex;
-    padding-top: 40px;
+    padding-top: 54px;
     flex-direction: column;
     justify-content: center;
     text-align: center;
@@ -137,6 +138,7 @@ header img {
     font-size: 28px;
     margin-bottom: 2px;
     font-family: 'Oswald';
+    font-width: 500;
 }
 
 .main-news-text p:last-child {
@@ -175,6 +177,7 @@ header img {
     font-size: 28px;
     margin-bottom: 2px;
     font-family: 'Oswald';
+    font-width: 500;
 }
 
 .partner-item-text p:last-child {
@@ -219,6 +222,7 @@ header img {
 .news-title {
     flex: 0 0;
     font-family: 'Oswald', sans-serif;
+    font-weight: 500;
     font-size: 24px;
     text-align: center;
 }
@@ -268,10 +272,16 @@ header img {
 
 .title {
     font-family: 'Oswald', sans-serif;
+    font-weight: 500;
 }
 
 .main-block {
     flex: 1 0 auto;
+}
+
+.max-display-block {
+    max-width: 1440px;
+    margin: auto;
 }
 
 footer {
@@ -288,6 +298,7 @@ footer p {
 .footer-title {
     margin-top: 0.5rem;
     font-family: 'Oswald', sans-serif;
+    font-weight: 500;
     font-size: 1.15rem;
 }
 
@@ -307,6 +318,17 @@ footer p {
 
 .social img {
     height: 30px;
+}
+
+@media (max-width:767px) {
+    .main-news-text p:first-child,
+    .partner-item-text p:first-child,
+    .news-title,
+    .title,
+    .footer-title {
+        font-weight: 400;
+    }
+
 }
 
 #nav-icon2 {

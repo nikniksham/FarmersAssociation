@@ -42,22 +42,23 @@
             <div>SEO</div>
         </a>
         <a name="News" class="admin-nav">
-            <div>Новости</div>
+            <div>News</div>
+        </a>
+        <a name="EditNews" class="admin-nav">
+            <div>Edit News</div>
         </a>
     </div>
     <div class="admin-settings-block">
-        <div id="SEO" class="admin-settings visible">
+        <div id="SEO" class="admin-settings">
             <p class="settings-title">Настройки SEO</p>
 
             <div class="settings">
                 <p>Заголовок</p>
                 <input type="text" value="не читай это">
-
                 <p>Описание</p>
-                <textarea rows="3" cols="50">1 много много текста
-                        2 мало мало смысла
-                        3 идеальный текст готов</textarea>
-
+                    <textarea rows="3" cols="50">1 много много текста
+2 мало мало смысла
+3 идеальный текст готов</textarea>
                 <p>Тэги</p>
                 <textarea rows="3" cols="50">Brichpunk, русская кибер деревня, ферма, кибер ферма</textarea>
 
@@ -90,47 +91,72 @@
                 </div>
             </div>
         </div>
-        <div id="News" class="admin-settings">
-            <p class="settings-title">Настройки новостей</p>
+        <div id="News" class="admin-settings visible">
+            <p class="settings-title">All News</p>
             <div class="settings">
-                <form action="" method="post" enctype=multipart/form-data>
-                    <div>{{ message }}</div>
-                    {{ form.hidden_tag() }}
-                    {{ form.heading.label }}<br>
-                    {{ form.heading(class="form-control") }}<br>
-                    {% for error in form.heading.errors %}
-                    <div class="alert alert-danger" role="alert">
-                        {{ error }}
-                    </div>
-                    {% endfor %}
-                    {{ form.text.label }}<br>
-                    {{ form.text(class="form-control") }}<br>
-                    {% for error in form.text.errors %}
-                    <div class="alert alert-danger" role="alert">
-                        {{ error }}
-                    </div>
-                    {% endfor %}
-                    {{ form.tags.label }}<br>
-                    {{ form.tags(class="form-control") }}<br>
-                    {% for error in form.tags.errors %}
-                    <div class="alert alert-danger" role="alert">
-                        {{ error }}
-                    </div>
-                    {% endfor %}
-                    <div class="input-file-row-1">
-                        <div class="upload-file-container">
-                            <img id="image3" src="#" alt=""/>
+                <p>Edit delete or add new News)</p>
+                <div class="settings-element">
+                    <p class="settings-element-title">News 1</p>
+                    <a class="settings-element-edit">Edit</a>
+                    <a class="settings-element-delete">Delete</a>
+                </div>
+                <div class="settings-element">
+                    <p class="settings-element-title">News 2</p>
+                    <a class="settings-element-edit">Edit</a>
+                    <a class="settings-element-delete">Delete</a>
+                </div>
+                <div class="settings-element">
+                    <p class="settings-element-title">News 3</p>
+                    <a class="settings-element-edit">Edit</a>
+                    <a class="settings-element-delete">Delete</a>
+                </div>
+                <div class="settings-add">
+                    <a class="settings-element-add">Add</a>
+                </div>
+            </div>
+        </div>
+        <div id="EditNews" class="admin-settings">
+            <p class="settings-title">Настройки News</p>
 
-                            <div class="upload-file-container-text">
-                                <span>Выбрать</span>
-                                <input type="file" name="pic[]" class="photo" id="imgInput3"/>
-                            </div>
+            <div class="settings">
+                <p>Заголовок</p>
+                <input type="text" value="не читай это">
+
+                <p>Описание</p>
+                    <textarea rows="3" cols="50">1 много много текста
+2 мало мало смысла
+3 идеальный текст готов</textarea>
+
+                <p>Тэги</p>
+                <textarea rows="3" cols="50">Brichpunk, русская кибер деревня, ферма, кибер ферма</textarea>
+
+                <p>Иконка</p>
+
+                <div class="input-file-row-1">
+                    <div class="upload-file-container">
+                        <img id="image1" src="#" alt=""/>
+
+                        <div class="upload-file-container-text">
+                            <span>Выбрать</span>
+                            <input type="file" name="pic[]" class="photo" id="imgInput1"/>
                         </div>
                     </div>
-                    <div class="submit-block">
-                        <button type="submit">Сохранить</button>
+                </div>
+                <p>Иконка для ссылок</p>
+
+                <div class="input-file-row-1">
+                    <div class="upload-file-container">
+                        <img id="image2" src="#" alt=""/>
+
+                        <div class="upload-file-container-text">
+                            <span>Выбрать</span>
+                            <input type="file" name="pic[]" class="photo" id="imgInput2"/>
+                        </div>
                     </div>
-                </form>
+                </div>
+                <div class="submit-block">
+                    <button type="submit">Сохранить</button>
+                </div>
             </div>
         </div>
     </div>
@@ -166,10 +192,11 @@
             <div class="col-12">
                 <div class="social">
                     <p class="footer-title">Мы в соц. сетях:</p>
-                    <a href="https://google.com/" target="_blank"><img src="static/img/facebook.jpg" alt="facebook"></a>
-                    <a href="google.com"><img src="static/img/facebook.jpg" alt="facebook"></a>
-                    <a href="google.com"><img src="static/img/facebook.jpg" alt="facebook"></a>
-                    <a href="google.com"><img src="static/img/facebook.jpg" alt="facebook"></a>
+                    <a href="https://facebook.com/sirotaoleg" target="_blank"><img src="static/img/facebook.png" alt="facebook"></a>
+                    <a href="https://instagram.com/fermaroigas/" target="_blank"><img src="static/img/instagram.png" alt="instagram"></a>
+                    <a href=" https://instagram.com/sirotaoleg/" target="_blank"><img src="static/img/instagram.png" alt="instargam"></a>
+                    <a href="  https://instagram.com/veselaya.korova/" target="_blank"><img src="static/img/instagram.png" alt="instargam"></a>
+                    <a href="  https://instagram.com/sotovhoney/" target="_blank"><img src="static/img/instagram.png" alt="instargam"></a>
                 </div>
             </div>
         </div>
@@ -185,12 +212,6 @@
         var boolAutoplay = false
         var speedNews = 3000
         var speedPartners = 2000
-
-
-
-
-
-
 
 
 </script>

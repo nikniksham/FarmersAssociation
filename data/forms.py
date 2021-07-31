@@ -4,10 +4,45 @@ from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 
 
-class NewsPageForm(FlaskForm):
+class NewspageForm(FlaskForm):
     heading = StringField('Заголовок', validators=[DataRequired()])
     text = TextAreaField('Статья', validators=[DataRequired()])
     tags = StringField('Тэги', validators=[DataRequired()])
+
+
+class AdminForm(FlaskForm):
+    stat = 3
+    name = StringField('Имя', validators=[DataRequired()])
+    surname = StringField('Фамилия', validators=[DataRequired()])
+    email = StringField('Почта', validators=[DataRequired()])
+    password = PasswordField('Пароль', validators=[DataRequired()])
+    status = SelectField("Права доступа", choices=[(i, ["Модератор", "Админ", "Владелец"][i]) for i in range(stat)])
+
+
+class ContentForm(FlaskForm):
+    type = SelectField('Тип', choices=[(1, "Новостной"), (2, "Текстовой"), (3, "С картинками")])
+    # animation_type = StringField('Тип анимации', validators=[DataRequired()])
+    text = StringField('Текст', validators=[DataRequired()])
+    tags = StringField('Тэги', validators=[DataRequired()])
+
+
+class FeedbackForm(FlaskForm):
+    fullname = StringField('ФИО', validators=[DataRequired()])
+    email = StringField('Почта', validators=[DataRequired()])
+    heading = StringField('Заголовок', validators=[DataRequired()])
+    text = StringField('Текст', validators=[DataRequired()])
+    code = StringField('Код подверждения', validators=[DataRequired()])
+
+
+class SmartpageForm(FlaskForm):
+    heading = StringField('Заголовок', validators=[DataRequired()])
+
+
+class PartnerForm(FlaskForm):
+    name = StringField('Название', validators=[DataRequired()])
+    text = StringField('О партнёре', validators=[DataRequired()])
+    link = StringField('Ссылка', validators=[DataRequired()])
+
 
 
 """class RegisterForm(FlaskForm):

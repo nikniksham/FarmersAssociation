@@ -8,7 +8,7 @@ $(document).ready(function(){
       autoplaySpeed: speedNews,
       fade: true,
       cssEase: 'linear',
-      arrows: false
+      arrows: false,
     });
 
     $('.partners-carousel').slick({
@@ -17,16 +17,39 @@ $(document).ready(function(){
         autoplay: boolAutoplay,
         autoplaySpeed: speedPartners,
         slidesToShow: 5,
-        variableWidth: true,
         draggable: true,
         arrows: false,
-        centerMode: true,
         swipeToSlide: true,
         responsive: [
             {
               breakpoint: 768,
               settings: {
-                autoplay: false
+                autoplay: false,
+                slidesToShow: 2
+              }
+            },
+            {
+              breakpoint: 541,
+              settings: {
+                slidesToShow: 1
+              }
+            },
+            {
+              breakpoint: 769,
+              settings: {
+                slidesToShow: 2
+              }
+            },
+            {
+              breakpoint: 1025,
+              settings: {
+                slidesToShow: 3
+              }
+            },
+            {
+              breakpoint: 1300,
+              settings: {
+                slidesToShow: 4
               }
             }
         ]
