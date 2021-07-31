@@ -41,8 +41,8 @@
         <a name="SEO" class="admin-nav">
             <div>SEO</div>
         </a>
-        <a name="GEO" class="admin-nav">
-            <div>GEO</div>
+        <a name="News" class="admin-nav">
+            <div>Новости</div>
         </a>
     </div>
     <div class="admin-settings-block">
@@ -54,9 +54,9 @@
                 <input type="text" value="не читай это">
 
                 <p>Описание</p>
-                    <textarea rows="3" cols="50">1 много много текста
-2 мало мало смысла
-3 идеальный текст готов</textarea>
+                <textarea rows="3" cols="50">1 много много текста
+                        2 мало мало смысла
+                        3 идеальный текст готов</textarea>
 
                 <p>Тэги</p>
                 <textarea rows="3" cols="50">Brichpunk, русская кибер деревня, ферма, кибер ферма</textarea>
@@ -90,52 +90,50 @@
                 </div>
             </div>
         </div>
-        <div id="GEO" class="admin-settings">
-            <p class="settings-title">Настройки GEO</p>
-
+        <div id="News" class="admin-settings">
+            <p class="settings-title">Настройки новостей</p>
             <div class="settings">
-                <p>Заголовок</p>
-                <input type="text" value="не читай это">
+                <form action="" method="post" enctype=multipart/form-data>
+                    <div>{{ message }}</div>
+                    {{ form.hidden_tag() }}
+                    {{ form.heading.label }}<br>
+                    {{ form.heading(class="form-control") }}<br>
+                    {% for error in form.heading.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                    {{ form.text.label }}<br>
+                    {{ form.text(class="form-control") }}<br>
+                    {% for error in form.text.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                    {{ form.tags.label }}<br>
+                    {{ form.tags(class="form-control") }}<br>
+                    {% for error in form.tags.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                    <div class="input-file-row-1">
+                        <div class="upload-file-container">
+                            <img id="image3" src="#" alt=""/>
 
-                <p>Описание</p>
-                    <textarea rows="3" cols="50">1 много много текста
-2 мало мало смысла
-3 идеальный текст готов</textarea>
-
-                <p>Тэги</p>
-                <textarea rows="3" cols="50">Brichpunk, русская кибер деревня, ферма, кибер ферма</textarea>
-
-                <p>Иконка</p>
-
-                <div class="input-file-row-1">
-                    <div class="upload-file-container">
-                        <img id="image1" src="#" alt=""/>
-
-                        <div class="upload-file-container-text">
-                            <span>Выбрать</span>
-                            <input type="file" name="pic[]" class="photo" id="imgInput1"/>
+                            <div class="upload-file-container-text">
+                                <span>Выбрать</span>
+                                <input type="file" name="pic[]" class="photo" id="imgInput3"/>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <p>Иконка для ссылок</p>
-
-                <div class="input-file-row-1">
-                    <div class="upload-file-container">
-                        <img id="image2" src="#" alt=""/>
-
-                        <div class="upload-file-container-text">
-                            <span>Выбрать</span>
-                            <input type="file" name="pic[]" class="photo" id="imgInput2"/>
-                        </div>
+                    <div class="submit-block">
+                        <button type="submit">Сохранить</button>
                     </div>
-                </div>
-                <div class="submit-block">
-                    <button type="submit">Сохранить</button>
-                </div>
+                </form>
             </div>
         </div>
     </div>
-</div>
 </div>
 <footer>
     <div class="container">
@@ -187,6 +185,12 @@
         var boolAutoplay = false
         var speedNews = 3000
         var speedPartners = 2000
+
+
+
+
+
+
 
 
 </script>

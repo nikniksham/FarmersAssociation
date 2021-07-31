@@ -7,8 +7,10 @@ $(document).ready(function(){
       autoplay: boolAutoplay,
       autoplaySpeed: speedNews,
       fade: true,
-      cssEase: 'linear'
+      cssEase: 'linear',
+      arrows: false
     });
+
     $('.partners-carousel').slick({
         dots: false,
         infinite: true,
@@ -16,9 +18,13 @@ $(document).ready(function(){
         autoplaySpeed: speedPartners,
         slidesToShow: 5,
         variableWidth: true,
+        draggable: true,
+        arrows: false,
+        centerMode: true,
+        swipeToSlide: true,
         responsive: [
             {
-              breakpoint: 769,
+              breakpoint: 768,
               settings: {
                 autoplay: false
               }

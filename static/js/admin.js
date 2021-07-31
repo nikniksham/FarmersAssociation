@@ -16,6 +16,9 @@ $("#imgInput1").change(function(){
 $("#imgInput2").change(function(){
     readURL(this, 2);
 });
+$("#imgInput3").change(function(){
+    readURL(this, 3);
+});
 
 function changeScreen(input) {
     $("#"+last).toggleClass("visible");

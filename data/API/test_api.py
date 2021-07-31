@@ -206,8 +206,8 @@ if test_partner:
             f"{link_website}api/partner/{test_admin['email']}/{test_admin['password']}/{page_id}").json())
 
 if test_feedback:
-    print(post(f"{link_website}api/feedback/CELDEY",
-               json={"email": "nikniksham@gmail.com", "fullname": "Шамков Николай Николаевич",
+    print(post(f"{link_website}api/feedback/5YP0LA",
+               json={"email": "yuramorozov2711@gmail.com", "fullname": "Шамков Николай Николаевич",
                      "heading": "Какой-то заголовок", "image": "standard.png",
                      "text": "Мне нравиться ваш сайт!"}).json())
 

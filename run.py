@@ -23,6 +23,7 @@ from data.feedback import Feedback
 from data.newspage import Newspage
 from data.partner import Partner
 from data.smartpage import Smartpage
+from data.forms import NewsPageForm
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(30)
 api = Api(app)
@@ -55,9 +56,11 @@ code_helper = CodeForConfirmation()
 
 
 def main(port=8000):
+    # print(code_helper.create_code("yuramorozov2711@gmail.com"))
+    print(code_helper.create_code("nikniksham@gmail.com"))
+    # code_helper.clear_codes()
     """session = db_session.create_session()
     session.execute("alter table confirmationcode add column 'email' 'varchar'")"""
-    print(code_helper.create_code("nikniksham@gmail.com"))
     app.run(port=port)
 
 
@@ -74,8 +77,9 @@ def test_page():
 
 @app.route("/admin")
 def admin():
-    return render_template('admin-panel.html', title='Наследник от главной страницы',
-                           style=url_for('static', filename='css/style.css'))
+    form = NewsPageForm()
+    return render_template('admin-panel.html', title='админка',
+                           style=url_for('static', filename='css/style.css'), form=form)
 
 
 if __name__ == '__main__':
