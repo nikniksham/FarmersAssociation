@@ -1,11 +1,10 @@
 import datetime
 import os
 import time
-
 from flask import Flask, render_template, url_for, request
 from flask_login import LoginManager, login_required, logout_user, current_user, login_user
 from flask_restful import abort, Api
-from requests import put, delete
+from requests import put, delete, get
 from werkzeug.utils import redirect
 from data import db_session
 from data.API.AdminAPI.AdminResource import CreateAdminResource, AdminResource, AdminListRecourse, UserResourceAdmin
@@ -13,17 +12,21 @@ from data.API.AuditlogAPI.AuditlogResource import AuditlogResource, AuditlogList
 from data.API.ConfirmationCodeAPI.ConfirmationcodeResource import CodeForConfirmation
 from data.API.ContentAPI.ContentResource import CreateContentResource, ContentResource, ContentListRecourse
 from data.API.FeedbackAPI.FeedbackResource import FeedbackResource, FeedbackListRecourse, CreateFeedbackResource
-from data.API.NewspageAPI.NewspageResource import NewspageResource, NewspageListRecourse, CreateNewspageResource, NewspageResourceUsual
-from data.API.PartnerAPI.PartnerResource import PartnerResource, PartnerResourceUsual, PartnerListRecourse, CreatePartnerResource
+from data.API.NewspageAPI.NewspageResource import NewspageResource, NewspageListRecourse, CreateNewspageResource, \
+    NewspageResourceUsual
+from data.API.PartnerAPI.PartnerResource import PartnerResource, PartnerResourceUsual, PartnerListRecourse, \
+    CreatePartnerResource
 from data.API.SmartpageAPI.SmartpageResource import CreateSmartpageResource, SmartpageResource, SmartpageListRecourse
-from data.admin import Admin
+from data.user import User
 from data.auditlog import AuditLog
 from data.content import Content
 from data.feedback import Feedback
 from data.newspage import Newspage
 from data.partner import Partner
 from data.smartpage import Smartpage
-from data.forms import NewspageForm
+from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm
+
+link_website = ""
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(30)
 api = Api(app)
@@ -50,9 +53,17 @@ api.add_resource(PartnerListRecourse, "/api/partner")
 api.add_resource(FeedbackResource, "/api/feedback/<string:email>/<string:password>/<int:feedback_id>")
 api.add_resource(FeedbackListRecourse, "/api/feedback/<string:email>/<string:password>")
 api.add_resource(CreateFeedbackResource, "/api/feedback/<string:code>")
-login_manager = LoginManager()
 db_session.global_init("db/FarmersAssociation.sqlite")
+login_manager = LoginManager()
+login_manager.init_app(app)
 code_helper = CodeForConfirmation()
+
+
+# Получение пользователя
+@login_manager.user_loader
+def load_user(user_id):
+    session = db_session.create_session()
+    return session.query(User).get(user_id)
 
 
 def main(port=8000):
@@ -76,20 +87,77 @@ def test_page():
 
 
 @app.route("/admin")
+# @login_required
 def admin():
     form = NewspageForm()
-    return render_template('admin-panel.html', title='админка',
+    return render_template('admin_news.html', title='админка', style=url_for('static', filename='css/style.css'), form=form)
+
+
+@app.route("/admin_create_news")
+# @login_required
+def admin_create_news():
+    form = NewspageForm()
+    return render_template('admin_create_news.html', title='Создание новости',
                            style=url_for('static', filename='css/style.css'), form=form)
+
+
+@app.route("/admin_admin")
+# @login_required
+def admin_admin():
+    admin = get(f"{link_website}/api/admin/<string:email>/<string:password>").json()
+    return render_template('admin-panel-admin.html', title='контент',
+                           style=url_for('static', filename='css/style.css'), admin=admin)
+
+
+@app.route("/admin_content")
+# @login_required
+def admin_content():
+    content = get(f"{link_website}/api/content").json()
+    return render_template('admin-panel-content.html', title='контент',
+                           style=url_for('static', filename='css/style.css'), content=content)
+
+
+@app.route("/admin_feedback")
+# @login_required
+def admin_feedback():
+    feedback = get(f"{link_website}/api/feedback/<string:email>/<string:password>").json()
+    return render_template('admin-panel-feedback.html', title='контент',
+                           style=url_for('static', filename='css/style.css'), feedback=feedback)
+
+
+@app.route("/admin_newspage")
+# @login_required
+def admin_newspage():
+    newspage = get(f"{link_website}/api/feedback/<string:email>/<string:password>").json()
+    return render_template('admin-panel-newspage.html', title='контент',
+                           style=url_for('static', filename='css/style.css'), newspage=newspage)
+
+
+@app.route("/admin_partner")
+# @login_required
+def admin_partner():
+    partner = get(f"{link_website}/api/partner/<string:email>/<string:password>").json()
+    return render_template('admin-panel-partner.html', title='контент',
+                           style=url_for('static', filename='css/style.css'), partner=partner)
+
+
+@app.route("/admin_smartpage")
+# @login_required
+def admin_smartpage():
+    smartpage = get(f"{link_website}/api/smartpage/<string:email>/<string:password>").json()
+    return render_template('admin-panel-smartpage.html', title='контент',
+                           style=url_for('static', filename='css/style.css'), smartpage=smartpage)
 
 
 if __name__ == '__main__':
     print("http://127.0.0.1:8000/admin")
+    print("http://127.0.0.1:8000/admin_create_news")
     main()
     create_new_db = False
     if create_new_db:
         db_session.global_init("db/FarmersAssociation.sqlite")
         session = db_session.create_session()
-        admin = Admin()
+        admin = User()
         session.add(admin)
         session.add(AuditLog())
         session.add(Feedback())

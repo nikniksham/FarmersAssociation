@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_restful import Resource, abort
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
-from data.admin import Admin
+from data.user import User
 from data.feedback import Feedback
 from data.confirmationcode import ConfirmationCode
 from data.API.FeedbackAPI.parser_feedback import parser_feedback
@@ -33,7 +33,7 @@ def check_admin_status(email, password, need_status=1):
 
 def check_admin(email, password):
     session = db_session.create_session()
-    user = session.query(Admin).filter(Admin.email == email).first()
+    user = session.query(User).filter(User.email == email).first()
     if not user:
         raise_error(f"Админ {email} не найден")
     if not user.check_password(password):
@@ -65,10 +65,10 @@ class FeedbackResource(Resource):
 
 
 class FeedbackListRecourse(Resource):
-    def get(self):
-        session = db_session.create_session()
+    def get(self, email, password):
+        admin, session = check_admin_status(email, password)
         feedbacks = session.query(Feedback).all()
-        return jsonify({'Партнёры': [
+        return jsonify({'Отзывы': [
             item.to_dict(only=('fullname', 'heading', 'email', 'image', 'text', 'created_date')) for item in feedbacks]})
 
 

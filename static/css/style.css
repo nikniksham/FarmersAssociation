@@ -46,7 +46,7 @@ a {
     overflow-y: visible;
     display: none;
     position: fixed;
-	width: 100%;
+    width: 100%;
     height: calc(100% - 50px);
 	top: 50;
 	left: 0;

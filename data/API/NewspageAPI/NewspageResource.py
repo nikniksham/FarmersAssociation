@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_restful import Resource, abort
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
-from data.admin import Admin
+from data.user import User
 from data.newspage import Newspage
 from data.API.NewspageAPI.parser_newspage import parser_newspage
 
@@ -36,7 +36,7 @@ def check_admin_status(email, password, need_status=1):
 
 def check_admin(email, password):
     session = db_session.create_session()
-    user = session.query(Admin).filter(Admin.email == email).first()
+    user = session.query(User).filter(User.email == email).first()
     if not user:
         raise_error(f"Админ {email} не найден")
     if not user.check_password(password):

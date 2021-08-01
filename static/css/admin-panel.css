@@ -24,10 +24,6 @@
     border-bottom: 1px solid;
 }
 
-.admin-settings {
-    display: none;
-}
-
 .admin-settings-block {
     flex: 1 0;
 }
@@ -106,9 +102,10 @@ html[xmlns] .input-file-row-1{
 .upload-file-container {
     position: relative;
     width: 100px;
-    height: 137px;
+    height: 100px;
+    background: url(../img/plusik.png) top center no-repeat;
+    background-size: 100px 100px;
     overflow: hidden;
-    background: url(http://i.imgur.com/AeUEdJb.png) top center no-repeat;
     float: left;
     margin-left: 23px;
 }
@@ -118,14 +115,14 @@ html[xmlns] .input-file-row-1{
 }
 
 .upload-file-container > img {
-    width: 93px;
+    width: 97px;
     height: 93px;
     border-radius: 5px;
     -webkit-border-radius: 5px;
     -moz-border-radius: 5px;
 }
 
-.upload-file-container-text{
+.upload-file-container-text {
     font-family: Arial, sans-serif;
     font-size: 12px;
     color: #719d2b;
@@ -139,23 +136,18 @@ html[xmlns] .input-file-row-1{
     height: 35px;
 }
 
-.upload-file-container-text > span{
-    border-bottom: 1px solid #719d2b;
-    cursor: pointer;
-}
-
 .upload-file-container input  {
     position: absolute;
     left: 0;
-    bottom: 0;
+    top: 0;
     font-size: 1px;
     opacity: 0;
     filter: alpha(opacity=0);
     margin: 0;
     padding: 0;
     border: none;
-    width: 70px;
-    height: 50px;
+    width: 100px;
+    height: 100px;
     cursor: pointer;
 }
 
@@ -167,14 +159,51 @@ html[xmlns] .input-file-row-1{
     margin-bottom: 10px;
 }
 
+img.visible {
+    display: block;
+}
+
+div.un-visible {
+    background: transparent;
+}
+
+.this-is-image {
+    display: none;
+}
+
 .settings-element-title {
     padding-left: 5px;
     flex: 1 0;
 }
 
+.delete-image {
+    position: absolute;
+    z-index: 3;
+    right: 2px;
+    width: 30px;
+    height: 30px;
+}
+
+.delete-image:hover {
+    background: url('../../static/img/del.png') right top no-repeat;
+    background-size: 30px 30px;
+}
+
 .settings-element-edit, .settings-element-delete, .settings-element-add {
     color: #eca137;
     padding: 0 5px;
+}
+
+.settings-element-edit:hover {
+    color: green;
+}
+
+.settings-element-delete:hover {
+    color: red;
+}
+
+.settings-element-add:hover {
+    color: green;
 }
 
 .settings-add {

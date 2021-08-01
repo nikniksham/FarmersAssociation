@@ -1,1 +1,1 @@
-from . import admin, partner, newspage, smartpage, content, auditlog, feedback, confirmationcode
+from . import user, partner, newspage, smartpage, content, auditlog, feedback, confirmationcode

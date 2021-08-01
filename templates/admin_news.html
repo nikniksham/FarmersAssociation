@@ -1,9 +1,9 @@
+<!-- в шаблон админской панели -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Шапка и подвал</title>
     <link rel="preconnect" href="https://fonts.googleapis.com/">
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500&display=swap" rel="stylesheet">
@@ -13,6 +13,9 @@
     <link href="static/css/slick-theme.css" rel="stylesheet">
     <link href="static/css/style.css" rel="stylesheet">
     <link href="static/css/admin-panel.css" rel="stylesheet">
+    <!-- нечего загружать в шаблон админской панели -->
+    <!-- кроме заголовка-->
+    <title>Все новости</title>
 </head>
 <body>
 <div class="navigation">
@@ -38,18 +41,44 @@
 </header>
 <div class="main-block">
     <div class="admin-nav-block">
-        <a name="SEO" class="admin-nav">
+        <a name="SEO" class="admin-nav" href="i-don't-know-1">
             <div>SEO</div>
         </a>
-        <a name="News" class="admin-nav" href="/admin_create_news">
+        <a name="News" class="admin-nav"  href="i-don't-know-2">
             <div>News</div>
         </a>
-        <a name="EditNews" class="admin-nav">
+        <a name="EditNews" class="admin-nav" href="i-don't-know-3">
             <div>Edit News</div>
         </a>
     </div>
     <div class="admin-settings-block">
-        {% block adminblock %}{% endblock %}
+        <!-- от сюда 2-->
+        <div id="News" class="admin-settings visible">
+            <p class="settings-title">All News</p>
+            <div class="settings">
+                <p>Edit delete or add new News)</p>
+                <div class="settings-add">
+                    <a class="settings-element-add" href="add-new-newer-news)">Add</a>
+                </div>
+                <div class="settings-element">
+                    <p class="settings-element-title">News 1</p>
+                    <a class="settings-element-edit" href="edit-news-1">Edit</a>
+                    <a class="settings-element-delete" href="delete-news-1">Delete</a>
+                </div>
+                <div class="settings-element">
+                    <p class="settings-element-title">News 2</p>
+                    <a class="settings-element-edit" href="edit-news-2">Edit</a>
+                    <a class="settings-element-delete" href="delete-news-2">Delete</a>
+                </div>
+                <div class="settings-element">
+                    <p class="settings-element-title">News 3</p>
+                    <a class="settings-element-edit" href="edit-news-3">Edit</a>
+                    <a class="settings-element-delete" href="delete-news-3">Delete</a>
+                </div>
+            </div>
+        </div>
+        <!-- до сюда 2 в шаблон админской -->
+        <!-- конец больше ничего в шаблон загружать не надо -->
     </div>
 </div>
 <footer>
@@ -96,15 +125,6 @@
 <script scr="static/js/bootstrap.min.js"></script>
 <script src="static/js/jquery.min.js"></script>
 <script src="static/js/footer.js"></script>
-<script src="static/js/slick.js"></script>
-<script src="static/js/carousels.js"></script>
 <script src="static/js/admin.js"></script>
-<script>
-        var boolAutoplay = false
-        var speedNews = 3000
-        var speedPartners = 2000
-
-
-</script>
 </body>
 </html>

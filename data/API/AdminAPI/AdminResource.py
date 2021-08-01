@@ -2,7 +2,7 @@ import datetime
 from flask import jsonify
 from flask_restful import Resource, abort
 from data import db_session
-from data.admin import Admin
+from data.user import User
 from data.API.AdminAPI.parser_admin import parser_admin
 from data.API.AdminAPI.put_parser_admin import put_parser_admin
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
@@ -33,7 +33,7 @@ def check_admin_status(email, password, need_status=1):
 
 def check_admin(email, password):
     session = db_session.create_session()
-    user = session.query(Admin).filter(Admin.email == email).first()
+    user = session.query(User).filter(User.email == email).first()
     if not user:
         raise_error(f"Админ {email} не найден")
     if not user.check_password(password):
@@ -42,7 +42,7 @@ def check_admin(email, password):
 
 
 def find_by_id(id, session, status=0):
-    user = session.query(Admin).get(id)
+    user = session.query(User).get(id)
     if not user:
         raise_error(f"Пользователь не найден")
     if user.status > status or status < 1:
@@ -72,11 +72,11 @@ class AdminResource(Resource):
             if args[key] is not None:
                 count += 1
                 if key == 'id':
-                    if session.query(Admin).filter(Admin.id == args["id"]).first():
+                    if session.query(User).filter(User.id == args["id"]).first():
                         raise_error("Этот id уже занят")
                     admin.id = args['id']
                 if key == 'email':
-                    if session.query(Admin).filter(Admin.id == args["email"]).first():
+                    if session.query(User).filter(User.id == args["email"]).first():
                         raise_error("Этот email уже занят")
                     admin.email = args['email']
                 if key == 'name':
@@ -96,7 +96,7 @@ class AdminResource(Resource):
 class AdminListRecourse(Resource):
     def get(self, email, password):
         admin, session = check_admin_status(email, password)
-        admins = session.query(Admin).all()
+        admins = session.query(User).all()
         return jsonify({'Пользователи': [item.to_dict(
             only=('id', 'surname', 'name', 'status', 'email', 'created_date'))
             for item in admins]})
@@ -128,7 +128,7 @@ class UserResourceAdmin(Resource):
             if args[key] is not None:
                 count += 1
                 if key == 'email':
-                    if session.query(Admin).filter(Admin.id == args["email"]).first():
+                    if session.query(User).filter(User.id == args["email"]).first():
                         raise_error("Этот email уже занят")
                     user.email = args['email']
                 if key == 'name':
@@ -156,16 +156,16 @@ class CreateAdminResource(Resource):
         args = put_parser_admin.parse_args()
         if not all(args[key] is not None for key in ['surname', 'name', 'email', 'password']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания пользователя')
-        if session.query(Admin).filter(Admin.email == args['email']).first():
+        if session.query(User).filter(User.email == args['email']).first():
             raise_error("Этот email уже занят")
         check_password(args["password"])
-        new_admin = Admin()
+        new_admin = User()
         new_admin.name = args["name"]
         new_admin.surname = args["surname"]
         new_admin.email = args['email']
         new_admin.set_password(args['password'])
         if args["id"] is not None:
-            if session.query(Admin).get(args["id"]) is not None:
+            if session.query(User).get(args["id"]) is not None:
                 raise_error("Этот id уже занят")
             new_admin.id = args["id"]
         if args['status'] is not None and admin.status > args['status']:

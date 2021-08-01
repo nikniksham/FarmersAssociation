@@ -13,8 +13,8 @@ class Partner(SqlAlchemyBase, SerializerMixin):
     text = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     link = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.now())
-    author_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("admin.id"))
-    author = orm.relation('Admin')
+    author_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("user.id"))
+    author = orm.relation('User')
 
     def formatted_date(self):
         d = self.created_date
