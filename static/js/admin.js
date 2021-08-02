@@ -20,7 +20,7 @@ function addImage(num) {
         addImage(num);
     });
 
-    $('.delete-image').click(function(){
+    $('.delete-image').click(function() {
         console.log('delete');
         var father = $(this).closest('.input-file-row-1');
         var src = $($(father.children()[0]).children()[1]).attr('src');
@@ -43,7 +43,6 @@ function readURL(input) {
             if ($('#image'+num).attr('class') === 'this-is-image') {
                 addImage(parseInt($($($(input).closest('.settings-images')).children()[0]).attr('id').match(/\d+/)));
                 $('#image'+num).toggleClass("visible");
-                $(this).closest('.upload-file-container').toggleClass('un-visible');
             }
         };
         reader.readAsDataURL(input.files[0]);

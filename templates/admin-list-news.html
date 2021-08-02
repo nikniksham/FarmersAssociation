@@ -1,0 +1,24 @@
+{% extends "admin-panel.html" %}
+
+{% block adminblock %}
+
+<div class="admin-settings-block">
+    <div id="News" class="admin-settings visible">
+        <p class="settings-title">{{title}}</p>
+        <div class="settings">
+            <p>Список новостей</p>
+            <div class="settings-add">
+                <a class="settings-element-add" href="/admin-create-news">Добавить</a>
+            </div>
+            {% for news in newslist %}
+            <div class="settings-element">
+                <p class="settings-element-title">{{news['heading']}}</p>
+                <a class="settings-element-edit" href="/admin-edit-news/{{news['id']}}">Изменить</a>
+                <a class="settings-element-delete" href="">Удалить</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

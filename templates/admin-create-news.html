@@ -1,0 +1,52 @@
+{% extends "admin-panel.html" %}
+
+{% block adminblock %}
+<div class="admin-settings">
+    <p class="settings-title">{{title}}</p>
+    <div class="settings">
+        <form action="" method="post">
+            <div class="main">
+                {{ form.hidden_tag() }}
+                {{ form.heading.label }}<br>
+                {{ form.heading(class="form-control") }}<br>
+                {% for error in form.heading.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+
+                {{ form.text.label }}<br>
+                {{ form.text(class="form-control") }}<br>
+                {% for error in form.text.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+
+                {{ form.tags.label }}<br>
+                {{ form.tags(class="form-control") }}<br>
+                {% for error in form.tags.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+                <p>Изображения</p>
+                <div class="settings-images">
+                    <div id="images1">
+                        <div class="input-file-row-1">
+                            <div class="upload-file-container">
+                                <div class="delete-image"></div>
+                                <img id="image1" class="this-is-image" src="#" alt=""/>
+                                <input type="file" name="image1" class="photo" id="imgInput1"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="submit-block">
+                    {{ form.submit(type="submit", class="btn btn-primary submit") }}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

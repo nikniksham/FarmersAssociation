@@ -6,11 +6,12 @@
 .admin-nav-block {
     width: 300px;
     color: #eca137;
-    font-size: 18px;
+    font-size: 24px;
     background: #1e2f37;
     border-right: solid;
-    border-color: #eca137;
-    border-width: 1px;
+    border-bottom: 2px solid;
+    border-color: #2e4f67;
+    border-width: 3px;
 }
 
 .admin-nav:hover {
@@ -18,10 +19,15 @@
     text-decoration: none;
 }
 
+.admin-nav-block > a:first-child > div {
+    border-top: 2px solid #2e4f67;
+}
+
 .admin-nav div {
     width: 100%;
+    font-size: 20px;
     padding: 5px 10px;
-    border-bottom: 1px solid;
+    border-bottom: 2px solid #2e4f67;
 }
 
 .admin-settings-block {
@@ -53,6 +59,13 @@
     border-bottom: 1px solid black;
 }
 
+.settings input[type=""] {
+    outline: none;
+    border: none;
+    background: transparent;
+    border-bottom: 1px solid black;
+}
+
 .settings button[type="submit"] {
     background: transparent;
     padding: 7px 10px;
@@ -61,6 +74,13 @@
     border: 1px solid black;
 }
 
+.settings input[type="submit"] {
+    background: transparent;
+    padding: 7px 10px;
+    border-radius: 5px;
+    outline: none;
+    border: 1px solid black;
+}
 
 .settings-title {
     padding: 10px;
@@ -161,6 +181,7 @@ html[xmlns] .input-file-row-1{
 
 img.visible {
     display: block;
+    background: white;
 }
 
 div.un-visible {
@@ -189,9 +210,26 @@ div.un-visible {
     background-size: 30px 30px;
 }
 
-.settings-element-edit, .settings-element-delete, .settings-element-add {
-    color: #eca137;
+.settings-element-edit, .settings-element-delete, .settings-element-add, .settings-element-move{
+    color: black;
     padding: 0 5px;
+}
+
+.settings-element-edit, .settings-element-delete, .settings-element-add, .settings-element-move, settings-element-title {
+    font-size: 20px;
+}
+
+.admin-nav {
+    font-size: 22px;
+}
+
+.settings-title {
+    font-size: 26px;
+}
+
+.settings-element-move:hover {
+    cursor: pointer;
+    color: black
 }
 
 .settings-element-edit:hover {
@@ -207,6 +245,7 @@ div.un-visible {
 }
 
 .settings-add {
+    margin: 10px 0;
     display: flex;
     width: 100%;
     justify-content: flex-end;

@@ -3,9 +3,9 @@ import os
 
 from flask import jsonify
 from flask_restful import Resource, abort
-from email.mime.multipart import MIMEMultipart      # Многокомпонентный объект
-from email.mime.text import MIMEText                # Текст/HTML
-from email.mime.image import MIMEImage              # Изображения
+from email.mime.multipart import MIMEMultipart  # Многокомпонентный объект
+from email.mime.text import MIMEText  # Текст/HTML
+from email.mime.image import MIMEImage  # Изображения
 from data import db_session
 from data.confirmationcode import ConfirmationCode
 import random
@@ -46,19 +46,19 @@ class CodeForConfirmation:
         msg['To'] = email  # Получатель
         msg['Subject'] = 'Код подтверждения'  # Тема сообщения
         html_code = f"""
-        <html>
+        <html lang="ru">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
         </head>
         <body style="display:flex;justify-content:center;width:100%;">
             <div style="max-width:320px;background-color:#f4f4f4;width:100%;border-radius:15px;overflow:hidden;">
-                <div style="height:55px;width:100%;padding-bottom:3px;border-bottom:1px solid #eca137;background:#1e2f37;">
-                    <img style="height:47px;padding-left:5px;padding-top:5px;" src="https://media.discordapp.net/attachments/547110396931211274/870716165574520913/logo-sm.png?width=1440&height=466" alt="logo">
+                <div style="height:55px;width:100%;padding-bottom:3px;background:#1e2f37;">
+                    <img style="height:47px;padding-left:5%;padding-top:5px;" src="https://media.discordapp.net/attachments/547110396931211274/870716165574520913/logo-sm.png?width=1440&height=466" alt="logo">
                 </div>
                 <h1 style="text-align:center;">Код подтверждения.</h1>
                 <p style="font-size:21px;padding:10px 5%;">Ваш код подтверждения, для написания отзыва на сайте Ассоциации Фермеров Московской Области: <b>{code}</b>, никому не сообщайте его</p>
-                <div style="width:100%;padding-top:3px;border-top:1px solid #eca137;background:#1e2f37;">
+                <div style="width:100%;padding-top:3px;background:#1e2f37;">
                     <p style="font-size:14px;padding:10px 5%;padding-bottom:20px;color:#eca137;margin:0;text-align:center;">Ассоциация фермеров Московской области</p>
                 </div>
             </div>

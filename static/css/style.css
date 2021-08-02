@@ -40,6 +40,7 @@ a {
     font-weight: 300;
     color: inherit;
     text-decoration: none;
+    letter-spacing: 1.3px;
 }
 
 .navigation {
@@ -88,8 +89,7 @@ header {
     height: 50px;
     background: #1e2f37;
     display: flex;
-    justify-content: space-between;
-    border-bottom: 1px solid #eca137;
+    justify-content: flex-end;
 }
 
 header img {
@@ -126,24 +126,26 @@ header img {
 
 .main-news-container img {
     padding-left: 5%;
-    height: 120px;
+    height: 150px;
 }
 
 .main-news-text {
-    padding-left: 10px;
-    color: #eca137;
+    padding-left: 30px;
+    color: white;
 }
 
 .main-news-text p:first-child {
-    font-size: 28px;
-    margin-bottom: 2px;
+    font-size: 32px;
+    margin-bottom: 5px;
     font-family: 'Oswald';
-    font-width: 500;
+    font-width: 400;
+    letter-spacing: 2px;
 }
 
 .main-news-text p:last-child {
     margin: 0;
-    font-size: 16px;
+    font-size: 18px;
+    letter-spacing: 2px;
 }
 
 .main-news-item:after {
@@ -178,18 +180,20 @@ header img {
     margin-bottom: 2px;
     font-family: 'Oswald';
     font-width: 500;
+    letter-spacing: 1px;
 }
 
 .partner-item-text p:last-child {
     margin: 0;
+    letter-spacing: 1.3px;
 }
 
 
 .news-2, .news {
     color: white;
-    margin-bottom: 10px;
+    margin-bottom: calc(var(--bs-gutter-x));
     border-radius: 15px;
-    padding: 10px;
+    padding: 15px;
     overflow: hidden;
     position: relative;
     display: flex;
@@ -220,20 +224,22 @@ header img {
 }
 
 .news-title {
+    margin: 10px 0;
     flex: 0 0;
     font-family: 'Oswald', sans-serif;
     font-weight: 500;
     font-size: 24px;
-    text-align: center;
+    letter-spacing: 1.2px;
 }
 
 .news-text {
     padding-top: 40px;
-    padding: 10px;
+    padding: 10px 0;
     flex: 1 0;
     font-size: 18px;
     font-family: 'Yanone Kaffeesatz', sans-serif;
     font-weight: 300;
+    letter-spacing: 1px;
 }
 
 .news-navigation span {
@@ -242,14 +248,15 @@ header img {
     font-family: 'Yanone Kaffeesatz', sans-serif;
     font-weight: 300;
     text-decoration: underline;
+    letter-spacing: 1px;
 }
 
 .news-2:hover .news-img:after, .news:hover .news-img:after {
     background: rgba(0,0,0,.7);
 }
 
-.news-2{
-    height: 690px;
+.news-2 {
+    height: calc(680px + var(--bs-gutter-x));
 }
 .news {
     height: 340px;
@@ -268,6 +275,7 @@ header img {
     background: #1e2f37;
     padding: 10px 20px;
     border-radius: 10px;
+    letter-spacing: 1.3px;
 }
 
 .title {
@@ -285,14 +293,23 @@ header img {
 }
 
 footer {
+    padding: 30px 0;
     flex: 0 0;
     background: #1e2f37;
     color: white;
-    border-top: 2px solid #eca137;
 }
 
 footer p {
     margin-bottom: 0.25rem;
+    letter-spacing: 1.5px;
+}
+
+.footer-header {
+    margin-top: 0.5rem;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 500;
+    font-size: 24px;
+    letter-spacing: 1.3px;
 }
 
 .footer-title {
@@ -300,6 +317,7 @@ footer p {
     font-family: 'Oswald', sans-serif;
     font-weight: 500;
     font-size: 1.15rem;
+    letter-spacing: 1.2px;
 }
 
 .social {
@@ -352,7 +370,7 @@ footer p {
   position: absolute;
   height: 5px;
   width: 50%;
-  background: #eca137;
+  background: white;
   opacity: 1;
   -webkit-transform: rotate(0deg);
   -moz-transform: rotate(0deg);
@@ -383,7 +401,7 @@ footer p {
 }
 
 #nav-icon2 span:nth-child(5), #nav-icon2 span:nth-child(6) {
-  top: 27px;
+  top: 26px;
 }
 
 #nav-icon2.open span:nth-child(1),#nav-icon2.open span:nth-child(6) {
