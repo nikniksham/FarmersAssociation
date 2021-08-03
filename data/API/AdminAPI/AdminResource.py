@@ -4,7 +4,6 @@ from flask_restful import Resource, abort
 from data import db_session
 from data.user import User
 from data.API.AdminAPI.parser_admin import parser_admin
-from data.API.AdminAPI.put_parser_admin import put_parser_admin
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 
 
@@ -53,7 +52,7 @@ def find_by_id(id, session, status=0):
 class AdminResource(Resource):
     def get(self, email, password):
         admin, session = check_admin(email, password)
-        return jsonify({'admin': admin.to_dict(only=('id', 'name', 'surname', 'status', 'email'))})
+        return jsonify(admin.to_dict(only=('id', 'name', 'surname', 'status', 'email')))
 
     def delete(self, email, password):
         admin, session = check_admin(email, password)
@@ -83,6 +82,9 @@ class AdminResource(Resource):
                     admin.name = args["name"]
                 if key == 'surname':
                     admin.surname = args["surname"]
+                """if key == 'password':
+                    check_password(args[key])
+                    admin.set_password(password)"""
         if count == 0:
             return raise_error("Пустой запрос")
         admin_dict_2 = admin.to_dict(only=('id', 'name', 'surname', 'status', 'email'))
@@ -97,16 +99,14 @@ class AdminListRecourse(Resource):
     def get(self, email, password):
         admin, session = check_admin_status(email, password)
         admins = session.query(User).all()
-        return jsonify({'Пользователи': [item.to_dict(
-            only=('id', 'surname', 'name', 'status', 'email', 'created_date'))
-            for item in admins]})
+        return jsonify([item.to_dict(only=('id', 'surname', 'name', 'status', 'email', 'created_date')) for item in admins])
 
 
 class UserResourceAdmin(Resource):
     def get(self, email, password, user_id):
         admin, session = check_admin_status(email, password)
         user, session = find_by_id(user_id, session, admin.status)
-        return jsonify({"admin": user.to_dict(only=('id', 'surname', 'name', 'status', 'email', 'created_date'))})
+        return jsonify(user.to_dict(only=('id', 'surname', 'name', 'status', 'email', 'created_date')))
 
     def delete(self, email, password, user_id):
         admin, session = check_admin_status(email, password, 2)
@@ -153,7 +153,7 @@ class UserResourceAdmin(Resource):
 class CreateAdminResource(Resource):
     def post(self, email, password):
         admin, session = check_admin_status(email, password)
-        args = put_parser_admin.parse_args()
+        args = parser_admin.parse_args()
         if not all(args[key] is not None for key in ['surname', 'name', 'email', 'password']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания пользователя')
         if session.query(User).filter(User.email == args['email']).first():

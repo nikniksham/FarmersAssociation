@@ -24,7 +24,8 @@ from data.feedback import Feedback
 from data.newspage import Newspage
 from data.partner import Partner
 from data.smartpage import Smartpage
-from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm
+from main import PasswordManager
+from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm
 
 link_website = "http://127.0.0.1:8000/"
 app = Flask(__name__)
@@ -59,6 +60,7 @@ db_session.global_init("db/FarmersAssociation.sqlite")
 login_manager = LoginManager()
 login_manager.init_app(app)
 code_helper = CodeForConfirmation()
+password_manager = PasswordManager()
 
 
 # Получение пользователя
@@ -92,32 +94,34 @@ def login():
         user = session.query(User).filter(User.email == form.email.data).first()
         session.close()
         if user and user.check_password(form.password.data):
+            password_manager.add_user(form.email.data, form.password.data, user.status)
             login_user(user, remember=True)
             return redirect("/")
-        return render_template('login.html', message="Неправильный логин или пароль", form=form,
-                               style=url_for('static', filename='css/style.css'))
-    return render_template('login.html', title='Авторизация', form=form,
-                           style=url_for('static', filename='css/style.css'))
+        return render_template('login.html', message="Неправильный логин или пароль", form=form)
+    return render_template('login.html', title='Авторизация', form=form)
 
 
 @app.route("/")
 def website_main():
-    return render_template('main-page.html', title='Главная страница',
-                           style=url_for('static', filename='css/style.css'))
+    return render_template('main-page.html', title='Главная страница')
 
 
 @app.route("/next")
 def test_page():
-    return render_template('test_page.html', title='Наследник от главной страницы',
-                           style=url_for('static', filename='css/style.css'))
+    return render_template('test_page.html', title='Наследник от главной страницы')
 
 
 @app.route("/admin")
 @login_required
 def admin():
-    form = NewspageForm()
-    return render_template('admin-panel.html', title='админка', style=url_for('static', filename='css/style.css'),
-                           form=form)
+    return render_template('admin-panel.html', title='админка')
+
+
+@app.route("/admin-list-news")
+@login_required
+def admin_list_news():
+    newslist = get(f"{link_website}api/newspage").json()
+    return render_template('admin-list-news.html', title='Новости', newslist=newslist)
 
 
 @app.route("/admin-create-news", methods=['GET', 'POST'])
@@ -127,11 +131,11 @@ def admin_create_news():
         message = ""
         form = NewspageForm()
         if request.method == 'POST':
-            message = post(f"{link_website}api/newspage/{current_user.email}/niknik12",
-                           json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data}).json()
+            message = post(
+                f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
+                json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data}).json()
 
-        return render_template('admin-create-news.html', title='Создание новости', message=message,
-                               style=url_for('static', filename='css/style.css'), form=form)
+        return render_template('admin-news-form.html', title='Создание новости', message=message, form=form)
     return you_dont_have_permission()
 
 
@@ -140,79 +144,152 @@ def admin_create_news():
 def admin_edit_news(id):
     form = NewspageForm()
     if current_user.status > 0:
-        print("AAAAAAAAAAAAAAAAAAAAAAAA")
         message = ""
         if request.method == 'POST':
-            message = put(f"{link_website}api/newspage/{current_user.email}/niknik12/{id}",
-                          json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data}).json()
+            message = put(
+                f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
+                json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data}).json()
         else:
-            news = get(f"{link_website}api/newspage/{current_user.email}/niknik12/{id}").json()
-            if "message" not in list(news.keys()):
-                news = news["newspage"]
+            news = get(f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+            if "message" not in list(news):
                 form.heading.data = news["heading"]
                 form.text.data = news["text"]
                 form.tags.data = news["tags"]
             else:
                 message = "Новость не найдена"
-        return render_template('admin-create-news.html', title='Редактирование новости', message=message,
-                               style=url_for('static', filename='css/style.css'), form=form)
+        return render_template('admin-news-form.html', title='Редактирование новости', message=message, form=form)
     return you_dont_have_permission()
 
 
-@app.route("/admin-list-news")
+@app.route("/admin-delete-news/<int:id>", methods=['GET', 'POST'])
 @login_required
-def admin_list_news():
-    newslist = get(f"{link_website}api/newspage").json()["Новостные страницы"]
-    return render_template('admin-list-news.html', title='Новости',
-                           style=url_for('static', filename='css/style.css'), newslist=newslist)
+def admin_delete_news(id):
+    form = DeleteForm()
+    if current_user.status > 0:
+        message, name = "", "новость не найдена"
+        news = get(
+            f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+        if "message" not in news:
+            name = "новость " + news["heading"]
+        if request.method == 'POST':
+            message = delete(
+                f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+        return render_template('admin-delete-form.html', title='Удаление новости', message=message, form=form,
+                               name=name)
+    return you_dont_have_permission()
 
 
-@app.route("/admin-admin")
+@app.route("/admin-list-admin")
 @login_required
-def admin_admin():
-    admin = get(f"{link_website}/api/admin/<string:email>/<string:password>").json()
-    return render_template('admin-panel-admin.html', title='контент',
-                           style=url_for('static', filename='css/style.css'), admin=admin)
+def admin_list_admin():
+    adminlist = get(
+        f"{link_website}api/admin/list/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}").json()
+    return render_template('admin-list-admin.html', title='Новости', adminlist=adminlist)
+
+
+@app.route("/admin-create-admin", methods=['GET', 'POST'])
+@login_required
+def admin_create_admin():
+    form = AdminForm()
+    if current_user.status > 1:
+        message = ""
+        if request.method == 'POST':
+            if form.password.data == form.password_again.data:
+                form.status.data = int(form.status.data)
+                if form.status.data < current_user.status:
+                    message = post(
+                        f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
+                        json={"name": form.name.data, "surname": form.surname.data, "email": form.email.data,
+                              "password": form.password.data, "status": form.status.data}).json()
+                    form.status.data = str(form.status.data)
+                else:
+                    message = "Слишком высокий статус нового пользователя"
+            else:
+                message = "Пароли не совпадают"
+        return render_template('admin-admin-form.html', title='Создание админа', message=message, form=form, flag=True)
+    return you_dont_have_permission()
+
+
+@app.route("/admin-edit-admin/<int:id>", methods=['GET', 'POST'])
+@login_required
+def admin_edit_admin(id):
+    form = AdminForm()
+    admin = get(
+        f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+    if current_user.status > 1:
+        message = ""
+        if "message" not in admin:
+            if admin["status"] < current_user.status:
+                if request.method == 'POST':
+                    form.status.data = int(form.status.data)
+                    message = put(
+                        f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
+                        json={"name": form.name.data, "surname": form.surname.data, "email": form.email.data, "status": form.status.data}).json()
+                    form.status.data = str(form.status.data)
+                else:
+                    form.name.data = admin["name"]
+                    form.surname.data = admin["surname"]
+                    form.email.data = admin["email"]
+                    form.status.data = str(admin["status"])
+            else:
+                message = "У вас недостаточно прав для этого"
+        else:
+            message = "Пользователь не найден"
+        return render_template('admin-admin-form.html', title='Редактирование админа', message=message, form=form, flag=False)
+    return you_dont_have_permission()
+
+
+@app.route("/admin-delete-admin/<int:id>", methods=['GET', 'POST'])
+@login_required
+def admin_delete_admin(id):
+    form = DeleteForm()
+    if current_user.status > 0:
+        message, name = "", "пользователь не найден"
+        admin = get(
+            f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+        if "message" not in admin:
+            name = "админа " + f"{admin['name']} {admin['surname']}"
+        if request.method == 'POST':
+            message = delete(
+                f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+        return render_template('admin-delete-form.html', title='Удаление админа', message=message, form=form,
+                               name=name)
+    return you_dont_have_permission()
 
 
 @app.route("/admin-content")
 @login_required
 def admin_content():
     content = get(f"{link_website}/api/content").json()
-    return render_template('admin-panel-content.html', title='контент',
-                           style=url_for('static', filename='css/style.css'), content=content)
+    return render_template('admin-panel-content.html', title='контент', content=content)
 
 
 @app.route("/admin-feedback")
 @login_required
 def admin_feedback():
     feedback = get(f"{link_website}/api/feedback/<string:email>/<string:password>").json()
-    return render_template('admin-panel-feedback.html', title='контент',
-                           style=url_for('static', filename='css/style.css'), feedback=feedback)
+    return render_template('admin-panel-feedback.html', title='контент', feedback=feedback)
 
 
 @app.route("/admin-newspage")
 @login_required
 def admin_newspage():
     newspage = get(f"{link_website}/api/feedback/<string:email>/<string:password>").json()
-    return render_template('admin-panel-newspage.html', title='контент',
-                           style=url_for('static', filename='css/style.css'), newspage=newspage)
+    return render_template('admin-panel-newspage.html', title='контент', newspage=newspage)
 
 
 @app.route("/admin-partner")
 @login_required
 def admin_partner():
     partner = get(f"{link_website}/api/partner/<string:email>/<string:password>").json()
-    return render_template('admin-panel-partner.html', title='контент',
-                           style=url_for('static', filename='css/style.css'), partner=partner)
+    return render_template('admin-panel-partner.html', title='контент', partner=partner)
 
 
 @app.route("/admin-smartpage")
 @login_required
 def admin_smartpage():
     smartpage = get(f"{link_website}/api/smartpage/<string:email>/<string:password>").json()
-    return render_template('admin-panel-smartpage.html', title='контент',
-                           style=url_for('static', filename='css/style.css'), smartpage=smartpage)
+    return render_template('admin-panel-smartpage.html', title='контент', smartpage=smartpage)
 
 
 if __name__ == '__main__':

@@ -55,8 +55,7 @@ class NewspageResource(Resource):
     def get(self, email, password, newspage_id):
         admin, session = check_admin_status(email, password)
         newspage, session = find_by_id(newspage_id, session)
-        return jsonify({'newspage': newspage.to_dict(
-            only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date', 'author_id'))})
+        return jsonify(newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date', 'author_id')))
 
     def delete(self, email, password, newspage_id):
         admin, session = check_admin_status(email, password)
@@ -100,15 +99,14 @@ class NewspageResourceUsual(Resource):
     def get(self, newspage_id):
         session = db_session.create_session()
         newspage, session = find_by_id(newspage_id, session)
-        return jsonify({'newspage': newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags'))})
+        return jsonify(newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags')))
 
 
 class NewspageListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
-        newspages = session.query(Newspage).all()
-        return jsonify({'Новостные страницы': [
-            item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags')) for item in newspages]})
+        newspages = session.query(Newspage).order_by(Newspage.created_date)[::-1]
+        return jsonify([item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags')) for item in newspages])
 
 
 class CreateNewspageResource(Resource):

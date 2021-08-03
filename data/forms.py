@@ -21,7 +21,7 @@ class AdminForm(StartForm):
     email = StringField('Почта', validators=[DataRequired()])
     password = PasswordField('Пароль', validators=[DataRequired()])
     password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
-    status = SelectField("Права доступа", choices=[(i, ["Модератор", "Админ", "Владелец"][i]) for i in range(stat - 1)])
+    status = SelectField("Права доступа", choices=[(i, ["Без прав", "Модератор", "Админ", "Владелец"][i]) for i in range(stat)])
     submit = SubmitField("Готово")
 
 
@@ -48,3 +48,7 @@ class PartnerForm(StartForm):
     name = StringField('Название', validators=[DataRequired()])
     text = StringField('О партнёре', validators=[DataRequired()])
     link = StringField('Ссылка', validators=[DataRequired()])
+
+
+class DeleteForm(FlaskForm):
+    submit = SubmitField("Подтвердить")

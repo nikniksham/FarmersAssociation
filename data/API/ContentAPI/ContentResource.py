@@ -41,8 +41,8 @@ class ContentResource(Resource):
     def get(self, email, password, content_id):
         admin, session = check_admin_status(email, password)
         content, session = find_by_id(content_id, session)
-        return jsonify({'Контент': content.to_dict(
-            only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))})
+        return jsonify(content.to_dict(
+            only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id')))
 
     def delete(self, email, password, content_id):
         admin, session = check_admin_status(email, password)
@@ -108,7 +108,8 @@ class ContentResource(Resource):
             only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
         list_chang = [f'изменяет {key} с {cont_dict[key]} на {cont_dict_2[key]}' for key in keys]
         session.commit()
-        add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет блок контента: {', '.join(list_chang)}", admin,
+        add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет блок контента: {', '.join(list_chang)}",
+                     admin,
                      datetime.datetime.now())
         return jsonify({"success": f"Блок контента на позиции {content.position} успешно изменен"})
 
@@ -117,9 +118,9 @@ class ContentListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
         contents = session.query(Content).all()
-        return jsonify({'Контент': [item.to_dict(
+        return jsonify([item.to_dict(
             only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
-            for item in contents]})
+            for item in contents])
 
 
 class CreateContentResource(Resource):

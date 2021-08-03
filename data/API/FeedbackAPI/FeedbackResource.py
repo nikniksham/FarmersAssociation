@@ -52,7 +52,7 @@ class FeedbackResource(Resource):
     def get(self, email, password, feedback_id):
         admin, session = check_admin_status(email, password)
         feedback, session = find_by_id(feedback_id, session)
-        return jsonify({'feedback': feedback.to_dict(only=('fullname', 'heading', 'email', 'image', 'text', 'created_date'))})
+        return jsonify(feedback.to_dict(only=('fullname', 'heading', 'email', 'image', 'text', 'created_date')))
 
     def delete(self, email, password, feedback_id):
         admin, session = check_admin_status(email, password)
@@ -60,7 +60,8 @@ class FeedbackResource(Resource):
         fullname = feedback.fullname
         session.delete(feedback)
         session.commit()
-        add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет отзыв {fullname}", admin, datetime.datetime.now())
+        add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет отзыв {fullname}", admin,
+                     datetime.datetime.now())
         return jsonify({"success": f"Отзыв {fullname} успешно удален"})
 
 
@@ -68,8 +69,8 @@ class FeedbackListRecourse(Resource):
     def get(self, email, password):
         admin, session = check_admin_status(email, password)
         feedbacks = session.query(Feedback).all()
-        return jsonify({'Отзывы': [
-            item.to_dict(only=('fullname', 'heading', 'email', 'image', 'text', 'created_date')) for item in feedbacks]})
+        return jsonify([item.to_dict(only=('fullname', 'heading', 'email', 'image', 'text', 'created_date')) for item in
+                        feedbacks])
 
 
 class CreateFeedbackResource(Resource):

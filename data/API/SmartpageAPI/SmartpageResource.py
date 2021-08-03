@@ -41,7 +41,7 @@ class SmartpageResource(Resource):
     def get(self, email, password, smartpage_id):
         admin, session = check_admin_status(email, password)
         smartpage, session = find_by_id(smartpage_id, session)
-        return jsonify({'smartpage': smartpage.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id'))})
+        return jsonify(smartpage.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id')))
 
     def delete(self, email, password, smartpage_id):
         admin, session = check_admin_status(email, password)
@@ -84,8 +84,7 @@ class SmartpageListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
         smartpages = session.query(Smartpage).all()
-        return jsonify({'Страницы': [item.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id'))
-                                     for item in smartpages]})
+        return jsonify([item.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id')) for item in smartpages])
 
 
 class CreateSmartpageResource(Resource):

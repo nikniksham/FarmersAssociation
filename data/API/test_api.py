@@ -11,12 +11,12 @@ test_post = True
 test_put = True
 test_delete = True
 
-test_admin_api = True
-test_smartpage_api = True
-test_content = True
-test_newspage = True
-test_partner = True
-test_feedback = True
+test_admin_api = False
+test_smartpage_api = False
+test_content = False
+test_newspage = False
+test_partner = False
+test_feedback = False
 test_auditlog = True
 
 # pbkdf2:sha256:150000$ienbNff2$f899740f7999e24b06b519d5305cf8f2e34643033b6e3086fff3e0c8e39d795b
@@ -213,5 +213,5 @@ if test_feedback:
 
 if test_auditlog:
     print(get(f"{link_website}api/auditlog/{test_admin['email']}/{test_admin['password']}/1").json())
-    for log in get(f"{link_website}api/auditlog/{test_admin['email']}/{test_admin['password']}").json()["Записи"]:
+    for log in get(f"{link_website}api/auditlog/{test_admin['email']}/{test_admin['password']}").json():
         print(log)

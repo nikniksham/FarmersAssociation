@@ -40,7 +40,7 @@ class PartnerResource(Resource):
     def get(self, email, password, partner_id):
         admin, session = check_admin_status(email, password)
         partner, session = find_by_id(partner_id, session)
-        return jsonify({'partner': partner.to_dict(only=('id', 'name', 'image', 'text', 'link', 'created_date', 'author_id'))})
+        return jsonify(partner.to_dict(only=('id', 'name', 'image', 'text', 'link', 'created_date', 'author_id')))
 
     def delete(self, email, password, partner_id):
         admin, session = check_admin_status(email, password)
@@ -88,16 +88,14 @@ class PartnerResourceUsual(Resource):
     def get(self, partner_id):
         session = db_session.create_session()
         partner, session = find_by_id(partner_id, session)
-        return jsonify({'partner': partner.to_dict(only=('id', 'name', 'image', 'text', 'link'))})
+        return jsonify(partner.to_dict(only=('id', 'name', 'image', 'text', 'link')))
 
 
 class PartnerListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
         partners = session.query(Partner).all()
-        return jsonify({'Партнёры': [
-            item.to_dict(only=('id', 'name', 'image', 'text', 'link')) for item in
-            partners]})
+        return jsonify([item.to_dict(only=('id', 'name', 'image', 'text', 'link')) for item in partners])
 
 
 class CreatePartnerResource(Resource):

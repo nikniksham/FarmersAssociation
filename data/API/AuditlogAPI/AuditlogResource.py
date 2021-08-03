@@ -37,16 +37,14 @@ class AuditlogResource(Resource):
     def get(self, email, password, auditlog_id):
         admin, session = check_admin_status(email, password)
         content, session = find_by_id(auditlog_id, session)
-        return jsonify({'Запись': content.to_dict(
-            only=('id', 'event', 'info', 'user', 'created_date'))})
+        return jsonify(content.to_dict(only=('id', 'event', 'info', 'user', 'created_date')))
 
 
 class AuditlogListRecourse(Resource):
     def get(self, email, password):
         admin, session = check_admin_status(email, password)
         contents = session.query(AuditLog).order_by(AuditLog.created_date).all()
-        return jsonify(
-            {'Записи': [item.to_dict(only=('id', 'event', 'info', 'user', 'created_date')) for item in contents]})
+        return jsonify([item.to_dict(only=('id', 'event', 'info', 'user', 'created_date')) for item in contents])
 
 
 def add_auditlog(event, info, user, datetime):
