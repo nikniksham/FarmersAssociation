@@ -8,9 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Yanone+Kaffeesatz:wght@300;400&display=swap" rel="stylesheet">
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/css/slick.css" rel="stylesheet">
-    <link href="/static/css/slick-theme.css" rel="stylesheet">
     <link href="/static/css/style.css" rel="stylesheet">
+    {% block head %}{% endblock %}
 </head>
 <body>
     <div class="navigation">
@@ -32,7 +31,9 @@
             <span></span>
         </div>
     </header>
-    {% block pageblock %}{% endblock %}
+    <div class="main-block">
+        {% block pageblock %}{% endblock %}
+    </div>
     <footer>
         <div class="container">
             <div class="row">
@@ -72,15 +73,9 @@
             </div>
         </div>
     </footer>
-    <script scr="static/js/bootstrap.min.js"></script>
-    <script src="static/js/jquery.min.js"></script>
-    <script src="static/js/footer.js"></script>
-    <script src="static/js/slick.js"></script>
-    <script src="static/js/carousels.js"></script>
-    <script>
-        var boolAutoplay = false
-        var speedNews = 3000
-        var speedPartners = 2000
-    </script>
+    <script scr="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/footer.js"></script>
+    {% block end %}{% endblock %}
 </body>
 </html>

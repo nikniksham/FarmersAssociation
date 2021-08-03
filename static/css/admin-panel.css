@@ -215,8 +215,17 @@ div.un-visible {
     padding: 0 5px;
 }
 
-.settings-element-edit, .settings-element-delete, .settings-element-add, .settings-element-move, settings-element-title {
-    font-size: 20px;
+.settings-element-edit, .settings-element-delete, .settings-element-add, .settings-element-move, settings-element-title, .message-success, .message-error {
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+.message-success {
+    color: green;
+}
+
+.message-error {
+    color: red;
 }
 
 .admin-nav {

@@ -1,18 +1,23 @@
 {% extends "admin-panel.html" %}
 
+{% block adninhead %}
+<title>Удалить {{name}}</title>
+{% endblock %}
+
 {% block adminblock %}
-<div class="admin-settings">
-    <p class="settings-title">{{title}}</p>
-    <div class="settings">
-        <form action="" method="post">
-            <p>Вы уверены, что хотите удалить {{name}}</p>
-            <div class="main">
-                {{ form.hidden_tag() }}
-                <div class="submit-block">
-                    {{ form.submit(type="submit", class="btn btn-primary submit") }}
-                </div>
+<p class="settings-title">{{title}}</p>
+<div class="settings">
+    <form action="" method="post">
+        <p>Вы уверены, что хотите удалить {{name}}</p>
+        <div class="main">
+            {{ form.hidden_tag() }}
+            <div class="submit-block">
+                {{ form.submit(type="submit", class="btn btn-primary submit") }}
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
+{% endblock %}
+
+{% block adminend %}
 {% endblock %}

@@ -1,111 +1,30 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Шапка и подвал</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com/">
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Yanone+Kaffeesatz:wght@300;400&display=swap" rel="stylesheet">
-    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/css/slick.css" rel="stylesheet">
-    <link href="/static/css/slick-theme.css" rel="stylesheet">
-    <link href="/static/css/style.css" rel="stylesheet">
-    <link href="/static/css/admin-panel.css" rel="stylesheet">
-</head>
-<body>
-<div class="navigation">
-    <div class="navigation-hrefs">
-        <a>Агро и Агро-туристический сектор</a>
-        <a>Партнёры</a>
-        <a>Все новости</a>
-        <a>Команда</a>
-        <a>Контакты</a>
-    </div>
+{% extends "main.html" %}
+
+{% block head %}
+<link href="/static/css/admin-panel.css" rel="stylesheet">
+{% block adninhead %}{% endblock %}
+{% endblock %}
+
+{% block pageblock %}
+<div class="admin-nav-block">
+    <a name="SEO" class="admin-nav" href="">
+        <div>SEO</div>
+    </a>
+    <a name="News" class="admin-nav" href="/admin-list-news">
+        <div>Новости</div>
+    </a>
+    <a name="EditNews" class="admin-nav" href="/admin-list-admin">
+        <div>Админы</div>
+    </a>
 </div>
-<header>
-    <div id="nav-icon2">
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
-</header>
-<div class="main-block">
-    <div class="admin-nav-block">
-        <a name="SEO" class="admin-nav" href="">
-            <div>SEO</div>
-        </a>
-        <a name="News" class="admin-nav" href="/admin-list-news">
-            <div>Новости</div>
-        </a>
-        <a name="EditNews" class="admin-nav" href="/admin-list-admin">
-            <div>Админы</div>
-        </a>
-    </div>
-    <div class="admin-settings-block">
+<div class="admin-settings-block">
+    <div class="admin-settings">
         {% block adminblock %}{% endblock %}
     </div>
 </div>
-<footer>
-    <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <p class="footer-header">Контакты</p>
-            </div>
-            <div class="col-sm-6 col-md-4 col-xl-4">
-                <p class="footer-title">Где мы</p>
-                <p>Москва, Усачева, 24, 119048, Российская Федерация</p>
-            </div>
-            <div class="col-sm-6 col-md-5 col-xl-4">
-                <p class="footer-title">Почтовый адрес</p>
-                <p>Москва, Гоголевский бульвар, дом 21, 119991, Российская Федерация</p>
-            </div>
-            <div class="col-sm-12 col-md-3 col-xl-4">
-                <div class="row">
-                    <div class="col-md-12 col-xl-6">
-                        <p class="footer-title">Телефон</p>
-                        <a href="tel:+74952872525">+7 (495) 287-25-25</a>
-                    </div>
-                    <div class="col-md-12 col-xl-6">
-                        <p class="footer-title">e-mail</p>
-                        <a href="mailto:info@rostec.ru">info@rostec.ru</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12">
-                <div class="social">
-                    <p class="footer-title">Мы в соц. сетях:</p>
-                    <a href="https://facebook.com/sirotaoleg" target="_blank"><img src="/static/img/facebook.png"
-                                                                                   alt="facebook"></a>
-                    <a href="https://instagram.com/fermaroigas/" target="_blank"><img src="/static/img/instagram.png"
-                                                                                      alt="instagram"></a>
-                    <a href=" https://instagram.com/sirotaoleg/" target="_blank"><img src="/static/img/instagram.png"
-                                                                                      alt="instargam"></a>
-                    <a href="  https://instagram.com/veselaya.korova/" target="_blank"><img
-                            src="/static/img/instagram.png" alt="instargam"></a>
-                    <a href="  https://instagram.com/sotovhoney/" target="_blank"><img src="/static/img/instagram.png"
-                                                                                       alt="instargam"></a>
-                </div>
-            </div>
-        </div>
-    </div>
-</footer>
-<script scr="/static/js/bootstrap.min.js"></script>
-<script src="/static/js/jquery.min.js"></script>
-<script src="/static/js/footer.js"></script>
-<script src="/static/js/slick.js"></script>
-<script src="/static/js/carousels.js"></script>
+{% endblock %}
+
+{% block end %}
 <script src="/static/js/admin.js"></script>
-<script>
-        var boolAutoplay = false
-        var speedNews = 3000
-        var speedPartners = 2000
-
-
-</script>
-</body>
-</html>
+{% block adminend %}{% endblock %}
+{% endblock %}
