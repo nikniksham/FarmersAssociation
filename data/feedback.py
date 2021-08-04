@@ -7,6 +7,7 @@ from datetime import datetime
 class Feedback(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'feedback'
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+    heading = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     fullname = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     email = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     image = sqlalchemy.Column(sqlalchemy.String, nullable=True)
