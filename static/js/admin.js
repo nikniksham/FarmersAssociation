@@ -3,7 +3,10 @@ var count_images = 1
 
 
 function addImage(num) {
-    document.getElementById("images"+num).innerHTML += '<div class="input-file-row-1"><div class="upload-file-container"><div class="delete-image"></div><img id="image'+count_images+'" class="this-is-image" src="#" alt=""/><input type="file" name="image'+count_images+'" class="photo" id="imgInput'+count_images+'"/></div></div>'
+    let block = document.createElement('div');
+    block.className = "input-file-row-1";
+    block.innerHTML = '<div class="upload-file-container"><div class="delete-image"></div><img id="image'+count_images+'" class="this-is-image" src="#" alt=""/><input type="file" name="image'+count_images+'" class="photo" id="imgInput'+count_images+'"/></div>';
+    document.getElementById("images"+num).append(block);
     count_images += 1;
     $('[id^="imgInput"]').change(function(){
         console.log('loadImage');
@@ -35,17 +38,19 @@ function addImage(num) {
 
 function readURL(input) {
     if (input.files && input.files[0]) {
-        var reader = new FileReader();
         var num = parseInt(input.id.match(/\d+/))
-        console.log(num);
-        reader.onload = function (e) {
-            $('#image'+num).attr('src', e.target.result);
+        var fr = new FileReader();
+        console.log(1)
+        fr.onload = function () {
+            console.log(2)
+            $('#image'+num).attr('src', fr.result);
+            console.log(3)
             if ($('#image'+num).attr('class') === 'this-is-image') {
                 addImage(parseInt($($($(input).closest('.settings-images')).children()[0]).attr('id').match(/\d+/)));
                 $('#image'+num).toggleClass("visible");
             }
-        };
-        reader.readAsDataURL(input.files[0]);
+        }
+        fr.readAsDataURL(input.files[0]);
     }
 }
 

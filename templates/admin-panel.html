@@ -5,6 +5,17 @@
 {% block adninhead %}{% endblock %}
 {% endblock %}
 
+{% block header %}
+<div id="nav-icon1" class="open left-burger">
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+</div>
+{% endblock %}
+
 {% block pageblock %}
 <div class="admin-nav-block">
     <a name="SEO" class="admin-nav" href="">
@@ -38,5 +49,6 @@
 
 {% block end %}
 <script src="/static/js/admin.js"></script>
+<script src="/static/js/admin-close-panel.js"></script>
 {% block adminend %}{% endblock %}
 {% endblock %}
