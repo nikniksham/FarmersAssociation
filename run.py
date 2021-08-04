@@ -546,7 +546,7 @@ def admin_delete_partner(id):
 @login_required
 def admin_auditlog():
     auditlogs = get(f"{link_website}/api/auditlog/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}").json()
-    return render_template('admin-auditlog-list.html', title='Журнал аудита', auditlogs=auditlogs)
+    return render_template('admin-list-auditlog.html', title='Журнал аудита', auditlogs=auditlogs)
 
 
 @app.route("/admin-list-feedback")
