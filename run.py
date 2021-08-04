@@ -26,10 +26,13 @@ from data.partner import Partner
 from data.smartpage import Smartpage
 from main import PasswordManager
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm
+from werkzeug.utils import secure_filename
+
 
 link_website = "http://127.0.0.1:8000/"
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(30)
+app.config['UPLOAD_FOLDER'] = 'static/img/'
 # app.config["DEBUG"] = False
 # app.config["TESTING"] = False
 api = Api(app)
@@ -69,6 +72,12 @@ password_manager = PasswordManager()
 def load_user(user_id):
     session = db_session.create_session()
     return session.query(User).get(user_id)
+
+
+def allowed_file(filename):
+    ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg']
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def main(port=8000):
@@ -152,7 +161,19 @@ def admin_edit_news(id):
     if current_user.status > 0:
         message, result = None, False
         if request.method == 'POST':
-            # загрузка как в site for tanya
+            # проходимся по названиямфайлов
+            for name in request.files:
+                # выбираем файл
+                file = request.files[name]
+                # проверяем файл
+                if file.filename != "":
+                    if file and allowed_file(file.filename):
+                        # создаём норм имя (кирилица не работает)
+                        filename = secure_filename(file.filename)
+                        # сохраняаем файл
+                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    else:
+                        print("неправильный тип файла")
             message = put(
                 f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
                 json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data}).json()
@@ -554,6 +575,14 @@ def admin_auditlog():
 def admin_feedback():
     feedbacks = get(f"{link_website}/api/feedback/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}").json()
     return render_template('admin-feedback-list.html', title='Отзывы', feedbacks=feedbacks)
+
+
+@app.route("/test", methods=['GET', 'POST'])
+def test():
+    if request.method == 'POST':
+        print(request.files)
+        file = request.files['file']
+    return render_template('test.html')
 
 
 if __name__ == '__main__':
