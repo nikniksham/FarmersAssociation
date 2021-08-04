@@ -1,14 +1,17 @@
 {% extends "admin-panel.html" %}
 
-{% block adninhead %}
-<title>{{title}}</title>
-{% endblock %}
-
 {% block adminblock %}
 <p class="settings-title">{{title}}</p>
 <div class="settings">
     <form action="" method="post">
         <div class="main">
+            {% if message %}
+            {% if result %}
+            <p class="message-success">{{message}}</p>
+            {% else %}
+            <p class="message-error">{{message}}</p>
+            {% endif %}
+            {% endif %}
             {{ form.hidden_tag() }}
             {{ form.name.label }}<br>
             {{ form.name(class="form-control") }}<br>
@@ -66,7 +69,4 @@
         </div>
     </form>
 </div>
-{% endblock %}
-
-{% block adminend %}
 {% endblock %}

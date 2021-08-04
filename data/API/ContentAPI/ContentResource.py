@@ -47,7 +47,7 @@ class ContentResource(Resource):
     def delete(self, email, password, content_id):
         admin, session = check_admin_status(email, password)
         content, session = find_by_id(content_id, session)
-        position, c_pos = content.position, 1
+        position, c_pos, type = content.position, 1, content.type
         session.delete(content)
         blocks = session.query(Content).filter(Content.smartpage_id == content.smartpage_id).order_by(
             Content.position).all()
@@ -55,7 +55,7 @@ class ContentResource(Resource):
             block.position, c_pos = c_pos, c_pos + 1
         session.commit()
         add_auditlog("Удаление",
-                     f"{admin.name} {admin.surname} удаляет блок контента на позиции: {position}, с типом данных: {content.type}",
+                     f"{admin.name} {admin.surname} удаляет блок контента на позиции: {position}, с типом данных: {type}",
                      admin, datetime.datetime.now())
         return jsonify({"success": f"Блок контента на позиции {position} успешно удален"})
 
@@ -84,7 +84,6 @@ class ContentResource(Resource):
                         blocks = session.query(Content).filter(Content.smartpage_id == content.smartpage_id).order_by(
                             Content.position).all()
                         for block in blocks:
-                            print(pos)
                             block.position, pos = pos, pos + 1
                     else:
                         elem = session.query(Content).filter(Content.smartpage_id == content.smartpage_id).filter(
@@ -107,17 +106,26 @@ class ContentResource(Resource):
         cont_dict_2 = content.to_dict(
             only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
         list_chang = [f'изменяет {key} с {cont_dict[key]} на {cont_dict_2[key]}' for key in keys]
+        # print([block.type for block in session.query(Content).order_by(Content.position).all()])
         session.commit()
         add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет блок контента: {', '.join(list_chang)}",
-                     admin,
-                     datetime.datetime.now())
+                     admin, datetime.datetime.now())
         return jsonify({"success": f"Блок контента на позиции {content.position} успешно изменен"})
 
 
 class ContentListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
-        contents = session.query(Content).all()
+        contents = session.query(Content).order_by(Content.position).all()
+        return jsonify([item.to_dict(
+            only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
+            for item in contents])
+
+
+class ContentListRecourseId(Resource):
+    def get(self, page_id):
+        session = db_session.create_session()
+        contents = session.query(Content).filter(Content.smartpage_id == page_id).order_by(Content.position).all()
         return jsonify([item.to_dict(
             only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
             for item in contents])
@@ -127,7 +135,7 @@ class CreateContentResource(Resource):
     def post(self, email, password):
         admin, session = check_admin_status(email, password)
         args = parser_content.parse_args()
-        if not all(args[key] is not None for key in ['type', 'position', 'page_id']):
+        if not all(args[key] is not None for key in ['type', 'page_id']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания страницы')
         page = session.query(Smartpage).get(args["page_id"])
         if page is None:
@@ -138,7 +146,7 @@ class CreateContentResource(Resource):
         if elem is not None:
             blocks = session.query(Content).filter(Content.smartpage_id == args['page_id']).order_by(
                 Content.position).all()
-            pos = args["position"]
+            pos = args["position"] if args["position"] else blocks[-1]["position"] + 1
             new_content.position = pos
             for block in blocks:
                 if block.position == pos:

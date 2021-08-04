@@ -1,0 +1,32 @@
+{% extends "admin-panel.html" %}
+
+{% block adminblock %}
+<p class="settings-title">{{title}}</p>
+<div class="settings">
+    <p>Список страниц</p>
+    <div class="settings-add">
+        <a class="settings-element-add" href="/admin-create-smartpage">Добавить</a>
+    </div>
+    {% for page in smartpagelist %}
+    <div class="settings-element">
+        <p class="settings-element-title">{{page['heading']}}</p>
+        <a class="settings-element-edit" href="/admin-create-content/{{page['id']}}">Добавть блок контента</a>
+        <a class="settings-element-edit" href="/admin-edit-smartpage/{{page['id']}}">Изменить</a>
+        <a class="settings-element-delete" href="/admin-delete-smartpage/{{page['id']}}">Удалить</a>
+    </div>
+    {% for content in contentdict[page['id']] %}
+    <div class="settings-element">
+        <p class="settings-element-title">{{content['type']}}</p>
+        {% if content != contentdict[page['id']][-1] %}
+        <a class="settings-element-move" href="/admin-edit-move-down/{{content['id']}}">↓</a>
+        {% endif %}
+        {% if content != contentdict[page['id']][0] %}
+        <a class="settings-element-move" href="/admin-edit-move-up/{{content['id']}}">↑</a>
+        {% endif %}
+        <a class="settings-element-edit" href="/admin-edit-content/{{content['id']}}">Изменить</a>
+        <a class="settings-element-delete" href="/admin-delete-content/{{content['id']}}">Удалить</a>
+    </div>
+    {% endfor %}
+    {% endfor %}
+</div>
+{% endblock %}

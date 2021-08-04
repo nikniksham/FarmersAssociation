@@ -1,6 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import PasswordField, StringField, TextAreaField, SubmitField, BooleanField, SelectField
-from wtforms.fields.html5 import EmailField
+from wtforms import PasswordField, StringField, TextAreaField, SubmitField, SelectField
 from wtforms.validators import DataRequired
 
 
@@ -16,17 +15,20 @@ class NewspageForm(StartForm):
 
 class AdminForm(StartForm):
     stat = 3
+
     name = StringField('Имя', validators=[DataRequired()])
     surname = StringField('Фамилия', validators=[DataRequired()])
     email = StringField('Почта', validators=[DataRequired()])
     password = PasswordField('Пароль', validators=[DataRequired()])
     password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
-    status = SelectField("Права доступа", choices=[(i, ["Без прав", "Модератор", "Админ", "Владелец"][i]) for i in range(stat)])
+    status = SelectField("Права доступа",
+                         choices=[(i, ["Без прав", "Модератор", "Админ", "Владелец"][i]) for i in range(stat)])
     submit = SubmitField("Готово")
 
 
 class ContentForm(StartForm):
-    type = SelectField('Тип', choices=[(1, "Новостной"), (2, "Текстовой"), (3, "С картинками")])
+    type = SelectField('Тип', choices=[("Новостной", "Новостной"), ("Текстовой", "Текстовой"),
+                                       ("С картинками", "С картинками")])
     # animation_type = StringField('Тип анимации', validators=[DataRequired()])
     text = StringField('Текст', validators=[DataRequired()])
     tags = StringField('Тэги', validators=[DataRequired()])

@@ -9,6 +9,13 @@
 <div class="settings">
     <form action="" method="post">
         <p>Вы уверены, что хотите удалить {{name}}</p>
+        {% if message %}
+        {% if result %}
+        <p class="message-success">{{message}}</p>
+        {% else %}
+        <p class="message-error">{{message}}</p>
+        {% endif %}
+        {% endif %}
         <div class="main">
             {{ form.hidden_tag() }}
             <div class="submit-block">

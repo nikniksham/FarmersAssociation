@@ -12,10 +12,10 @@
             <p class="message-error">{{message}}</p>
             {% endif %}
             {% endif %}
-            {{ form.hidden_tag() }}
-            {{ form.heading.label }}<br>
-            {{ form.heading(class="form-control") }}<br>
-            {% for error in form.heading.errors %}
+
+            {{ form.name.label }}<br>
+            {{ form.name(class="form-control") }}<br>
+            {% for error in form.name.errors %}
             <div class="alert alert-danger" role="alert">
                 {{ error }}
             </div>
@@ -29,9 +29,9 @@
             </div>
             {% endfor %}
 
-            {{ form.tags.label }}<br>
-            {{ form.tags(class="form-control") }}<br>
-            {% for error in form.tags.errors %}
+            {{ form.link.label }}<br>
+            {{ form.link(class="form-control") }}<br>
+            {% for error in form.link.errors %}
             <div class="alert alert-danger" role="alert">
                 {{ error }}
             </div>

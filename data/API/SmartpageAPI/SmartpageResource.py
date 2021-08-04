@@ -46,6 +46,12 @@ class SmartpageResource(Resource):
     def delete(self, email, password, smartpage_id):
         admin, session = check_admin_status(email, password)
         smartpage, session = find_by_id(smartpage_id, session)
+        contentlist = session.query(Content).filter(Content.smartpage_id == smartpage.id).all()
+        for content in contentlist:
+            add_auditlog("Удаление",
+                         f"{admin.name} {admin.surname} удаляет блок контента на позиции: {content.position}, с типом данных: {content.type}",
+                         admin, datetime.datetime.now())
+            session.delete(content)
         heading = smartpage.heading
         session.delete(smartpage)
         session.commit()
@@ -69,13 +75,17 @@ class SmartpageResource(Resource):
                 if key == 'image':
                     smartpage.image = args['image']
                 if key == 'heading':
+                    if session.query(Smartpage).filter(Smartpage.heading == args["heading"]).first() is not None:
+                        raise_error("Этот заголовок уже занят")
                     smartpage.heading = args["heading"]
         if count == 0:
             return raise_error("Пустой запрос")
         page_dict_2 = smartpage.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id'))
         list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' for key in keys]
         session.commit()
-        add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет страницу {smartpage.heading}: {', '.join(list_chang)}", admin,
+        add_auditlog("Изменение",
+                     f"{admin.name} {admin.surname} изменяет страницу {smartpage.heading}: {', '.join(list_chang)}",
+                     admin,
                      datetime.datetime.now())
         return jsonify({"success": f"Страница {smartpage.heading} успешно изменена"})
 
@@ -84,7 +94,8 @@ class SmartpageListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
         smartpages = session.query(Smartpage).all()
-        return jsonify([item.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id')) for item in smartpages])
+        return jsonify(
+            [item.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id')) for item in smartpages])
 
 
 class CreateSmartpageResource(Resource):
@@ -93,6 +104,8 @@ class CreateSmartpageResource(Resource):
         args = parser_smartpage.parse_args()
         if not all(args[key] is not None for key in ['heading']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания страницы')
+        if session.query(Smartpage).filter(Smartpage.heading == args["heading"]).first() is not None:
+            raise_error("Этот заголовок уже занят")
         new_smartpage = Smartpage()
         new_smartpage.heading = args["heading"]
         new_smartpage.image = args['image'] if args['image'] is not None else "standard.png"
