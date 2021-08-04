@@ -39,20 +39,22 @@
             <p>Изображения</p>
             <div class="settings-images">
                 <div id="images1">
+                    {% if filenames %}
+                    {% for filename in filenames %}
                     <div class="input-file-row-1">
-                        {% if filenames %}
-                        {% for filename in filenames %}
                         <div class="upload-file-container">
                             <div class="delete-image"></div>
                             <img id="image{{loop.index}}" class="visible" src="/static/img/{{filename}}" alt="">
-                            <input type=file name=file class="photo" id="imgInput{{loop.index}}">
+                            <input type=file name=image{{loop.index}} class="photo" id="imgInput{{loop.index}}">
                         </div>
-                        {% endfor %}
-                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    <div class="input-file-row-1">
                         <div class="upload-file-container">
                             <div class="delete-image"></div>
-                            <img id="image1" class="this-is-image" src="#" alt="">
-                            <input type=file name=file class="photo" id="imgInput{{image_len}}">
+                            <img id="image{{image_len}}" class="this-is-image" src="#" alt="">
+                            <input type=file name=imgInput{{image_len}} class="photo" id="imgInput{{image_len}}">
                         </div>
                     </div>
                 </div>
