@@ -1,0 +1,13 @@
+{% extends "admin-panel.html" %}
+
+{% block adminblock %}
+<p class="settings-title">{{title}}</p>
+<div class="settings">
+    <p>Журнал аудита</p>
+    {% for auditlog in auditlogs %}
+    <div class="settings-element">
+        <p class="settings-element-title">{{auditlog['info']}}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

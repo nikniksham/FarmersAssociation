@@ -541,11 +541,18 @@ def admin_delete_partner(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-feedback")
+@app.route("/admin-list-auditlog")
+@login_required
+def admin_auditlog():
+    auditlogs = get(f"{link_website}/api/auditlog/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}").json()
+    return render_template('admin-auditlog-list.html', title='Журнал аудита', auditlogs=auditlogs)
+
+
+@app.route("/admin-list-feedback")
 @login_required
 def admin_feedback():
-    feedback = get(f"{link_website}/api/feedback/<string:email>/<string:password>").json()
-    return render_template('admin-panel-feedback.html', title='контент', feedback=feedback)
+    feedbacks = get(f"{link_website}/api/feedback/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}").json()
+    return render_template('admin-feedback-list.html', title='Отзывы', feedbacks=feedbacks)
 
 
 if __name__ == '__main__':
