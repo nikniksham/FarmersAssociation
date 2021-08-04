@@ -152,6 +152,7 @@ def admin_edit_news(id):
     if current_user.status > 0:
         message, result = None, False
         if request.method == 'POST':
+            # загрузка как в site for tanya
             message = put(
                 f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
                 json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data}).json()
