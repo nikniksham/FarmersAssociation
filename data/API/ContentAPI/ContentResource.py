@@ -123,9 +123,9 @@ class ContentListRecourse(Resource):
 
 
 class ContentListRecourseId(Resource):
-    def get(self, page_id):
+    def get(self, smartpage_id):
         session = db_session.create_session()
-        contents = session.query(Content).filter(Content.smartpage_id == page_id).order_by(Content.position).all()
+        contents = session.query(Content).filter(Content.smartpage_id == smartpage_id).order_by(Content.position).all()
         return jsonify([item.to_dict(
             only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
             for item in contents])

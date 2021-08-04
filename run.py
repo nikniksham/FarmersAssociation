@@ -10,13 +10,15 @@ from data import db_session
 from data.API.AdminAPI.AdminResource import CreateAdminResource, AdminResource, AdminListRecourse, UserResourceAdmin
 from data.API.AuditlogAPI.AuditlogResource import AuditlogResource, AuditlogListRecourse
 from data.API.ConfirmationCodeAPI.ConfirmationcodeResource import CodeForConfirmation
-from data.API.ContentAPI.ContentResource import CreateContentResource, ContentResource, ContentListRecourse, ContentListRecourseId
+from data.API.ContentAPI.ContentResource import CreateContentResource, ContentResource, ContentListRecourse, \
+    ContentListRecourseId
 from data.API.FeedbackAPI.FeedbackResource import FeedbackResource, FeedbackListRecourse, CreateFeedbackResource
 from data.API.NewspageAPI.NewspageResource import NewspageResource, NewspageListRecourse, CreateNewspageResource, \
     NewspageResourceUsual
 from data.API.PartnerAPI.PartnerResource import PartnerResource, PartnerResourceUsual, PartnerListRecourse, \
     CreatePartnerResource
-from data.API.SmartpageAPI.SmartpageResource import CreateSmartpageResource, SmartpageResource, SmartpageListRecourse
+from data.API.SmartpageAPI.SmartpageResource import CreateSmartpageResource, SmartpageResource, SmartpageListRecourse, \
+    SmartpageRecourseUsual
 from data.user import User
 from data.auditlog import AuditLog
 from data.content import Content
@@ -27,7 +29,6 @@ from data.smartpage import Smartpage
 from main import PasswordManager
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm
 from werkzeug.utils import secure_filename
-
 
 link_website = "http://127.0.0.1:8000/"
 app = Flask(__name__)
@@ -42,11 +43,12 @@ api.add_resource(UserResourceAdmin, "/api/admin/<string:email>/<string:password>
 api.add_resource(AdminListRecourse, "/api/admin/list/<string:email>/<string:password>")
 api.add_resource(CreateSmartpageResource, "/api/smartpage/<string:email>/<string:password>")
 api.add_resource(SmartpageResource, "/api/smartpage/<string:email>/<string:password>/<int:smartpage_id>")
+api.add_resource(SmartpageRecourseUsual, "/api/smartpage/<int:smartpage_id>")
 api.add_resource(SmartpageListRecourse, "/api/smartpage")
 api.add_resource(CreateContentResource, "/api/content/<string:email>/<string:password>")
 api.add_resource(ContentResource, "/api/content/<string:email>/<string:password>/<int:content_id>")
 api.add_resource(ContentListRecourse, "/api/content")
-api.add_resource(ContentListRecourseId, "/api/content/page_id")
+api.add_resource(ContentListRecourseId, "/api/content/<int:smartpage_id>")
 api.add_resource(AuditlogResource, "/api/auditlog/<string:email>/<string:password>/<int:auditlog_id>")
 api.add_resource(AuditlogListRecourse, "/api/auditlog/<string:email>/<string:password>")
 api.add_resource(CreateNewspageResource, "/api/newspage/<string:email>/<string:password>")
@@ -145,7 +147,8 @@ def admin_create_news():
         if request.method == 'POST':
             message = post(
                 f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
-                json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data, "image": None}).json()
+                json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data,
+                      "image": None}).json()
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
@@ -181,7 +184,8 @@ def admin_edit_news(id):
                 result = True
             message = " ".join(list(message.values()))
         else:
-            news = get(f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+            news = get(
+                f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
             if "message" not in list(news):
                 form.heading.data = news["heading"]
                 form.text.data = news["text"]
@@ -266,7 +270,8 @@ def admin_edit_admin(id):
                     form.status.data = int(form.status.data)
                     message = put(
                         f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
-                        json={"name": form.name.data, "surname": form.surname.data, "email": form.email.data, "status": form.status.data}).json()
+                        json={"name": form.name.data, "surname": form.surname.data, "email": form.email.data,
+                              "status": form.status.data}).json()
                     form.status.data = str(form.status.data)
                     if "success" in message:
                         result = True
@@ -411,7 +416,8 @@ def admin_create_content(page_id):
         if request.method == 'POST':
             message = post(
                 f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
-                json={"type": form.type.data, "text": form.text.data, "page_id": page_id, "tags": form.tags.data}).json()
+                json={"type": form.type.data, "text": form.text.data, "page_id": page_id,
+                      "tags": form.tags.data}).json()
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
@@ -424,8 +430,11 @@ def admin_create_content(page_id):
 @login_required
 def admin_content_move_up(id):
     if current_user.status > 0:
-        content = get(f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
-        put(f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}", json={"position": content["position"] - 1})
+        content = get(
+            f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+        put(
+            f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
+            json={"position": content["position"] - 1})
         return redirect("/admin-list-smartpage")
     return you_dont_have_permission()
 
@@ -434,8 +443,11 @@ def admin_content_move_up(id):
 @login_required
 def admin_content_move_down(id):
     if current_user.status > 0:
-        content = get(f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
-        print(put(f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}", json={"position": content["position"] + 1}).json())
+        content = get(
+            f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+        print(put(
+            f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
+            json={"position": content["position"] + 1}).json())
         return redirect("/admin-list-smartpage")
     return you_dont_have_permission()
 
@@ -506,7 +518,8 @@ def admin_create_partner():
         if request.method == 'POST':
             message = post(
                 f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
-                json={"name": form.name.data, "image": "standard.png", "text": form.text.data, "link": form.link.data}).json()
+                json={"name": form.name.data, "image": "standard.png", "text": form.text.data,
+                      "link": form.link.data}).json()
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
@@ -566,15 +579,31 @@ def admin_delete_partner(id):
 @app.route("/admin-list-auditlog")
 @login_required
 def admin_auditlog():
-    auditlogs = get(f"{link_website}/api/auditlog/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}").json()
+    auditlogs = get(
+        f"{link_website}/api/auditlog/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}").json()
     return render_template('admin-list-auditlog.html', title='Журнал аудита', auditlogs=auditlogs)
 
 
 @app.route("/admin-list-feedback")
 @login_required
 def admin_feedback():
-    feedbacks = get(f"{link_website}/api/feedback/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}").json()
+    feedbacks = get(
+        f"{link_website}/api/feedback/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}").json()
     return render_template('admin-feedback-list.html', title='Отзывы', feedbacks=feedbacks)
+
+
+@app.route("/page/<int:id>")
+def page(id):
+    if not current_user.is_anonymous:
+        page = get(
+            f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+        content = get(f"{link_website}api/content/{page['id']}").json()
+        newslist = get(f"{link_website}api/newspage").json()
+        return render_template('admin-page.html', title=page["heading"], content=content, newslist=newslist)
+    page = get(f"{link_website}api/smartpage/{id}").json()
+    content = get(f"{link_website}api/content/{page['id']}").json()
+    newslist = get(f"{link_website}api/newspage").json()
+    return render_template('page.html', title=page["heading"], content=content, newslist=newslist)
 
 
 @app.route("/test", methods=['GET', 'POST'])

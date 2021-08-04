@@ -90,6 +90,13 @@ class SmartpageResource(Resource):
         return jsonify({"success": f"Страница {smartpage.heading} успешно изменена"})
 
 
+class SmartpageRecourseUsual(Resource):
+    def get(self, smartpage_id):
+        session = db_session.create_session()
+        smartpage, session = find_by_id(smartpage_id, session)
+        return jsonify(smartpage.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id')))
+
+
 class SmartpageListRecourse(Resource):
     def get(self):
         session = db_session.create_session()

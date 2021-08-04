@@ -1,10 +1,227 @@
 {% extends "admin-panel.html" %}
 
 {% block adninhead %}
+<link href="/static/css/slick.css" rel="stylesheet">
+<link href="/static/css/slick-theme.css" rel="stylesheet">
 {% endblock %}
 
 {% block adminblock %}
+<div class="main-news">
+    <div class="main-news-carousel">
+        <div class="main-news-item" style="background-image: url('/static/img/news-2.jpg');">
+            <div class="main-news-container">
+                <img class="d-none d-md-block" src="/static/img/logo.png" atl="logo">
+                <div class="main-news-text">
+                    <p>Цель компании</p>
+                    <p>Создать колонию на марсе.</p>
+                </div>
+            </div>
+        </div>
+        <div class="main-news-item" style="background-image: url('/static/img/news-3.jpg');">
+            <div class="main-news-container">
+                <img class="d-none d-md-block" src="/static/img/logo.png" atl="logo">
+                <div class="main-news-text">
+                    <p>Только качествынне фракталы</p>
+                    <p>Без рекурсии и ГМО!</p>
+                </div>
+            </div>
+        </div>
+        <div class="main-news-item" style="background-image: url('/static/img/news-4.jpg');">
+            <div class="main-news-container">
+                <img class="d-none d-md-block" src="/static/img/logo.png" atl="logo">
+                <div class="main-news-text">
+                    <p>Комфортные рабочие условия</p>
+                    <p>А главное, это дружественный коллектив.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div class="partners-carousel">
+        <div class="partner-item">
+            <img class="partner-item-image" src="/static/img/partner-1.jpg">
+            <div class="partner-item-text">
+                <p>fermaroigas</p>
+                <p>Эко-Ферма</p>
+            </div>
+        </div>
+        <div class="partner-item">
+            <img class="partner-item-image" src="/static/img/partner-1.jpg">
+            <div class="partner-item-text">
+                <p>fermaroigas</p>
+                <p>Эко-Ферма</p>
+            </div>
+        </div>
+        <div class="partner-item">
+            <img class="partner-item-image" src="/static/img/partner-1.jpg">
+            <div class="partner-item-text">
+                <p>fermaroigas</p>
+                <p>Эко-Ферма</p>
+            </div>
+        </div>
+        <div class="partner-item">
+            <img class="partner-item-image" src="/static/img/partner-1.jpg">
+            <div class="partner-item-text">
+                <p>fermaroigas</p>
+                <p>Эко-Ферма</p>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12 col-md-6 col-lg-4">
+            <a>
+                <div class="news-2">
+                    <div class="news-img" style="background-image: url('/static/img/news-5.jpg');"></div>
+                    <div class="news-title">
+                        Какой-то заголовок с текстом.
+                    </div>
+                    <div class="news-text">
+                        Здесь может быть мало текста или много зависит от автора, а так же может быть ссылка на сайт
+                        портёра или на блок с новостью.
+                    </div>
+                    <div class="news-navigation">
+                        <span class="date">12.12.2021</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-12 col-md-6 col-lg-4">
+            <a>
+                <div class="news">
+                    <div class="news-img" style="background-image: url('/static/img/news-5.jpg');"></div>
+                    <div class="news-title">
+                        Какой-то заголовок с текстом.
+                    </div>
+                    <div class="news-text">
+                        Здесь может быть мало текста или много зависит от автора, а так же может быть ссылка на сайт
+                        портёра или на блок с новостью.
+                    </div>
+                    <div class="news-navigation">
+                        <span class="date">12.12.2021</span>
+                    </div>
+                </div>
+            </a>
+            <a>
+                <div class="news">
+                    <div class="news-img" style="background-image: url('/static/img/news-5.jpg');"></div>
+                    <div class="news-title">
+                        Какой-то заголовок с текстом.
+                    </div>
+                    <div class="news-text">
+                        Здесь может быть мало текста или много зависит от автора, а так же может быть ссылка на сайт
+                        портёра или на блок с новостью.
+                    </div>
+                    <div class="news-navigation">
+                        <span class="date">12.12.2021</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-12 col-md-12 col-lg-4">
+            <div class="row">
+                <div class="col-sm-12 col-md-6 col-lg-12">
+                    <a>
+                        <div class="news">
+                            <div class="news-img" style="background-image: url('/static/img/news-5.jpg');"></div>
+                            <div class="news-title">
+                                Какой-то заголовок с текстом.
+                            </div>
+                            <div class="news-text">
+                                Здесь может быть мало текста или много зависит от автора, а так же может быть ссылка
+                                на сайт портёра или на блок с новостью.
+                            </div>
+                            <div class="news-navigation">
+                                <span class="date">12.12.2021</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-sm-12 col-md-6 col-lg-12">
+                    <a>
+                        <div class="news">
+                            <div class="news-img" style="background-image: url('/static/img/news-5.jpg');"></div>
+                            <div class="news-title">
+                                Какой-то заголовок с текстом.
+                            </div>
+                            <div class="news-text">
+                                Здесь может быть мало текста или много зависит от автора, а так же может быть ссылка
+                                на сайт портёра или на блок с новостью.
+                            </div>
+                            <div class="news-navigation">
+                                <span class="date">12.12.2021</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-md-6 col-lg-4">
+            <a>
+                <div class="news">
+                    <div class="news-img" style="background-image: url('/static/img/news-5.jpg');"></div>
+                    <div class="news-title">
+                        Какой-то заголовок с текстом.
+                    </div>
+                    <div class="news-text">
+                        Здесь может быть мало текста или много зависит от автора, а так же может быть ссылка на сайт
+                        портёра или на блок с новостью.
+                    </div>
+                    <div class="news-navigation">
+                        <span class="date">12.12.2021</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-12 col-md-6 col-lg-4">
+            <a>
+                <div class="news">
+                    <div class="news-img" style="background-image: url('/static/img/news-5.jpg');"></div>
+                    <div class="news-title">
+                        Какой-то заголовок с текстом.
+                    </div>
+                    <div class="news-text">
+                        Здесь может быть мало текста или много зависит от автора, а так же может быть ссылка на сайт
+                        портёра или на блок с новостью.
+                    </div>
+                    <div class="news-navigation">
+                        <span class="date">12.12.2021</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-sm-12 col-md-6 col-lg-4">
+            <a>
+                <div class="news">
+                    <div class="news-img" style="background-image: url('/static/img/news-5.jpg');"></div>
+                    <div class="news-title">
+                        Какой-то заголовок с текстом.
+                    </div>
+                    <div class="news-text">
+                        Здесь может быть мало текста или много зависит от автора, а так же может быть ссылка на сайт
+                        портёра или на блок с новостью. Any text
+                    </div>
+                    <div class="news-navigation">
+                        <span class="date">12.12.2021</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+    <div class="more-news">
+        <a>
+            <button>Все новости</button>
+        </a>
+    </div>
+</div>
 {% endblock %}
 
 {% block adminend %}
+<script src="/static/js/slick.js"></script>
+<script src="/static/js/carousels.js"></script>
+<script>
+    var boolAutoplay = true
+    var speedNews = 3000
+    var speedPartners = 2000
+</script>
 {% endblock %}
