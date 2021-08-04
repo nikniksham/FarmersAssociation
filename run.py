@@ -142,29 +142,9 @@ def admin_list_news():
 @login_required
 def admin_create_news():
     if current_user.status > 0:
-        message, result = None, False
+        message, result, filenames, filename = None, False, False, None
         form = NewspageForm()
         if request.method == 'POST':
-            message = post(
-                f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
-                json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data,
-                      "image": None}).json()
-            if "success" in message:
-                result = True
-            message = " ".join(list(message.values()))
-        return render_template('admin-news-form.html', title='Создание новости', message=message,
-                               form=form, result=result)
-    return you_dont_have_permission()
-
-
-@app.route("/admin-edit-news/<int:id>", methods=['GET', 'POST'])
-@login_required
-def admin_edit_news(id):
-    form = NewspageForm()
-    if current_user.status > 0:
-        message, result = None, False
-        if request.method == 'POST':
-            # проходимся по названиямфайлов
             for name in request.files:
                 # выбираем файл
                 file = request.files[name]
@@ -175,11 +155,38 @@ def admin_edit_news(id):
                         filename = secure_filename(file.filename)
                         # сохраняаем файл
                         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                    else:
-                        print("неправильный тип файла")
+            message = post(
+                f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
+                json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data, "image": filename}).json()
+            if "success" in message:
+                result = True
+            message = " ".join(list(message.values()))
+        return render_template('admin-news-form.html', title='Создание новости', message=message,
+                               form=form, result=result, filenames=filenames)
+    return you_dont_have_permission()
+
+
+@app.route("/admin-edit-news/<int:id>", methods=['GET', 'POST'])
+@login_required
+def admin_edit_news(id):
+    form = NewspageForm()
+    if current_user.status > 0:
+        message, result, filenames, filename = None, False, None, None
+        if request.method == 'POST':
+            # проходимся по названиям файлов
+            for name in request.files:
+                # выбираем файл
+                file = request.files[name]
+                # проверяем файл
+                if file.filename != "":
+                    if file and allowed_file(file.filename):
+                        # создаём норм имя (кирилица не работает)
+                        filename = secure_filename(file.filename)
+                        # сохраняаем файл
+                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             message = put(
                 f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
-                json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data}).json()
+                json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data, "image": filename}).json()
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
@@ -190,10 +197,11 @@ def admin_edit_news(id):
                 form.heading.data = news["heading"]
                 form.text.data = news["text"]
                 form.tags.data = news["tags"]
+                filenames = news["image"].split("/")
             else:
                 message = "Новость не найдена"
         return render_template('admin-news-form.html', title='Редактирование новости', message=message, result=result,
-                               form=form)
+                               form=form, filenames=filenames, image_len=len(filenames) + 1)
     return you_dont_have_permission()
 
 
@@ -616,7 +624,7 @@ def test():
 
 if __name__ == '__main__':
     print("http://127.0.0.1:8000/admin")
-    print("http://127.0.0.1:8000/admin-create-news")
+    print("http://127.0.0.1:8000/admin-edit-news/2")
     print("http://127.0.0.1:8000/login")
     main()
     create_new_db = False
