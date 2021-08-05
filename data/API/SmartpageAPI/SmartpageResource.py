@@ -63,8 +63,8 @@ class SmartpageResource(Resource):
         admin, session = check_admin_status(email, password)
         smartpage, session = find_by_id(smartpage_id, session)
         args, count = parser_smartpage.parse_args(), 0
-        page_dict = smartpage.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id'))
-        keys = list(filter(lambda key: args[key] is not None and args[key] != page_dict[key], list(args.keys())))
+        page_dict = smartpage.to_dict(only=('id', 'heading', 'image', 'created_date'))
+        keys = list(filter(lambda key: args[key] is not None and args[key] != page_dict[key] and key in list(page_dict.keys()), list(args.keys())))
         for key in list(args.keys()):
             if args[key] is not None and args[key] != page_dict[key]:
                 count += 1
@@ -81,7 +81,7 @@ class SmartpageResource(Resource):
         if count == 0:
             return raise_error("Пустой запрос")
         page_dict_2 = smartpage.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id'))
-        list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' for key in keys]
+        list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' if key != "image" else "изменяет изображения" for key in keys]
         session.commit()
         add_auditlog("Изменение",
                      f"{admin.name} {admin.surname} изменяет страницу {smartpage.heading}: {', '.join(list_chang)}",
@@ -124,7 +124,9 @@ class CreateSmartpageResource(Resource):
         admin.smartpage.append(new_smartpage)
         session.merge(admin)
         session.commit()
+        params_dict = new_smartpage.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id'))
+        params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание",
-                     f"{admin.name} {admin.surname} создаёт страницу {new_smartpage.heading}: {new_smartpage.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id'))}",
+                     f"{admin.name} {admin.surname} создаёт страницу {new_smartpage.heading}: {params_dict}",
                      admin, datetime.datetime.now())
         return jsonify({'success': f'Страница {new_smartpage.heading} создана'})

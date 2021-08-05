@@ -55,11 +55,11 @@ class PartnerResource(Resource):
         admin, session = check_admin_status(email, password)
         partner, session = find_by_id(partner_id, session)
         args, count = parser_partner.parse_args(), 0
-        page_dict = partner.to_dict(only=('id', 'name', 'image', 'text', 'link'))
-        keys = list(filter(lambda key: args[key] is not None and args[key] != page_dict[key], list(args.keys())))
+        part_dict = partner.to_dict(only=('id', 'name', 'image', 'text', 'link'))
+        keys = list(filter(lambda key: args[key] is not None and args[key] != part_dict[key] and key in list(part_dict.keys()), list(args.keys())))
         name = partner.name
         for key in list(args.keys()):
-            if args[key] is not None and args[key] != page_dict[key]:
+            if args[key] is not None and args[key] != part_dict[key]:
                 count += 1
                 if key == 'id':
                     if session.query(Partner).filter(Partner.id == args["id"]).first():
@@ -75,8 +75,8 @@ class PartnerResource(Resource):
                     partner.tags = args["link"]
         if count == 0:
             return raise_error("Пустой запрос")
-        page_dict_2 = partner.to_dict(only=('id', 'name', 'image', 'text', 'link'))
-        list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' for key in keys]
+        part_dict_2 = partner.to_dict(only=('id', 'name', 'image', 'text', 'link'))
+        list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key != "image" else "изменяет изображения" for key in keys]
         session.commit()
         add_auditlog("Изменение",
                      f"{admin.name} {admin.surname} изменяет партнёра {name}: {', '.join(list_chang)}", admin,
@@ -117,7 +117,9 @@ class CreatePartnerResource(Resource):
         admin.partner.append(new_partner)
         session.merge(admin)
         session.commit()
+        params_dict = new_partner.to_dict(only=('id', 'name', 'image', 'text', 'link', 'created_date', 'author_id'))
+        params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание",
-                     f"{admin.name} {admin.surname} создаёт партнёра {new_partner.name}: {new_partner.to_dict(only=('id', 'name', 'image', 'text', 'link', 'created_date', 'author_id'))}",
+                     f"{admin.name} {admin.surname} создаёт партнёра {new_partner.name}: {params_dict}",
                      admin, datetime.datetime.now())
         return jsonify({'success': f'Партнёр {new_partner.name} создан'})

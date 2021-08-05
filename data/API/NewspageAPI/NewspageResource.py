@@ -72,7 +72,7 @@ class NewspageResource(Resource):
         newspage, session = find_by_id(newspage_id, session)
         args, count = parser_newspage.parse_args(), 0
         page_dict = newspage.to_dict(only=('heading', 'text', 'image', 'tags'))
-        keys = list(filter(lambda key: args[key] is not None and args[key] != page_dict[key], list(args.keys())))
+        keys = list(filter(lambda key: args[key] is not None and args[key] != page_dict[key] and key in list(page_dict.keys()), list(args.keys())))
         for key in list(args.keys()):
             if args[key] is not None and args[key] != page_dict[key]:
                 count += 1
@@ -87,7 +87,7 @@ class NewspageResource(Resource):
         if count == 0:
             return raise_error("Пустой запрос")
         page_dict_2 = newspage.to_dict(only=('heading', 'text', 'image', 'tags'))
-        list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' for key in keys]
+        list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' if key != "image" else "изменяет изображения" for key in keys]
         session.commit()
         add_auditlog("Изменение",
                      f"{admin.name} {admin.surname} изменяет новостную страницу {newspage.heading}: {', '.join(list_chang)}",
@@ -136,7 +136,9 @@ class CreateNewspageResource(Resource):
         admin.newspage.append(new_newspage)
         session.merge(admin)
         session.commit()
+        params_dict = new_newspage.to_dict(only=('id', 'heading', 'text', 'link', 'tags', 'created_date', 'author_id'))
+        params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание",
-                     f"{admin.name} {admin.surname} создаёт новостную страницу {new_newspage.heading}: {new_newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date', 'author_id'))}",
+                     f"{admin.name} {admin.surname} создаёт новостную страницу {new_newspage.heading}: {params_dict}",
                      admin, datetime.datetime.now())
         return jsonify({'success': f'Новостная страница {new_newspage.heading} создана'})
