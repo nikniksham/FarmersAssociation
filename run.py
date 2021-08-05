@@ -714,7 +714,7 @@ def page(id):
 def test():
     if request.method == 'POST':
         file = request.files['file']
-    return render_template('test.html')
+    return render_template('partner.html')
 
 
 if __name__ == '__main__':
