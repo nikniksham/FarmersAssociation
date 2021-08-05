@@ -489,7 +489,6 @@ def admin_create_content(page_id):
                         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                         filenames.append(filename)
             image = "" if len(filenames) == 0 else "//".join(filenames)
-            print(form.heading.data)
             message = post(
                 f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
                 json={"type": form.type.data, "text": form.text.data, "page_id": page_id,
