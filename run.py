@@ -712,8 +712,6 @@ def page(id):
 
 @app.route("/test", methods=['GET', 'POST'])
 def test():
-    if request.method == 'POST':
-        file = request.files['file']
     return render_template('test.html')
 
 

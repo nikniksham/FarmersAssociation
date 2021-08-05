@@ -63,9 +63,10 @@ class ContentResource(Resource):
         admin, session = check_admin_status(email, password)
         content, session = find_by_id(content_id, session)
         args, count = parser_content.parse_args(), 0
-        cont_dict = content.to_dict(
-            only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
-        keys = list(filter(lambda key: args[key] is not None and args[key] != cont_dict[key], list(args.keys())))
+        cont_dict = content.to_dict(only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags'))
+        keys = list(
+            filter(lambda key: args[key] is not None and args[key] != cont_dict[key] and key in list(cont_dict.keys()),
+                   list(args.keys())))
         for key in list(args.keys()):
             if args[key] is not None and args[key] != cont_dict[key]:
                 count += 1
@@ -103,9 +104,10 @@ class ContentResource(Resource):
                     content.tags = args["tags"]
         if count == 0:
             return raise_error("Пустой запрос")
-        cont_dict_2 = content.to_dict(
-            only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
-        list_chang = [f'изменяет {key} с {cont_dict[key]} на {cont_dict_2[key]}' for key in keys]
+        cont_dict_2 = content.to_dict(only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags'))
+        list_chang = [
+            f'изменяет {key} с {cont_dict[key]} на {cont_dict_2[key]}' if key != "image" else "изменяет изображения" for
+            key in keys]
         # print([block.type for block in session.query(Content).order_by(Content.position).all()])
         session.commit()
         add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет блок контента: {', '.join(list_chang)}",
@@ -171,8 +173,9 @@ class CreateContentResource(Resource):
         admin.content.append(new_content)
         session.merge(admin)
         session.commit()
-        add_auditlog("Создание",
-                     f"{admin.name} {admin.surname} создаёт блок контента с параметрами: {new_content.to_dict(only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))}",
-                     admin,
-                     datetime.datetime.now())
+        params_dict = new_content.to_dict(
+            only=('id', 'position', 'type', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
+        params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
+        add_auditlog("Создание", f"{admin.name} {admin.surname} создаёт блок контента с параметрами: {params_dict}",
+                     admin, datetime.datetime.now())
         return jsonify({'success': f'Блок контента на позиции {new_content.position} создан'})
