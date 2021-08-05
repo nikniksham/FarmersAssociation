@@ -11,24 +11,31 @@
     <div class="settings-element">
         <p class="settings-element-title">{{page['heading']}}</p>
         <a class="settings-element-edit" href="/admin-create-content/{{page['id']}}">Добавть блок контента</a>
+        <a class="settings-element-edit" name=contentPage{{page['id']}}>Показать контент</a>
         <a class="settings-element-edit" href="/admin-edit-smartpage/{{page['id']}}">Изменить</a>
         <a class="settings-element-delete" href="/admin-delete-smartpage/{{page['id']}}">Удалить</a>
     </div>
-    {% for content in contentdict[page['id']] %}
-    <div class="settings-element">
-        <p class="settings-element-title">{{content['type']}}</p>
-        {% if content != contentdict[page['id']][-1] %}
-        <a class="settings-element-move" href="/admin-edit-content-move-down/{{content['id']}}">↓</a>
-        {% endif %}
-        {% if content != contentdict[page['id']][0] %}
-        <a class="settings-element-move" href="/admin-edit-content-move-up/{{content['id']}}">↑</a>
-        {% else %}
-        <p class="settings-element-move-empty"></p>
-        {% endif %}
-        <a class="settings-element-edit" href="/admin-edit-content/{{content['id']}}">Изменить</a>
-        <a class="settings-element-delete" href="/admin-delete-content/{{content['id']}}">Удалить</a>
+    <div id=contentPage{{page['id']}} class="content-of-page">
+        {% for content in contentdict[page['id']] %}
+        <div class="settings-element manifesting" style="animation-delay: {{loop.index/10}}s;">
+            <p class="settings-element-title">{{content['type']}}</p>
+            {% if content != contentdict[page['id']][-1] %}
+            <a class="settings-element-move" href="/admin-edit-content-move-down/{{content['id']}}">↓</a>
+            {% endif %}
+            {% if content != contentdict[page['id']][0] %}
+            <a class="settings-element-move" href="/admin-edit-content-move-up/{{content['id']}}">↑</a>
+            {% else %}
+            <p class="settings-element-move-empty"></p>
+            {% endif %}
+            <a class="settings-element-edit" href="/admin-edit-content/{{content['id']}}">Изменить</a>
+            <a class="settings-element-delete" href="/admin-delete-content/{{content['id']}}">Удалить</a>
+        </div>
+        {% endfor %}
     </div>
     {% endfor %}
-    {% endfor %}
 </div>
+{% endblock %}
+
+{% block adminend %}
+<script src="/static/js/subitemslist.js"></script>
 {% endblock %}
