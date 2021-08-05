@@ -373,3 +373,27 @@ p.settings-element-move-empty {
   left: calc(50% - 2px);
   top: 20px;
 }
+
+.manifesting {
+    display: none;
+    opacity: 0;
+    animation: fade 1s linear forwards;
+}
+
+@keyframes fade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.content-of-page {
+    width: 100%;
+    display: none;
+}
+
+.visible.content-of-page {
+    display: block;
+}
+
+.visible.content-of-page > div {
+    display: flex;
+}
