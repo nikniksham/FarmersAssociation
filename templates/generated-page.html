@@ -1,0 +1,56 @@
+{% extends "admin-panel.html" %}
+
+{% block head %}
+<link href="/static/css/slick.css" rel="stylesheet">
+<link href="/static/css/slick-theme.css" rel="stylesheet">
+{% endblock %}
+
+{% block pageblock %}
+<div class="container">
+    {% for block in content %}
+        {% if block['type'] == "News" %}
+            <div class="row">
+                {% for news in newslist %}
+                    <div class="col-sm-12 col-md-6 col-lg-4">
+                        <a href="/news/{{news['id']}}">
+                            <div class="news">
+                                <div class="news-img" style="background-image: url('static/img/news-5.jpg');"></div>
+                                <div class="news-title">{{news['heading']}}</div>
+                                <div class="news-text">{{news['text']}}</div>
+                                <div class="news-navigation">
+                                    <span class="date">12.12.2021</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% elif block['type'] == "Text" %}
+            {% if block['title'] != "" %}
+            <p>{{block['title']}}</p>
+            {% endif %}
+            <p>{{block['type']}}</p>
+        {% elif block['type'] == "Images" %}
+            {% if block['title'] != "" %}
+            <p>{{block['title']}}</p>
+            {% endif %}
+            <div class="carousel">
+                {% for src in block['image'].slit('//') %}
+                    <img src="{{src}}" alt="">
+                {% endfor %}
+            </div>
+        {% elif block['type'] == "Partners" %}
+        {% endif %}
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block end %}
+<script src="/static/js/slick.js"></script>
+<script src="/static/js/carousels.js"></script>
+<script>
+    var boolAutoplay = true
+    var speedNews = 3000
+    var speedPartners = 2000
+</script>
+{% endblock %}
