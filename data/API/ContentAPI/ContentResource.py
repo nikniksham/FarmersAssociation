@@ -42,12 +42,12 @@ class ContentResource(Resource):
         admin, session = check_admin_status(email, password)
         content, session = find_by_id(content_id, session)
         return jsonify(content.to_dict(
-            only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id')))
+            only=('id', 'position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id')))
 
     def delete(self, email, password, content_id):
         admin, session = check_admin_status(email, password)
         content, session = find_by_id(content_id, session)
-        position, c_pos, type = content.position, 1, content.type
+        heading, c_pos, type = content.heading, 1, content.type
         session.delete(content)
         blocks = session.query(Content).filter(Content.smartpage_id == content.smartpage_id).order_by(
             Content.position).all()
@@ -55,15 +55,15 @@ class ContentResource(Resource):
             block.position, c_pos = c_pos, c_pos + 1
         session.commit()
         add_auditlog("Удаление",
-                     f"{admin.name} {admin.surname} удаляет блок контента на позиции: {position}, с типом данных: {type}",
+                     f"{admin.name} {admin.surname} удаляет блок контента {heading}, с типом данных: {type}",
                      admin, datetime.datetime.now())
-        return jsonify({"success": f"Блок контента на позиции {position} успешно удален"})
+        return jsonify({"success": f"Блок контента {heading} успешно удален"})
 
     def put(self, email, password, content_id):
         admin, session = check_admin_status(email, password)
         content, session = find_by_id(content_id, session)
         args, count = parser_content.parse_args(), 0
-        cont_dict = content.to_dict(only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags'))
+        cont_dict = content.to_dict(only=('id', 'position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags'))
         keys = list(
             filter(lambda key: args[key] is not None and args[key] != cont_dict[key] and key in list(cont_dict.keys()),
                    list(args.keys())))
@@ -102,9 +102,11 @@ class ContentResource(Resource):
                     content.text = args["text"]
                 if key == "tags":
                     content.tags = args["tags"]
+                if key == "heading":
+                    content.heading = args["heading"]
         if count == 0:
             return raise_error("Пустой запрос")
-        cont_dict_2 = content.to_dict(only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags'))
+        cont_dict_2 = content.to_dict(only=('id', 'position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags'))
         list_chang = [
             f'изменяет {key} с {cont_dict[key]} на {cont_dict_2[key]}' if key != "image" else "изменяет изображения" for
             key in keys]
@@ -120,7 +122,7 @@ class ContentListRecourse(Resource):
         session = db_session.create_session()
         contents = session.query(Content).order_by(Content.position).all()
         return jsonify([item.to_dict(
-            only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
+            only=('id', 'position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
             for item in contents])
 
 
@@ -129,7 +131,7 @@ class ContentListRecourseId(Resource):
         session = db_session.create_session()
         contents = session.query(Content).filter(Content.smartpage_id == smartpage_id).order_by(Content.position).all()
         return jsonify([item.to_dict(
-            only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
+            only=('id', 'position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
             for item in contents])
 
 
@@ -137,7 +139,7 @@ class CreateContentResource(Resource):
     def post(self, email, password):
         admin, session = check_admin_status(email, password)
         args = parser_content.parse_args()
-        if not all(args[key] is not None for key in ['type', 'page_id']):
+        if not all(args[key] is not None for key in ['type', 'page_id', 'heading']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания страницы')
         page = session.query(Smartpage).get(args["page_id"])
         if page is None:
@@ -159,6 +161,7 @@ class CreateContentResource(Resource):
             i = i[-1].position + 1 if i else 1
             new_content.position = i
 
+        new_content.heading = args['heading']
         new_content.type = args["type"]
         new_content.image = args['image']
         new_content.animation_type = args["animation_type"]
@@ -174,7 +177,7 @@ class CreateContentResource(Resource):
         session.merge(admin)
         session.commit()
         params_dict = new_content.to_dict(
-            only=('id', 'position', 'type', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
+            only=('id', 'position', 'type', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id', 'heading'))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание", f"{admin.name} {admin.surname} создаёт блок контента с параметрами: {params_dict}",
                      admin, datetime.datetime.now())

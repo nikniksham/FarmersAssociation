@@ -12,6 +12,7 @@ class Content(SqlAlchemyBase, SerializerMixin):
     type = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     image = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     animation_type = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    heading = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     text = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     tags = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.now())

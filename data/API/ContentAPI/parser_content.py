@@ -3,6 +3,7 @@ from flask_restful import reqparse
 parser_content = reqparse.RequestParser()
 parser_content.add_argument('id', type=int)
 parser_content.add_argument('position', type=int)
+parser_content.add_argument("heading", type=str)
 parser_content.add_argument('type', type=str)
 parser_content.add_argument('image', type=str)
 parser_content.add_argument('animation_type', type=str)

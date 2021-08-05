@@ -18,7 +18,7 @@
     <div id=contentPage{{page['id']}} class="content-of-page">
         {% for content in contentdict[page['id']] %}
         <div class="settings-element manifesting" style="animation-delay: {{loop.index/10}}s;">
-            <p class="settings-element-title">{{content['type']}}</p>
+            <p class="settings-element-title">{{content['heading']}} ({{types[content['type']]}})</p>
             {% if content != contentdict[page['id']][-1] %}
             <a class="settings-element-move" href="/admin-edit-content-move-down/{{content['id']}}">↓</a>
             {% endif %}

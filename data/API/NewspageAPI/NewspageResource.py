@@ -102,6 +102,15 @@ class NewspageResourceUsual(Resource):
         return jsonify(newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date')))
 
 
+class NewspageResourceLink(Resource):
+    def get(self, link):
+        session = db_session.create_session()
+        newspage = session.query(Newspage).filter(Newspage.link == link).first()
+        if newspage:
+            return jsonify(newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date')))
+        raise_error("Новость не найдена")
+
+
 class NewspageListRecourseId(Resource):
     def get(self, start_id, end_id):
         session = db_session.create_session()
