@@ -30,7 +30,6 @@ from data.smartpage import Smartpage
 from main import PasswordManager, ManagerContainer
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm
 from werkzeug.utils import secure_filename
-from PIL import Image
 
 link_website = "http://127.0.0.1:8000/"
 app = Flask(__name__)

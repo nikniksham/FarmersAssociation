@@ -13,7 +13,7 @@
     <div class="partners-carousel">
         <div class="partner-item">
             <a class="partner-href" onclick="openPopUp('fermaroigas')">
-                <img class="partner-item-image" src="static/img/partner-1.jpg">
+                <img class="partner-item-image" src="static/img/partner-1.jpg" alt="fermaroigas">
                 <div class="partner-item-text">
                     <p>fermaroigas</p>
                     <p>Эко-Ферма</p>
@@ -22,7 +22,7 @@
         </div>
         <div class="partner-item">
             <a class="partner-href" onclick="openPopUp('fermaroigas')">
-                <img class="partner-item-image" src="static/img/partner-1.jpg">
+                <img class="partner-item-image" src="static/img/partner-1.jpg" alt="fermaroigas">
                 <div class="partner-item-text">
                     <p>fermaroigas</p>
                     <p>Эко-Ферма</p>
@@ -31,7 +31,7 @@
         </div>
         <div class="partner-item">
             <a class="partner-href" onclick="openPopUp('fermaroigas')">
-                <img class="partner-item-image" src="static/img/partner-1.jpg">
+                <img class="partner-item-image" src="static/img/partner-1.jpg" alt="fermaroigas">
                 <div class="partner-item-text">
                     <p>fermaroigas</p>
                     <p>Эко-Ферма</p>
@@ -40,7 +40,7 @@
         </div>
         <div class="partner-item">
             <a class="partner-href" onclick="openPopUp('fermaroigas')">
-                <img class="partner-item-image" src="static/img/partner-1.jpg">
+                <img class="partner-item-image" src="static/img/partner-1.jpg" alt="fermaroigas">
                 <div class="partner-item-text">
                     <p>fermaroigas</p>
                     <p>Эко-Ферма</p>
@@ -51,19 +51,15 @@
 </div>
 <div id="fermaroigas" class="partner">
     <div class="container">
-        <div>
-            <div class="close"></div>
-        </div>
         <div class="partner-Pop-up">
-            <div class="container">
-                <div class="partner-Pop-up-header">
-                    <img class="partner-Pop-up-img" src="static/img/partner-1.jpg">
-                    <p class="partner-Pop-up-title">fermaroigas</p>
-                </div>
-                <p>Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма.</p>
-                <p><b>Преференции:</b> ВЫ можете узнать о существовании этой Эко-фермы!</p>
-                <div class="partner-Pop-up-footer"><a>На страничку фермы</a></div>
+            <div class="partner-Pop-up-header">
+                <img class="partner-Pop-up-img" src="static/img/partner-1.jpg" alt="fermaroigas">
+                <p class="partner-Pop-up-title">fermaroigas</p>
+                <img class="partner-Pop-up-close" src="static/img/close.png" alt="закрыть" onclick="openPopUp('fermaroigas')">
             </div>
+            <p>Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма.</p>
+            <p><b>Преференции:</b> ВЫ можете узнать о существовании этой Эко-фермы!</p>
+            <div class="partner-Pop-up-footer"><a>На страничку фермы</a></div>
         </div>
     </div>
 </div>
@@ -78,13 +74,6 @@
     function openPopUp(name) {
         $('#'+name).toggleClass('visible');
     }
-
-    $(document).click(function (e) {
-        if (!$('.partner-Pop-up').is(e.target) && $('.partner-Pop-up').has(e.target).length === 0) {
-            menu.slideUp();
-            menuBtn.removeClass('is-active');
-        };
-    });
 
     $(document).ready(function(){
         $('.partners-carousel').slick({
