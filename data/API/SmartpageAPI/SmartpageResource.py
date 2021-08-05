@@ -63,10 +63,10 @@ class SmartpageResource(Resource):
         admin, session = check_admin_status(email, password)
         smartpage, session = find_by_id(smartpage_id, session)
         args, count = parser_smartpage.parse_args(), 0
-        keys = list(filter(lambda key: args[key] is not None, list(args.keys())))
         page_dict = smartpage.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id'))
+        keys = list(filter(lambda key: args[key] is not None and args[key] != page_dict[key], list(args.keys())))
         for key in list(args.keys()):
-            if args[key] is not None:
+            if args[key] is not None and args[key] != page_dict[key]:
                 count += 1
                 if key == 'id':
                     if session.query(Smartpage).filter(Smartpage.id == args["id"]).first():

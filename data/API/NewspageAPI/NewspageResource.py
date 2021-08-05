@@ -71,10 +71,10 @@ class NewspageResource(Resource):
         admin, session = check_admin_status(email, password)
         newspage, session = find_by_id(newspage_id, session)
         args, count = parser_newspage.parse_args(), 0
-        keys = list(filter(lambda key: args[key] is not None, list(args.keys())))
         page_dict = newspage.to_dict(only=('heading', 'text', 'image', 'tags'))
+        keys = list(filter(lambda key: args[key] is not None and args[key] != page_dict[key], list(args.keys())))
         for key in list(args.keys()):
-            if args[key] is not None:
+            if args[key] is not None and args[key] != page_dict[key]:
                 count += 1
                 if key == 'image':
                     newspage.image = args['image']

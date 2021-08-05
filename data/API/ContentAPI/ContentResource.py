@@ -63,11 +63,11 @@ class ContentResource(Resource):
         admin, session = check_admin_status(email, password)
         content, session = find_by_id(content_id, session)
         args, count = parser_content.parse_args(), 0
-        keys = list(filter(lambda key: args[key] is not None, list(args.keys())))
         cont_dict = content.to_dict(
             only=('id', 'position', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id'))
+        keys = list(filter(lambda key: args[key] is not None and args[key] != cont_dict[key], list(args.keys())))
         for key in list(args.keys()):
-            if args[key] is not None:
+            if args[key] is not None and args[key] != cont_dict[key]:
                 count += 1
                 if key == 'id':
                     if session.query(Content).filter(Content.id == args["id"]).first():

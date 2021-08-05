@@ -65,10 +65,10 @@ class AdminResource(Resource):
     def put(self, email, password):
         admin, session = check_admin(email, password)
         args, count = parser_admin.parse_args(), 0
-        keys = list(filter(lambda key: args[key] is not None, list(args.keys())))
         admin_dict = admin.to_dict(only=('id', 'name', 'surname', 'status', 'email'))
+        keys = list(filter(lambda key: args[key] is not None and args[key] != admin_dict[key], list(args.keys())))
         for key in list(args.keys()):
-            if args[key] is not None:
+            if args[key] is not None and args[key] != admin_dict[key]:
                 count += 1
                 if key == 'id':
                     if session.query(User).filter(User.id == args["id"]).first():
@@ -122,10 +122,10 @@ class UserResourceAdmin(Resource):
         admin, session = check_admin_status(email, password, 2)
         user, session = find_by_id(user_id, session, admin.status)
         args, count = parser_admin.parse_args(), 0
-        keys = list(filter(lambda key: args[key] is not None, list(args.keys())))
         user_dict = user.to_dict(only=('id', 'name', 'surname', 'status', 'email'))
+        keys = list(filter(lambda key: args[key] is not None and args[key] != user_dict[key], list(args.keys())))
         for key in list(args.keys()):
-            if args[key] is not None:
+            if args[key] is not None and args[key] != user_dict[key]:
                 count += 1
                 if key == 'email':
                     if session.query(User).filter(User.id == args["email"]).first():

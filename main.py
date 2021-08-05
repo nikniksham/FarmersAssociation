@@ -28,3 +28,34 @@ class PasswordManager:
             if self.data[email].status <= status:
                 return self.data[email].password
         return False
+
+
+class ImageContainer:
+    def __init__(self, filenames):
+        self.image_container = {}
+        for imageIndex, filename in enumerate(filenames, start=1):
+            self.image_container[f"image{imageIndex}"] = filename
+
+    def get_dict(self):
+        return self.image_container
+
+
+class ManagerContainer:
+    def __init__(self):
+        self.containers = {}
+
+    def add_container(self, name, filenames):
+        self.containers[name] = ImageContainer(filenames)
+
+    def delete_container(self, name):
+        if name in self.containers:
+            new_container = {}
+            for container in self.containers.keys():
+                if name != container:
+                    new_container[container] = self.containers[container]
+            self.containers = new_container
+
+    def get_container(self, name):
+        if name in self.containers:
+            return self.containers[name].get_dict()
+        return None

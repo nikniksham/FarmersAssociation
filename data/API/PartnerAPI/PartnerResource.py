@@ -55,11 +55,11 @@ class PartnerResource(Resource):
         admin, session = check_admin_status(email, password)
         partner, session = find_by_id(partner_id, session)
         args, count = parser_partner.parse_args(), 0
-        keys = list(filter(lambda key: args[key] is not None, list(args.keys())))
         page_dict = partner.to_dict(only=('id', 'name', 'image', 'text', 'link'))
+        keys = list(filter(lambda key: args[key] is not None and args[key] != page_dict[key], list(args.keys())))
         name = partner.name
         for key in list(args.keys()):
-            if args[key] is not None:
+            if args[key] is not None and args[key] != page_dict[key]:
                 count += 1
                 if key == 'id':
                     if session.query(Partner).filter(Partner.id == args["id"]).first():
