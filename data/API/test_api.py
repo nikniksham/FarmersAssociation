@@ -212,6 +212,8 @@ if test_feedback:
                      "text": "Мне нравиться ваш сайт!"}).json())
 
 
+print(get(f"{link_website}api/newspage/0/4").json())
+print(get(f"{link_website}api/newspage/23/24").json())
 if test_auditlog and False:
     print(get(f"{link_website}api/auditlog/{test_admin['email']}/{test_admin['password']}/1").json())
     for log in get(f"{link_website}api/auditlog/{test_admin['email']}/{test_admin['password']}").json():

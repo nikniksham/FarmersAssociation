@@ -99,7 +99,7 @@ class NewspageResourceUsual(Resource):
     def get(self, newspage_id):
         session = db_session.create_session()
         newspage, session = find_by_id(newspage_id, session)
-        return jsonify(newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags')))
+        return jsonify(newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date')))
 
 
 class NewspageListRecourseId(Resource):
@@ -111,14 +111,14 @@ class NewspageListRecourseId(Resource):
         if end_id > len(newspages):
             end_id = len(newspages)
         newspages = newspages[start_id:end_id]
-        return jsonify([item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags')) for item in newspages])
+        return jsonify([item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date')) for item in newspages])
 
 
 class NewspageListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
         newspages = session.query(Newspage).order_by(Newspage.created_date)[::-1]
-        return jsonify([item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags')) for item in newspages])
+        return jsonify([item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date')) for item in newspages])
 
 
 class CreateNewspageResource(Resource):
