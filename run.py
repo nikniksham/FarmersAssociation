@@ -1,5 +1,6 @@
 import datetime
 import os
+import random
 import time
 from flask import Flask, render_template, url_for, request
 from flask_login import LoginManager, login_required, logout_user, current_user, login_user
@@ -26,12 +27,14 @@ from data.feedback import Feedback
 from data.newspage import Newspage
 from data.partner import Partner
 from data.smartpage import Smartpage
-from main import PasswordManager
+from main import PasswordManager, ManagerContainer
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm
 from werkzeug.utils import secure_filename
+from PIL import Image
 
 link_website = "http://127.0.0.1:8000/"
 app = Flask(__name__)
+let = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890"
 app.config['SECRET_KEY'] = os.urandom(30)
 app.config['UPLOAD_FOLDER'] = 'static/img/'
 # app.config["DEBUG"] = False
@@ -67,6 +70,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 code_helper = CodeForConfirmation()
 password_manager = PasswordManager()
+containerManager = ManagerContainer()
 
 
 # Получение пользователя
@@ -74,6 +78,14 @@ password_manager = PasswordManager()
 def load_user(user_id):
     session = db_session.create_session()
     return session.query(User).get(user_id)
+
+
+def create_new_image_name(logo=False):
+    filelist, format = os.listdir(app.config['UPLOAD_FOLDER']), ".png" if logo else ".jpg"
+    filename = ''.join([random.choice(let) for i in range(50)]) + format
+    while filename in filelist:
+        filename = ''.join([random.choice(let) for i in range(50)]) + format
+    return filename
 
 
 def allowed_file(filename):
@@ -142,64 +154,68 @@ def admin_list_news():
 @login_required
 def admin_create_news():
     if current_user.status > 0:
-        message, result, filenames, filename = None, False, False, None
         form = NewspageForm()
+        message, result, filenames, filename = None, False, [], None
         if request.method == 'POST':
             for name in request.files:
-                # выбираем файл
                 file = request.files[name]
-                # проверяем файл
                 if file.filename != "":
                     if file and allowed_file(file.filename):
-                        # создаём норм имя (кирилица не работает)
-                        filename = secure_filename(file.filename)
-                        # сохраняаем файл
+                        filename = secure_filename(create_new_image_name())
                         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                        filenames.append(filename)
+            if len(filenames) == 0:
+                filenames = ["standard.png"]
             message = post(
                 f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
-                json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data, "image": filename}).json()
+                json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data, "image": "//".join(filenames)}).json()
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
         return render_template('admin-news-form.html', title='Создание новости', message=message,
-                               form=form, result=result, filenames=filenames)
+                               form=form, result=result, filenames=filenames, image_len=1)
     return you_dont_have_permission()
 
 
 @app.route("/admin-edit-news/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_news(id):
-    form = NewspageForm()
     if current_user.status > 0:
-        message, result, filenames, filename = None, False, None, None
-        if request.method == 'POST':
-            # проходимся по названиям файлов
-            for name in request.files:
-                # выбираем файл
-                file = request.files[name]
-                # проверяем файл
-                if file.filename != "":
-                    if file and allowed_file(file.filename):
-                        # создаём норм имя (кирилица не работает)
-                        filename = secure_filename(file.filename)
-                        # сохраняаем файл
-                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            message = put(
-                f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
-                json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data, "image": filename}).json()
-            if "success" in message:
-                result = True
-            message = " ".join(list(message.values()))
-        else:
-            news = get(
-                f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
-            if "message" not in list(news):
+        form = NewspageForm()
+        message, result, filenames, filename = None, False, [], None
+        news = get(
+            f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+        if "message" not in list(news):
+            if request.method == 'POST':
+                cont = containerManager.get_container(f"news_{id}")
+                if cont:
+                    for file in list(request.files)[:-1]:
+                        if file in cont:
+                            filenames.append(cont[file])
+                for name in request.files:
+                    file = request.files[name]
+                    if file.filename != "":
+                        if file and allowed_file(file.filename):
+                            filename = secure_filename(create_new_image_name())
+                            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                            filenames.append(filename)
+                if len(filenames) == 0:
+                    filenames = ["standard.png"]
+                containerManager.add_container(f"news_{id}", filenames)
+                message = put(
+                    f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
+                    json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data, "image": "//".join(filenames)}).json()
+                if "success" in message:
+                    result = True
+                message = " ".join(list(message.values()))
+            else:
                 form.heading.data = news["heading"]
                 form.text.data = news["text"]
                 form.tags.data = news["tags"]
-                filenames = news["image"].split("/")
-            else:
-                message = "Новость не найдена"
+                filenames = news["image"].split("//")
+                containerManager.add_container(f"news_{id}", filenames)
+        else:
+            message = "Новость не найдена"
         return render_template('admin-news-form.html', title='Редактирование новости', message=message, result=result,
                                form=form, filenames=filenames, image_len=len(filenames) + 1)
     return you_dont_have_permission()
@@ -208,8 +224,8 @@ def admin_edit_news(id):
 @app.route("/admin-delete-news/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_news(id):
-    form = DeleteForm()
     if current_user.status > 0:
+        form = DeleteForm()
         message, result, name = None, False, "новость не найдена"
         news = get(
             f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
@@ -221,6 +237,7 @@ def admin_delete_news(id):
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
+            containerManager.delete_container(f"news_{id}")
         return render_template('admin-delete-form.html', title='Удаление новости', message=message, form=form,
                                result=result, name=name)
     return you_dont_have_permission()
@@ -301,8 +318,8 @@ def admin_edit_admin(id):
 @app.route("/admin-delete-admin/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_admin(id):
-    form = DeleteForm()
     if current_user.status > 1:
+        form = DeleteForm()
         message, name, result = None, "пользователь не найден", False
         admin = get(
             f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
@@ -345,51 +362,77 @@ def admin_list_smartpage():
 @app.route("/admin-create-smartpage", methods=['GET', 'POST'])
 @login_required
 def admin_create_smartpage():
-    form = SmartpageForm()
     if current_user.status > 0:
-        message, result = None, False
+        form = SmartpageForm()
+        message, result, filenames, filename = None, False, [], None
         if request.method == 'POST':
+            for name in request.files:
+                file = request.files[name]
+                if file.filename != "":
+                    if file and allowed_file(file.filename):
+                        filename = secure_filename(create_new_image_name())
+                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                        filenames.append(filename)
+            if len(filenames) == 0:
+                filenames = ["standard.png"]
             message = post(
                 f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
-                json={"heading": form.heading.data, "image": None}).json()
+                json={"heading": form.heading.data, "image": "//".join(filenames)}).json()
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
         return render_template('admin-smartpage-form.html', title='Создание страницы', message=message, form=form,
-                               result=result, flag=True)
+                               result=result, filenames=filenames, image_len=1)
     return you_dont_have_permission()
 
 
 @app.route("/admin-edit-smartpage/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_smartpage(id):
-    form = SmartpageForm()
     if current_user.status > 0:
+        form = SmartpageForm()
         smartpage = get(
             f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
-        message, result = None, False
+        message, result, filenames, filename = None, False, [], None
         if "message" not in smartpage:
             if request.method == 'POST':
+                cont = containerManager.get_container(f"smartpage_{id}")
+                if cont:
+                    for file in list(request.files)[:-1]:
+                        if file in cont:
+                            filenames.append(cont[file])
+                for name in request.files:
+                    file = request.files[name]
+                    if file.filename != "":
+                        if file and allowed_file(file.filename):
+                            filename = secure_filename(create_new_image_name())
+                            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                            filenames.append(filename)
+                if len(filenames) == 0:
+                    filenames = ["standard.png"]
+                containerManager.add_container(f"smartpage_{id}", filenames)
                 message = put(
                     f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
-                    json={"heading": form.heading.data, "image": None}).json()
+                    json={"heading": form.heading.data, "image": "//".join(filenames)}).json()
                 if "success" in message:
                     result = True
                 message = " ".join(list(message.values()))
             else:
                 form.heading.data = smartpage["heading"]
+                filenames = smartpage["image"].split("//")
+                containerManager.add_container(f"smartpage_{id}", filenames)
         else:
             message = "Страница не найдена"
         return render_template('admin-smartpage-form.html', title='Редактирование страницы', message=message, form=form,
-                               result=result, flag=False)
+                               result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1)
     return you_dont_have_permission()
 
 
 @app.route("/admin-delete-smartpage/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_smartpage(id):
-    form = DeleteForm()
     if current_user.status > 0:
+        form = DeleteForm()
         message, name, result = "", "страница не найдена", False
         smartpage = get(
             f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
@@ -401,6 +444,7 @@ def admin_delete_smartpage(id):
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
+            containerManager.delete_container(f"smartpage_{id}")
         return render_template('admin-delete-form.html', title='Удаление страницы', message=message, form=form,
                                result=result, name=name)
     return you_dont_have_permission()
@@ -418,23 +462,32 @@ def admin_list_content():
 @app.route("/admin-create-content/<int:page_id>", methods=['GET', 'POST'])
 @login_required
 def admin_create_content(page_id):
-    form = ContentForm()
     if current_user.status > 0:
-        message, result = None, False
+        form = ContentForm()
+        message, result, filenames, filename = None, False, [], None
         if request.method == 'POST':
+            for name in request.files:
+                file = request.files[name]
+                if file.filename != "":
+                    if file and allowed_file(file.filename):
+                        filename = secure_filename(create_new_image_name())
+                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                        filenames.append(filename)
+            if len(filenames) == 0:
+                filenames = ["standard.png"]
             message = post(
                 f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
                 json={"type": form.type.data, "text": form.text.data, "page_id": page_id,
-                      "tags": form.tags.data}).json()
+                      "tags": form.tags.data, "image": "//".join(filenames)}).json()
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
         return render_template('admin-content-form.html', title='Создание контента', message=message, form=form,
-                               result=result, flag=True)
+                               result=result, flag=True, filenames=filenames, image_len=1)
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-move-up/<int:id>", methods=['GET', 'POST'])
+@app.route("/admin-edit-content-move-up/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_content_move_up(id):
     if current_user.status > 0:
@@ -447,15 +500,14 @@ def admin_content_move_up(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-move-down/<int:id>", methods=['GET', 'POST'])
+@app.route("/admin-edit-content-move-down/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_content_move_down(id):
     if current_user.status > 0:
         content = get(
             f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
-        print(put(
-            f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
-            json={"position": content["position"] + 1}).json())
+        put(f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
+            json={"position": content["position"] + 1}).json()
         return redirect("/admin-list-smartpage")
     return you_dont_have_permission()
 
@@ -463,16 +515,31 @@ def admin_content_move_down(id):
 @app.route("/admin-edit-content/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_content(id):
-    form = ContentForm()
     if current_user.status > 0:
+        form = ContentForm()
         content = get(
             f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
-        message, result = None, False
+        message, result, filenames, filename = None, False, [], None
         if "message" not in content:
             if request.method == 'POST':
+                cont = containerManager.get_container(f"content_{id}")
+                if cont:
+                    for file in list(request.files)[:-1]:
+                        if file in cont:
+                            filenames.append(cont[file])
+                for name in request.files:
+                    file = request.files[name]
+                    if file.filename != "":
+                        if file and allowed_file(file.filename):
+                            filename = secure_filename(create_new_image_name())
+                            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                            filenames.append(filename)
+                if len(filenames) == 0:
+                    filenames = ["standard.png"]
+                containerManager.add_container(f"content_{id}", filenames)
                 message = put(
                     f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
-                    json={"type": form.type.data, "text": form.text.data, "tags": form.tags.data}).json()
+                    json={"type": form.type.data, "text": form.text.data, "tags": form.tags.data, "image": "//".join(filenames)}).json()
                 if "success" in message:
                     result = True
                 message = " ".join(list(message.values()))
@@ -480,18 +547,20 @@ def admin_edit_content(id):
                 form.type.data = content["type"]
                 form.text.data = content["text"]
                 form.tags.data = content["tags"]
+                filenames = content["image"].split("//")
+                containerManager.add_container(f"content_{id}", filenames)
         else:
             message = "Контент не найден"
         return render_template('admin-content-form.html', title='Редактирование контента', message=message, form=form,
-                               result=result, flag=False)
+                               result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1)
     return you_dont_have_permission()
 
 
 @app.route("/admin-delete-content/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_content(id):
-    form = DeleteForm()
     if current_user.status > 0:
+        form = DeleteForm()
         message, name, result = "", "контент не найден", False
         content = get(
             f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
@@ -503,6 +572,7 @@ def admin_delete_content(id):
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
+            containerManager.delete_container(f"content_{id}")
         return render_template('admin-delete-form.html', title='Удаление контента', message=message, form=form,
                                result=result, name=name)
     return you_dont_have_permission()
@@ -520,35 +590,59 @@ def admin_list_partner():
 @app.route("/admin-create-partner", methods=['GET', 'POST'])
 @login_required
 def admin_create_partner():
-    form = PartnerForm()
     if current_user.status > 0:
-        message, result = None, False
+        form = PartnerForm()
+        message, result, filenames, filename = None, False, [], None
         if request.method == 'POST':
+            for name in request.files:
+                file = request.files[name]
+                if file.filename != "":
+                    if file and allowed_file(file.filename):
+                        filename = secure_filename(create_new_image_name(True))
+                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                        filenames.append(filename)
+            if len(filenames) == 0:
+                filenames = ["standard.png"]
             message = post(
                 f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
-                json={"name": form.name.data, "image": "standard.png", "text": form.text.data,
+                json={"name": form.name.data, "image": "//".join(filenames), "text": form.text.data,
                       "link": form.link.data}).json()
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
         return render_template('admin-partner-form.html', title='Создание партнёра', message=message, form=form,
-                               result=result, flag=True)
+                               result=result, flag=True, filenames=filenames, image_len=1)
     return you_dont_have_permission()
 
 
 @app.route("/admin-edit-partner/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_partner(id):
-    form = PartnerForm()
     if current_user.status > 0:
+        form = PartnerForm()
         partner = get(
             f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
-        message, result = None, False
+        message, result, filenames, filename = None, False, [], None
         if "message" not in partner:
             if request.method == 'POST':
+                cont = containerManager.get_container(f"partner_{id}")
+                if cont:
+                    for file in list(request.files)[:-1]:
+                        if file in cont:
+                            filenames.append(cont[file])
+                for name in request.files:
+                    file = request.files[name]
+                    if file.filename != "":
+                        if file and allowed_file(file.filename):
+                            filename = secure_filename(create_new_image_name(True))
+                            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                            filenames.append(filename)
+                if len(filenames) == 0:
+                    filenames = ["standard.png"]
+                containerManager.add_container(f"partner_{id}", filenames)
                 message = put(
                     f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
-                    json={"name": form.name.data, "text": form.text.data, "link": form.link.data}).json()
+                    json={"name": form.name.data, "text": form.text.data, "link": form.link.data, "image": "//".join(filenames)}).json()
                 if "success" in message:
                     result = True
                 message = " ".join(list(message.values()))
@@ -556,18 +650,20 @@ def admin_edit_partner(id):
                 form.name.data = partner["name"]
                 form.text.data = partner["text"]
                 form.link.data = partner["link"]
+                filenames = partner["image"].split("//")
+                containerManager.add_container(f"partner_{id}", filenames)
         else:
             message = "Партнёр не найден"
         return render_template('admin-partner-form.html', title='Редактирование партнёра', message=message, form=form,
-                               result=result, flag=False)
+                               result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1)
     return you_dont_have_permission()
 
 
 @app.route("/admin-delete-partner/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_partner(id):
-    form = DeleteForm()
     if current_user.status > 0:
+        form = DeleteForm()
         message, name, result = "", "партнёр не найден", False
         partner = get(
             f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
@@ -579,6 +675,7 @@ def admin_delete_partner(id):
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
+            containerManager.delete_container(f"partner_{id}")
         return render_template('admin-delete-form.html', title='Удаление партнёра', message=message, form=form,
                                result=result, name=name)
     return you_dont_have_permission()
@@ -617,14 +714,12 @@ def page(id):
 @app.route("/test", methods=['GET', 'POST'])
 def test():
     if request.method == 'POST':
-        print(request.files)
         file = request.files['file']
     return render_template('test.html')
 
 
 if __name__ == '__main__':
     print("http://127.0.0.1:8000/admin")
-    print("http://127.0.0.1:8000/admin-edit-news/2")
     print("http://127.0.0.1:8000/login")
     main()
     create_new_db = False
