@@ -211,7 +211,8 @@ if test_feedback:
                      "heading": "Какой-то заголовок", "image": "standard.png",
                      "text": "Мне нравиться ваш сайт!"}).json())
 
-if test_auditlog:
+
+if test_auditlog and False:
     print(get(f"{link_website}api/auditlog/{test_admin['email']}/{test_admin['password']}/1").json())
     for log in get(f"{link_website}api/auditlog/{test_admin['email']}/{test_admin['password']}").json():
         print(log)

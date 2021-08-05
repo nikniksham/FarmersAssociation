@@ -15,7 +15,7 @@ from data.API.ContentAPI.ContentResource import CreateContentResource, ContentRe
     ContentListRecourseId
 from data.API.FeedbackAPI.FeedbackResource import FeedbackResource, FeedbackListRecourse, CreateFeedbackResource
 from data.API.NewspageAPI.NewspageResource import NewspageResource, NewspageListRecourse, CreateNewspageResource, \
-    NewspageResourceUsual
+    NewspageResourceUsual, NewspageListRecourseId
 from data.API.PartnerAPI.PartnerResource import PartnerResource, PartnerResourceUsual, PartnerListRecourse, \
     CreatePartnerResource
 from data.API.SmartpageAPI.SmartpageResource import CreateSmartpageResource, SmartpageResource, SmartpageListRecourse, \
@@ -56,6 +56,7 @@ api.add_resource(AuditlogListRecourse, "/api/auditlog/<string:email>/<string:pas
 api.add_resource(CreateNewspageResource, "/api/newspage/<string:email>/<string:password>")
 api.add_resource(NewspageResource, "/api/newspage/<string:email>/<string:password>/<int:newspage_id>")
 api.add_resource(NewspageResourceUsual, "/api/newspage/<int:newspage_id>")
+api.add_resource(NewspageListRecourseId, "/api/newspage/<int:start_id>/<int:end_id>")
 api.add_resource(NewspageListRecourse, "/api/newspage")
 api.add_resource(CreatePartnerResource, "/api/partner/<string:email>/<string:password>")
 api.add_resource(PartnerResource, "/api/partner/<string:email>/<string:password>/<int:partner_id>")
@@ -77,6 +78,11 @@ containerManager = ManagerContainer()
 def load_user(user_id):
     session = db_session.create_session()
     return session.query(User).get(user_id)
+
+
+def delete_img(filename):
+    if os.path.exists(f"{app.config['UPLOAD_FOLDER']}{filename}"):
+        os.remove(f"{app.config['UPLOAD_FOLDER']}{filename}")
 
 
 def create_new_image_name(logo=False):
@@ -187,17 +193,19 @@ def admin_edit_news(id):
         if "message" not in list(news):
             if request.method == 'POST':
                 cont = containerManager.get_container(f"news_{id}")
-                if cont:
-                    for file in list(request.files)[:-1]:
-                        if file in cont:
-                            filenames.append(cont[file])
-                for name in request.files:
+                img_list = list(request.files)
+                for ind, name in enumerate(request.files):
                     file = request.files[name]
                     if file.filename != "":
+                        if img_list[ind] in cont:
+                            delete_img(cont[img_list[ind]])
                         if file and allowed_file(file.filename):
                             filename = secure_filename(create_new_image_name())
                             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                             filenames.append(filename)
+                    else:
+                        if img_list[ind] in cont:
+                            filenames.append(cont[img_list[ind]])
                 if len(filenames) == 0:
                     filenames = ["standard.png"]
                 containerManager.add_container(f"news_{id}", filenames)
@@ -230,13 +238,16 @@ def admin_delete_news(id):
             f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
         if "message" not in news:
             name = "новость " + news["heading"]
-        if request.method == 'POST':
-            message = delete(
-                f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
-            if "success" in message:
-                result = True
-            message = " ".join(list(message.values()))
-            containerManager.delete_container(f"news_{id}")
+            if request.method == 'POST':
+                message = delete(
+                    f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+                if "success" in message:
+                    result = True
+                message = " ".join(list(message.values()))
+                images = news["image"]
+                for image in images.split("//"):
+                    delete_img(image)
+                containerManager.delete_container(f"news_{id}")
         return render_template('admin-delete-form.html', title='Удаление новости', message=message, form=form,
                                result=result, name=name)
     return you_dont_have_permission()
@@ -396,17 +407,19 @@ def admin_edit_smartpage(id):
         if "message" not in smartpage:
             if request.method == 'POST':
                 cont = containerManager.get_container(f"smartpage_{id}")
-                if cont:
-                    for file in list(request.files)[:-1]:
-                        if file in cont:
-                            filenames.append(cont[file])
-                for name in request.files:
+                img_list = list(request.files)
+                for ind, name in enumerate(request.files):
                     file = request.files[name]
                     if file.filename != "":
+                        if img_list[ind] in cont:
+                            delete_img(cont[img_list[ind]])
                         if file and allowed_file(file.filename):
                             filename = secure_filename(create_new_image_name())
                             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                             filenames.append(filename)
+                    else:
+                        if img_list[ind] in cont:
+                            filenames.append(cont[img_list[ind]])
                 if len(filenames) == 0:
                     filenames = ["standard.png"]
                 containerManager.add_container(f"smartpage_{id}", filenames)
@@ -437,13 +450,16 @@ def admin_delete_smartpage(id):
             f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
         if "message" not in smartpage:
             name = "страница " + smartpage['heading']
-        if request.method == 'POST':
-            message = delete(
-                f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
-            if "success" in message:
-                result = True
-            message = " ".join(list(message.values()))
-            containerManager.delete_container(f"smartpage_{id}")
+            if request.method == 'POST':
+                message = delete(
+                    f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+                if "success" in message:
+                    result = True
+                message = " ".join(list(message.values()))
+                images = smartpage["image"]
+                for image in images.split("//"):
+                    delete_img(image)
+                containerManager.delete_container(f"smartpage_{id}")
         return render_template('admin-delete-form.html', title='Удаление страницы', message=message, form=form,
                                result=result, name=name)
     return you_dont_have_permission()
@@ -522,17 +538,19 @@ def admin_edit_content(id):
         if "message" not in content:
             if request.method == 'POST':
                 cont = containerManager.get_container(f"content_{id}")
-                if cont:
-                    for file in list(request.files)[:-1]:
-                        if file in cont:
-                            filenames.append(cont[file])
-                for name in request.files:
+                img_list = list(request.files)
+                for ind, name in enumerate(request.files):
                     file = request.files[name]
                     if file.filename != "":
+                        if img_list[ind] in cont:
+                            delete_img(cont[img_list[ind]])
                         if file and allowed_file(file.filename):
                             filename = secure_filename(create_new_image_name())
                             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                             filenames.append(filename)
+                    else:
+                        if img_list[ind] in cont:
+                            filenames.append(cont[img_list[ind]])
                 if len(filenames) == 0:
                     filenames = ["standard.png"]
                 containerManager.add_container(f"content_{id}", filenames)
@@ -565,13 +583,16 @@ def admin_delete_content(id):
             f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
         if "message" not in content:
             name = "контент " + content['type']
-        if request.method == 'POST':
-            message = delete(
-                f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
-            if "success" in message:
-                result = True
-            message = " ".join(list(message.values()))
-            containerManager.delete_container(f"content_{id}")
+            if request.method == 'POST':
+                message = delete(
+                    f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+                if "success" in message:
+                    result = True
+                message = " ".join(list(message.values()))
+                images = content["image"]
+                for image in images.split("//"):
+                    delete_img(image)
+                containerManager.delete_container(f"content_{id}")
         return render_template('admin-delete-form.html', title='Удаление контента', message=message, form=form,
                                result=result, name=name)
     return you_dont_have_permission()
@@ -625,17 +646,19 @@ def admin_edit_partner(id):
         if "message" not in partner:
             if request.method == 'POST':
                 cont = containerManager.get_container(f"partner_{id}")
-                if cont:
-                    for file in list(request.files)[:-1]:
-                        if file in cont:
-                            filenames.append(cont[file])
-                for name in request.files:
+                img_list = list(request.files)
+                for ind, name in enumerate(request.files):
                     file = request.files[name]
                     if file.filename != "":
+                        if img_list[ind] in cont:
+                            delete_img(cont[img_list[ind]])
                         if file and allowed_file(file.filename):
                             filename = secure_filename(create_new_image_name(True))
                             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                             filenames.append(filename)
+                    else:
+                        if img_list[ind] in cont:
+                            filenames.append(cont[img_list[ind]])
                 if len(filenames) == 0:
                     filenames = ["standard.png"]
                 containerManager.add_container(f"partner_{id}", filenames)
@@ -668,13 +691,16 @@ def admin_delete_partner(id):
             f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
         if "message" not in partner:
             name = "страница " + partner['name']
-        if request.method == 'POST':
-            message = delete(
-                f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
-            if "success" in message:
-                result = True
-            message = " ".join(list(message.values()))
-            containerManager.delete_container(f"partner_{id}")
+            if request.method == 'POST':
+                message = delete(
+                    f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+                if "success" in message:
+                    result = True
+                message = " ".join(list(message.values()))
+                images = partner["image"]
+                for image in images.split("//"):
+                    delete_img(image)
+                containerManager.delete_container(f"partner_{id}")
         return render_template('admin-delete-form.html', title='Удаление партнёра', message=message, form=form,
                                result=result, name=name)
     return you_dont_have_permission()
@@ -718,6 +744,7 @@ def test():
 if __name__ == '__main__':
     print("http://127.0.0.1:8000/admin")
     print("http://127.0.0.1:8000/login")
+    print("http://127.0.0.1:8000/test")
     main()
     create_new_db = False
     if create_new_db:

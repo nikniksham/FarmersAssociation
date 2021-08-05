@@ -43,7 +43,7 @@ class AuditlogResource(Resource):
 class AuditlogListRecourse(Resource):
     def get(self, email, password):
         admin, session = check_admin_status(email, password)
-        contents = session.query(AuditLog).order_by(AuditLog.created_date).all()
+        contents = session.query(AuditLog).order_by(AuditLog.created_date).all()[::-1]
         return jsonify([item.to_dict(only=('id', 'event', 'info', 'user', 'created_date')) for item in contents])
 
 
