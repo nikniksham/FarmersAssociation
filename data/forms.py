@@ -28,7 +28,7 @@ class AdminForm(StartForm):
 
 class ContentForm(StartForm):
     type = SelectField('Тип', choices=[("News", "Новостной"), ("Text", "Текстовой"),
-                                       ("Image", "С картинками"), ("Partners", "Партнёры")])
+                                       ("Image", "С картинками"), ("Partner", "Партнёры")])
     # animation_type = StringField('Тип анимации', validators=[DataRequired()])
     text = StringField('Текст', validators=[DataRequired()])
     tags = StringField('Тэги', validators=[DataRequired()])
