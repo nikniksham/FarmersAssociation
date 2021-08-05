@@ -724,15 +724,12 @@ def admin_feedback():
 
 @app.route("/page/<int:id>")
 def page(id):
-    if not current_user.is_anonymous:
-        page = get(
-            f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
-        content = get(f"{link_website}api/content/{page['id']}").json()
-        newslist = get(f"{link_website}api/newspage").json()
-        return render_template('admin-page.html', title=page["heading"], content=content, newslist=newslist)
     page = get(f"{link_website}api/smartpage/{id}").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
-    newslist = get(f"{link_website}api/newspage").json()
+    newslist = get(f"{link_website}api/newspage/0/9").json()
+    print(page)
+    print(content)
+    print(newslist)
     return render_template('page.html', title=page["heading"], content=content, newslist=newslist)
 
 
