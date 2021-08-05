@@ -712,7 +712,7 @@ def page(id):
 
 @app.route("/test", methods=['GET', 'POST'])
 def test():
-    return render_template('test.html')
+    return render_template('partner.html')
 
 
 if __name__ == '__main__':

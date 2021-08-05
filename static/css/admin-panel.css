@@ -220,7 +220,7 @@ div.un-visible {
     background-size: 30px 30px;
 }
 
-.settings-element-edit, .settings-element-delete, .settings-element-add, .settings-element-move{
+.settings-element-edit, .settings-element-delete, .settings-element-add, .settings-element-move, .settings-element-move-empty {
     color: black;
     padding: 0 5px;
 }
@@ -249,6 +249,10 @@ div.un-visible {
 .settings-element-move:hover {
     cursor: pointer;
     color: black
+}
+
+p.settings-element-move-empty {
+    margin: 0 5px;
 }
 
 .settings-element-edit:hover {

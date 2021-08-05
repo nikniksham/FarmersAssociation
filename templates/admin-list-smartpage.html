@@ -22,6 +22,8 @@
         {% endif %}
         {% if content != contentdict[page['id']][0] %}
         <a class="settings-element-move" href="/admin-edit-content-move-up/{{content['id']}}">↑</a>
+        {% else %}
+        <p class="settings-element-move-empty"></p>
         {% endif %}
         <a class="settings-element-edit" href="/admin-edit-content/{{content['id']}}">Изменить</a>
         <a class="settings-element-delete" href="/admin-delete-content/{{content['id']}}">Удалить</a>
