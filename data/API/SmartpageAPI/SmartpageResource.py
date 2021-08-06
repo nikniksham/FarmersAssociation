@@ -6,6 +6,7 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.smartpage import Smartpage
 from data.content import Content
+from data.API.NewspageAPI.NewspageResource import trans_link
 from data.API.SmartpageAPI.parser_smartpage import parser_smartpage
 
 

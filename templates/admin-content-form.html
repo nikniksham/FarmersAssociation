@@ -29,7 +29,11 @@
                 {{ error }}
             </div>
             {% endfor %}
+            {% if form.type.data == "Text" %}
+            <div id="text" class="">
+            {% else %}
             <div id="text" class="hidden">
+            {% endif %}
                 {{ form.text.label }}<br>
                 {{ form.text(class="form-control") }}<br>
                 {% for error in form.text.errors %}
@@ -37,8 +41,15 @@
                     {{ error }}
                 </div>
                 {% endfor %}
+                <div class="submit-block">
+                    {{ form.preview(type="submit", class="btn btn-primary submit") }}
+                </div>
             </div>
+            {% if form.type.data == "Image" %}
+            <div id="images" class="">
+            {% else%}
             <div id="images" class="hidden">
+            {% endif %}
                 <p>Изображения</p>
                 <div class="settings-images">
                     <div id="images1">
@@ -93,5 +104,6 @@
             $('#text').removeClass('hidden');
         }
     });
+
 </script>
 {% endblock %}

@@ -10,7 +10,7 @@ class Smartpage(SqlAlchemyBase, SerializerMixin):
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     heading = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     image = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    # content = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    link = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.now())
     content = orm.relation('Content')
     author_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("user.id"))
