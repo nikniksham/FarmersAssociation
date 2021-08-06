@@ -13,13 +13,14 @@
 }
 
 .partner {
-    position: absolute;
+    position: fixed;
     left: 0;
     top: 50px;
     width: 100%;
     height: calc(100% - 50px);
     background: rgba(0,0,0,.9);
     display: none;
+    z-index: 20;
 }
 
 .partner-Pop-up {

@@ -3,9 +3,33 @@
 {% block head %}
 <link href="/static/css/slick.css" rel="stylesheet">
 <link href="/static/css/slick-theme.css" rel="stylesheet">
+<link href="/static/css/generated-page.css" rel="stylesheet">
+<link href="/static/css/subpages.css" rel="stylesheet">
+{% endblock %}
+
+{% block popup %}
+<div id="fermaroigas" class="partner">
+    <div class="container">
+        <div class="partner-Pop-up">
+            <div class="partner-Pop-up-header">
+                <img class="partner-Pop-up-img" src="/static/img/partner-1.jpg" alt="fermaroigas">
+                <p class="partner-Pop-up-title">fermaroigas</p>
+                <img class="partner-Pop-up-close" src="/static/img/close.png" alt="закрыть" onclick="openPopUp('fermaroigas')">
+            </div>
+            <p>Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма.</p>
+            <p><b>Преференции:</b> ВЫ можете узнать о существовании этой Эко-фермы!</p>
+            <div class="partner-Pop-up-footer"><a>На страничку фермы</a></div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block pageblock %}
+<div class="carousel">
+    {% for src in page['image'].split('//') %}
+        <div class="carousel-head" style="background-image: url(/static/img/{{src}});"></div>
+    {% endfor %}
+</div>
 <div class="container">
     {% for block in content %}
         {% if block['type'] == "News" %}
@@ -14,11 +38,11 @@
                     <div class="col-sm-12 col-md-6 col-lg-4">
                         <a href="/news/{{news['id']}}">
                             <div class="news">
-                                <div class="news-img" style="background-image: url('static/img/news-5.jpg');"></div>
+                                <div class="news-img" style="background-image: url('/static/img/{{news['image'].split('//')[0]}}');"></div>
                                 <div class="news-title">{{news['heading']}}</div>
                                 <div class="news-text">{{news['text']}}</div>
                                 <div class="news-navigation">
-                                    <span class="date">12.12.2021</span>
+                                    <span class="date">{{news['created_date']}}</span>
                                 </div>
                             </div>
                         </a>
@@ -26,20 +50,56 @@
                 {% endfor %}
             </div>
         {% elif block['type'] == "Text" %}
-            {% if block['title'] != "" %}
-            <p>{{block['title']}}</p>
-            {% endif %}
-            <p>{{block['type']}}</p>
-        {% elif block['type'] == "Images" %}
-            {% if block['title'] != "" %}
-            <p>{{block['title']}}</p>
-            {% endif %}
-            <div class="carousel">
-                {% for src in block['image'].slit('//') %}
-                    <img src="{{src}}" alt="">
+            <div class="text-block">
+                <p>{{block['text']}}</p>
+            </div>
+        {% elif block['type'] == "Image" %}
+            <div class="carousel image-block">
+                {% for src in block['image'].split('//') %}
+                    <div class="carousel-item">
+                        <div style="background-image: url(/static/img/{{src}});"></div>
+                    </div>
                 {% endfor %}
             </div>
-        {% elif block['type'] == "Partners" %}
+        {% elif block['type'] == "Partner" %}
+            <div class="partners-carousel">
+                <div class="partner-item">
+                    <a class="partner-href" onclick="openPopUp('fermaroigas')">
+                        <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
+                        <div class="partner-item-text">
+                            <p>fermaroigas</p>
+                            <p>Эко-Ферма</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="partner-item">
+                    <a class="partner-href" onclick="openPopUp('fermaroigas')">
+                        <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
+                        <div class="partner-item-text">
+                            <p>fermaroigas</p>
+                            <p>Эко-Ферма</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="partner-item">
+                    <a class="partner-href" onclick="openPopUp('fermaroigas')">
+                        <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
+                        <div class="partner-item-text">
+                            <p>fermaroigas</p>
+                            <p>Эко-Ферма</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="partner-item">
+                    <a class="partner-href" onclick="openPopUp('fermaroigas')">
+                        <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
+                        <div class="partner-item-text">
+                            <p>fermaroigas</p>
+                            <p>Эко-Ферма</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
         {% endif %}
     {% endfor %}
 </div>
@@ -47,10 +107,67 @@
 
 {% block end %}
 <script src="/static/js/slick.js"></script>
-<script src="/static/js/carousels.js"></script>
 <script>
     var boolAutoplay = true
-    var speedNews = 3000
     var speedPartners = 2000
+    var speedCarousel = 1000
+
+    function openPopUp(name) {
+        console.log("lol "+name);
+        $('#'+name).toggleClass('visible');
+    }
+
+    $(document).ready(function(){
+        $(document).ready(function(){
+            $('.carousel').slick({
+                dots: false,
+                infinite: true,
+                autoplay: boolAutoplay,
+                autoplaySpeed: speedCarousel,
+                slidesToShow: 1,
+                draggable: true,
+                arrows: false,
+                swipeToSlide: true,
+            });
+        });
+
+        $('.partners-carousel').slick({
+            dots: false,
+            infinite: true,
+            autoplay: boolAutoplay,
+            autoplaySpeed: speedPartners,
+            slidesToShow: 4,
+            draggable: true,
+            arrows: false,
+            swipeToSlide: true,
+            responsive: [
+                {
+                  breakpoint: 768,
+                  settings: {
+                    autoplay: false,
+                    slidesToShow: 1
+                  }
+                },
+                {
+                  breakpoint: 991,
+                  settings: {
+                    slidesToShow: 2
+                  }
+                },
+                {
+                  breakpoint: 1200,
+                  settings: {
+                    slidesToShow: 3
+                  }
+                },
+                {
+                  breakpoint: 1300,
+                  settings: {
+                    slidesToShow: 4
+                  }
+                }
+            ]
+        });
+    });
 </script>
 {% endblock %}

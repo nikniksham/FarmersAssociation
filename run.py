@@ -730,7 +730,7 @@ def page(id):
     print(page)
     print(content)
     print(newslist)
-    return render_template('page.html', title=page["heading"], content=content, newslist=newslist)
+    return render_template('generated-page.html', title=page["heading"], page=page, content=content, newslist=newslist)
 
 
 @app.route("/test", methods=['GET', 'POST'])

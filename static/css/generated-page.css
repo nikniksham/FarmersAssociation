@@ -1,0 +1,36 @@
+p {
+    font-size: 18px;
+    letter-spacing: 0.8px;
+}
+
+.text-block {
+    margin: 30px 0;
+}
+
+.text-block p {
+    background: #1e2f37;
+    color: white;
+    text-align: center;
+    border-radius: 15px;
+    margin: auto;
+    padding: 15px 0;
+}
+
+.carousel-head {
+    padding-bottom: 35%;
+    background-size: cover;
+    background-position: center;
+}
+
+.carousel-item div {
+    max-width: 767px;
+    margin: auto;
+    border-radius: 15px;
+    padding-bottom: 45%;
+    background-size: cover;
+    background-position: center;
+}
+
+.image-block {
+    margin: 30px 0;
+}
