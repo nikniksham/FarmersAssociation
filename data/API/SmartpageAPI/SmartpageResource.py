@@ -79,6 +79,14 @@ class SmartpageResource(Resource):
                     if session.query(Smartpage).filter(Smartpage.heading == args["heading"]).first() is not None:
                         raise_error("Этот заголовок уже занят")
                     smartpage.heading = args["heading"]
+                    link, count = trans_link(args["heading"]), 0
+                    while session.query(Smartpage).filter(Smartpage.link == link).first() is not None:
+                        if link[-len(str(count)):] == str(count):
+                            link = link[:-len(str(count))] + str(count + 1)
+                            count += 1
+                        else:
+                            link += str(count)
+                    smartpage.link = link
         if count == 0:
             return raise_error("Пустой запрос")
         page_dict_2 = smartpage.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id'))
@@ -101,7 +109,7 @@ class SmartpageRecourseUsual(Resource):
 class SmartpageRecourseLink(Resource):
     def get(self, link):
         session = db_session.create_session()
-        smartpage = session.query(Smartpage).filter(Smartpage.link == link).get()
+        smartpage = session.query(Smartpage).filter(Smartpage.link == link).first()
         if smartpage:
             return jsonify(smartpage.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id')))
         raise_error("Страница не найдена")

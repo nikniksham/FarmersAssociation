@@ -20,6 +20,9 @@
             <a>Все новости</a>
             <a>Команда</a>
             <a>Контакты</a>
+            {% for smartpage in smartpages %}
+            <a href=/page/{{smartpage['link']}}>{{smartpage["heading"]}}</a>
+            {% endfor %}
         </div>
     </div>
     {% block popup %}{% endblock %}

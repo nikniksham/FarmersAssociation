@@ -26,11 +26,11 @@ class AdminForm(StartForm):
 
 
 class ContentForm(StartForm):
-    type = SelectField('Тип', choices=[("News", "Новостной"), ("Text", "Текстовой"),
+    type = SelectField('Тип', choices=[("News", "Новостной"), ("Text", "Текстовый"),
                                        ("Image", "С картинками"), ("Partner", "Партнёры")])
     heading = StringField('Название', validators=[DataRequired()])
     # animation_type = StringField('Тип анимации', validators=[DataRequired()])
-    text = StringField('Текст', validators=[DataRequired()])
+    text = StringField('Текст')
     preview = SubmitField("Предпросмотр")
 
 
@@ -39,7 +39,9 @@ class FeedbackForm(StartForm):
     email = StringField('Почта', validators=[DataRequired()])
     heading = StringField('Заголовок', validators=[DataRequired()])
     text = StringField('Текст', validators=[DataRequired()])
-    code = StringField('Код подверждения', validators=[DataRequired()])
+    code = StringField('Код подверждения')
+    getcode = SubmitField("Получить код")
+    preview = SubmitField("Предпросмотр")
 
 
 class SmartpageForm(StartForm):

@@ -178,7 +178,7 @@ class CreateContentResource(Resource):
         session.commit()
         params_dict = new_content.to_dict(
             only=('id', 'position', 'type', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id', 'heading'))
-        params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
+        params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//")) if args["image"] else 0}'
         add_auditlog("Создание", f"{admin.name} {admin.surname} создаёт блок контента с параметрами: {params_dict}",
                      admin, datetime.datetime.now())
         return jsonify({'success': f'Блок контента на позиции {new_content.position} создан'})

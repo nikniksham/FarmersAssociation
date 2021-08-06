@@ -80,6 +80,14 @@ class NewspageResource(Resource):
                     newspage.image = args['image']
                 if key == 'heading':
                     newspage.heading = args["heading"]
+                    link, count = trans_link(args["heading"]), 0
+                    while session.query(Newspage).filter(Newspage.link == link).first() is not None:
+                        if link[-len(str(count)):] == str(count):
+                            link = link[:-len(str(count))] + str(count + 1)
+                            count += 1
+                        else:
+                            link += str(count)
+                    newspage.link = link
                 if key == "text":
                     newspage.text = args["text"]
                 if key == "tags":

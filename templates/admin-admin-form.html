@@ -37,7 +37,6 @@
             </div>
             {% endfor %}
 
-            {{ form.hidden_tag() }}
             {{ form.status.label }}<br>
             {{ form.status(class="form-control") }}<br>
             {% for error in form.status.errors %}

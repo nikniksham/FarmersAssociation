@@ -16,8 +16,8 @@ test_smartpage_api = False
 test_content = False
 test_newspage = False
 test_partner = False
-test_feedback = False
-test_auditlog = True
+test_feedback = True
+test_auditlog = False
 
 # pbkdf2:sha256:150000$ienbNff2$f899740f7999e24b06b519d5305cf8f2e34643033b6e3086fff3e0c8e39d795b
 if test_admin_api:
@@ -206,10 +206,10 @@ if test_partner:
             f"{link_website}api/partner/{test_admin['email']}/{test_admin['password']}/{page_id}").json())
 
 if test_feedback:
-    print(post(f"{link_website}api/feedback/5YP0LA",
+    print(post(f"{link_website}api/feedback",
                json={"email": "yuramorozov2711@gmail.com", "fullname": "Шамков Николай Николаевич",
                      "heading": "Какой-то заголовок", "image": "standard.png",
-                     "text": "Мне нравиться ваш сайт!"}).json())
+                     "text": "Мне нравиться ваш сайт!", "code": "5YP0LA"}).json())
 
 
 print(get(f"{link_website}api/newspage/0/4").json())

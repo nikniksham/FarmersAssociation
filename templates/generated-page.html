@@ -5,6 +5,7 @@
 <link href="/static/css/slick-theme.css" rel="stylesheet">
 <link href="/static/css/generated-page.css" rel="stylesheet">
 <link href="/static/css/subpages.css" rel="stylesheet">
+{% block headext %}{% endblock %}
 {% endblock %}
 
 {% block popup %}
@@ -14,9 +15,13 @@
             <div class="partner-Pop-up-header">
                 <img class="partner-Pop-up-img" src="/static/img/partner-1.jpg" alt="fermaroigas">
                 <p class="partner-Pop-up-title">fermaroigas</p>
-                <img class="partner-Pop-up-close" src="/static/img/close.png" alt="закрыть" onclick="openPopUp('fermaroigas')">
+                <img class="partner-Pop-up-close" src="/static/img/close.png" alt="закрыть"
+                     onclick="openPopUp('fermaroigas')">
             </div>
-            <p>Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма.</p>
+            <p>Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма.
+                Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма.
+                Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма.
+                Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма.</p>
             <p><b>Преференции:</b> ВЫ можете узнать о существовании этой Эко-фермы!</p>
             <div class="partner-Pop-up-footer"><a>На страничку фермы</a></div>
         </div>
@@ -27,85 +32,88 @@
 {% block pageblock %}
 <div class="carousel">
     {% for src in page['image'].split('//') %}
-        <div class="carousel-head" style="background-image: url(/static/img/{{src}});"></div>
+    <div class="carousel-head" style="background-image: url(/static/img/{{src}});"></div>
     {% endfor %}
 </div>
 <div class="container">
     {% for block in content %}
-        {% if block['type'] == "News" %}
-            <div class="row">
-                {% for news in newslist %}
-                    <div class="col-sm-12 col-md-6 col-lg-4">
-                        <a href="/news/{{news['id']}}">
-                            <div class="news">
-                                <div class="news-img" style="background-image: url('/static/img/{{news['image'].split('//')[0]}}');"></div>
-                                <div class="news-title">{{news['heading']}}</div>
-                                <div class="news-text">{{news['text']}}</div>
-                                <div class="news-navigation">
-                                    <span class="date">{{news['created_date']}}</span>
-                                </div>
-                            </div>
-                        </a>
+    {% if block['type'] == "News" %}
+    <div class="row">
+        {% for news in newslist %}
+        <div class="col-sm-12 col-md-6 col-lg-4">
+            <a href="/news/{{news['id']}}">
+                <div class="news">
+                    <div class="news-img"
+                         style="background-image: url('/static/img/{{news['image'].split('//')[0]}}');"></div>
+                    <div class="news-title">{{news['heading']}}</div>
+                    <div class="news-text">{{news['text']}}</div>
+                    <div class="news-navigation">
+                        <span class="date">{{news['created_date']}}</span>
                     </div>
-                {% endfor %}
-            </div>
-        {% elif block['type'] == "Text" %}
-            <div class="text-block">
-                <p>{{block['text']}}</p>
-            </div>
-        {% elif block['type'] == "Image" %}
-            <div class="carousel image-block">
-                {% for src in block['image'].split('//') %}
-                    <div class="carousel-item">
-                        <div style="background-image: url(/static/img/{{src}});"></div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% elif block['type'] == "Partner" %}
-            <div class="partners-carousel">
-                <div class="partner-item">
-                    <a class="partner-href" onclick="openPopUp('fermaroigas')">
-                        <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
-                        <div class="partner-item-text">
-                            <p>fermaroigas</p>
-                            <p>Эко-Ферма</p>
-                        </div>
-                    </a>
                 </div>
-                <div class="partner-item">
-                    <a class="partner-href" onclick="openPopUp('fermaroigas')">
-                        <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
-                        <div class="partner-item-text">
-                            <p>fermaroigas</p>
-                            <p>Эко-Ферма</p>
-                        </div>
-                    </a>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% elif block['type'] == "Text" %}
+    <div class="text-block">
+        <p>{{block['text']}}</p>
+    </div>
+    {% elif block['type'] == "Image" %}
+    <div class="carousel image-block">
+        {% for src in block['image'].split('//') %}
+        <div class="carousel-item">
+            <div style="background-image: url(/static/img/{{src}});"></div>
+        </div>
+        {% endfor %}
+    </div>
+    {% elif block['type'] == "Partner" %}
+    <div class="partners-carousel">
+        <div class="partner-item">
+            <a class="partner-href" onclick="openPopUp('fermaroigas')">
+                <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
+                <div class="partner-item-text">
+                    <p>fermaroigas</p>
+                    <p>Эко-Ферма</p>
                 </div>
-                <div class="partner-item">
-                    <a class="partner-href" onclick="openPopUp('fermaroigas')">
-                        <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
-                        <div class="partner-item-text">
-                            <p>fermaroigas</p>
-                            <p>Эко-Ферма</p>
-                        </div>
-                    </a>
+            </a>
+        </div>
+        <div class="partner-item">
+            <a class="partner-href" onclick="openPopUp('fermaroigas')">
+                <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
+                <div class="partner-item-text">
+                    <p>fermaroigas</p>
+                    <p>Эко-Ферма</p>
                 </div>
-                <div class="partner-item">
-                    <a class="partner-href" onclick="openPopUp('fermaroigas')">
-                        <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
-                        <div class="partner-item-text">
-                            <p>fermaroigas</p>
-                            <p>Эко-Ферма</p>
-                        </div>
-                    </a>
+            </a>
+        </div>
+        <div class="partner-item">
+            <a class="partner-href" onclick="openPopUp('fermaroigas')">
+                <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
+                <div class="partner-item-text">
+                    <p>fermaroigas</p>
+                    <p>Эко-Ферма</p>
                 </div>
-            </div>
-        {% endif %}
+            </a>
+        </div>
+        <div class="partner-item">
+            <a class="partner-href" onclick="openPopUp('fermaroigas')">
+                <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
+                <div class="partner-item-text">
+                    <p>fermaroigas</p>
+                    <p>Эко-Ферма</p>
+                </div>
+            </a>
+        </div>
+    </div>
+    {% endif %}
     {% endfor %}
+    {% block pageblockext %}{% endblock %}
 </div>
 {% endblock %}
 
 {% block end %}
+{% block endext %}{% endblock %}
 <script src="/static/js/slick.js"></script>
 <script>
     var boolAutoplay = true
@@ -169,5 +177,7 @@
             ]
         });
     });
+
+
 </script>
 {% endblock %}

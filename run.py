@@ -19,7 +19,7 @@ from data.API.NewspageAPI.NewspageResource import NewspageResource, NewspageList
 from data.API.PartnerAPI.PartnerResource import PartnerResource, PartnerResourceUsual, PartnerListRecourse, \
     CreatePartnerResource
 from data.API.SmartpageAPI.SmartpageResource import CreateSmartpageResource, SmartpageResource, SmartpageListRecourse, \
-    SmartpageRecourseUsual
+    SmartpageRecourseUsual, SmartpageRecourseLink
 from data.user import User
 from data.auditlog import AuditLog
 from data.content import Content
@@ -46,6 +46,7 @@ api.add_resource(AdminListRecourse, "/api/admin/list/<string:email>/<string:pass
 api.add_resource(CreateSmartpageResource, "/api/smartpage/<string:email>/<string:password>")
 api.add_resource(SmartpageResource, "/api/smartpage/<string:email>/<string:password>/<int:smartpage_id>")
 api.add_resource(SmartpageRecourseUsual, "/api/smartpage/<int:smartpage_id>")
+api.add_resource(SmartpageRecourseLink, "/api/smartpage/<string:link>")
 api.add_resource(SmartpageListRecourse, "/api/smartpage")
 api.add_resource(CreateContentResource, "/api/content/<string:email>/<string:password>")
 api.add_resource(ContentResource, "/api/content/<string:email>/<string:password>/<int:content_id>")
@@ -64,7 +65,7 @@ api.add_resource(PartnerResourceUsual, "/api/partner/<int:partner_id>")
 api.add_resource(PartnerListRecourse, "/api/partner")
 api.add_resource(FeedbackResource, "/api/feedback/<string:email>/<string:password>/<int:feedback_id>")
 api.add_resource(FeedbackListRecourse, "/api/feedback/<string:email>/<string:password>")
-api.add_resource(CreateFeedbackResource, "/api/feedback/<string:code>")
+api.add_resource(CreateFeedbackResource, "/api/feedback")
 db_session.global_init("db/FarmersAssociation.sqlite")
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -132,26 +133,30 @@ def login():
 
 @app.route("/")
 def website_main():
-    return render_template('main-page.html', title='Главная страница')
+    smartpages = get(f"{link_website}api/smartpage").json()
+    return render_template('main-page.html', title='Главная страница', smartpages=smartpages)
 
 
 @app.route("/next")
 def test_page():
-    return render_template('test_page.html', title='Наследник от главной страницы')
+    smartpages = get(f"{link_website}api/smartpage").json()
+    return render_template('test_page.html', title='Наследник от главной страницы', smartpages=smartpages)
 
 
 @app.route("/admin")
 @login_required
 def admin():
-    return render_template('admin-panel.html', title='админка')
+    smartpages = get(f"{link_website}api/smartpage").json()
+    return render_template('admin-panel.html', title='админка', smartpages=smartpages)
 
 
 @app.route("/admin-list-news")
 @login_required
 def admin_list_news():
     if current_user.status > 0:
+        smartpages = get(f"{link_website}api/smartpage").json()
         newslist = get(f"{link_website}api/newspage").json()
-        return render_template('admin-list-news.html', title='Новости', newslist=newslist)
+        return render_template('admin-list-news.html', title='Новости', newslist=newslist, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -177,8 +182,9 @@ def admin_create_news():
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-news-form.html', title='Создание новости', message=message,
-                               form=form, result=result, filenames=filenames, image_len=1)
+                               form=form, result=result, filenames=filenames, image_len=1, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -223,8 +229,9 @@ def admin_edit_news(id):
                 containerManager.add_container(f"news_{id}", filenames)
         else:
             message = "Новость не найдена"
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-news-form.html', title='Редактирование новости', message=message, result=result,
-                               form=form, filenames=filenames, image_len=len(filenames) + 1)
+                               form=form, filenames=filenames, image_len=len(filenames) + 1, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -248,8 +255,9 @@ def admin_delete_news(id):
                 for image in images.split("//"):
                     delete_img(image)
                 containerManager.delete_container(f"news_{id}")
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-delete-form.html', title='Удаление новости', message=message, form=form,
-                               result=result, name=name)
+                               result=result, name=name, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -259,7 +267,8 @@ def admin_list_admin():
     if current_user.status > 0:
         adminlist = get(
             f"{link_website}api/admin/list/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}").json()
-        return render_template('admin-list-admin.html', title='Новости', adminlist=adminlist)
+        smartpages = get(f"{link_website}api/smartpage").json()
+        return render_template('admin-list-admin.html', title='Новости', adminlist=adminlist, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -285,8 +294,9 @@ def admin_create_admin():
                     message = "Слишком высокий статус нового пользователя"
             else:
                 message = "Пароли не совпадают"
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-admin-form.html', title='Создание админа', message=message, form=form,
-                               result=result, flag=True)
+                               result=result, flag=True, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -320,8 +330,9 @@ def admin_edit_admin(id):
                 message = "У вас недостаточно прав для этого"
         else:
             message = "Пользователь не найден"
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-admin-form.html', title='Редактирование админа', message=message, form=form,
-                               result=result, flag=False)
+                               result=result, flag=False, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -346,8 +357,9 @@ def admin_delete_admin(id):
                 message = "У вас недостаточно прав для этого"
         else:
             name = "пользователь не найден"
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-delete-form.html', title='Удаление админа', message=message, form=form,
-                               result=result, name=name)
+                               result=result, name=name, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -364,8 +376,10 @@ def admin_list_smartpage():
                         contentdict[page["id"]].append(content)
                     else:
                         contentdict[page["id"]] = [content]
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-list-smartpage.html', title='Страницы', smartpagelist=smartpagelist,
-                               contentdict=contentdict, types={"News": "Новости", "Image": "Картинки", "Text": "Текст", "Partner": "Партнёры"})
+                               contentdict=contentdict, types={"News": "Новости", "Image": "Картинки", "Text": "Текст", "Partner": "Партнёры"},
+                               smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -391,8 +405,9 @@ def admin_create_smartpage():
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-smartpage-form.html', title='Создание страницы', message=message, form=form,
-                               result=result, filenames=filenames, image_len=1)
+                               result=result, filenames=filenames, image_len=1, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -435,8 +450,10 @@ def admin_edit_smartpage(id):
                 containerManager.add_container(f"smartpage_{id}", filenames)
         else:
             message = "Страница не найдена"
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-smartpage-form.html', title='Редактирование страницы', message=message, form=form,
-                               result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1)
+                               result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1,
+                               smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -460,17 +477,9 @@ def admin_delete_smartpage(id):
                 for image in images.split("//"):
                     delete_img(image)
                 containerManager.delete_container(f"smartpage_{id}")
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-delete-form.html', title='Удаление страницы', message=message, form=form,
-                               result=result, name=name)
-    return you_dont_have_permission()
-
-
-@app.route("/admin-list-content")
-@login_required
-def admin_list_content():
-    if current_user.status > 0:
-        contentlist = get(f"{link_website}api/content").json()
-        return render_template('admin-list-content.html', title='Контент', contentlist=contentlist)
+                               result=result, name=name, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -496,8 +505,9 @@ def admin_create_content(page_id):
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-content-form.html', title='Создание контента', message=message, form=form,
-                               result=result, flag=True, filenames=filenames, image_len=1)
+                               result=result, flag=True, filenames=filenames, image_len=1, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -567,8 +577,10 @@ def admin_edit_content(id):
                 containerManager.add_container(f"content_{id}", filenames)
         else:
             message = "Контент не найден"
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-content-form.html', title='Редактирование контента', message=message, form=form,
-                               result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1 )
+                               result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1,
+                               smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -593,8 +605,9 @@ def admin_delete_content(id):
                     print(image, images)
                     delete_img(image)
                 containerManager.delete_container(f"content_{id}")
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-delete-form.html', title='Удаление контента', message=message, form=form,
-                               result=result, name=name)
+                               result=result, name=name, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -603,7 +616,8 @@ def admin_delete_content(id):
 def admin_list_partner():
     if current_user.status > 0:
         partnerlist = get(f"{link_website}api/partner").json()
-        return render_template('admin-list-partner.html', title='Партнёры', partnerlist=partnerlist)
+        smartpages = get(f"{link_website}api/smartpage").json()
+        return render_template('admin-list-partner.html', title='Партнёры', partnerlist=partnerlist, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -630,8 +644,9 @@ def admin_create_partner():
             if "success" in message:
                 result = True
             message = " ".join(list(message.values()))
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-partner-form.html', title='Создание партнёра', message=message, form=form,
-                               result=result, flag=True, filenames=filenames, image_len=1)
+                               result=result, flag=True, filenames=filenames, image_len=1, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -676,8 +691,10 @@ def admin_edit_partner(id):
                 containerManager.add_container(f"partner_{id}", filenames)
         else:
             message = "Партнёр не найден"
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-partner-form.html', title='Редактирование партнёра', message=message, form=form,
-                               result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1)
+                               result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1,
+                               smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -701,8 +718,9 @@ def admin_delete_partner(id):
                 for image in images.split("//"):
                     delete_img(image)
                 containerManager.delete_container(f"partner_{id}")
+        smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-delete-form.html', title='Удаление партнёра', message=message, form=form,
-                               result=result, name=name)
+                               result=result, name=name, smartpages=smartpages)
     return you_dont_have_permission()
 
 
@@ -710,32 +728,103 @@ def admin_delete_partner(id):
 @login_required
 def admin_auditlog():
     auditlogs = get(
-        f"{link_website}/api/auditlog/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}").json()
-    return render_template('admin-list-auditlog.html', title='Журнал аудита', auditlogs=auditlogs)
+        f"{link_website}api/auditlog/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}").json()
+    smartpages = get(f"{link_website}api/smartpage").json()
+    return render_template('admin-list-auditlog.html', title='Журнал аудита', auditlogs=auditlogs, smartpages=smartpages)
 
 
 @app.route("/admin-list-feedback")
 @login_required
 def admin_feedback():
     feedbacks = get(
-        f"{link_website}/api/feedback/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}").json()
-    return render_template('admin-feedback-list.html', title='Отзывы', feedbacks=feedbacks)
+        f"{link_website}api/feedback/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}").json()
+    smartpages = get(f"{link_website}api/smartpage").json()
+    return render_template('admin-feedback-list.html', title='Отзывы', feedbacks=feedbacks, smartpages=smartpages)
 
 
-@app.route("/page/<int:id>")
-def page(id):
-    page = get(f"{link_website}api/smartpage/{id}").json()
+@app.route("/admin-delete-feedback/<int:id>", methods=['GET', 'POST'])
+@login_required
+def admin_delete_feedback(id):
+    if current_user.status > 0:
+        form = DeleteForm()
+        message, name, result = "", "отзыв не найден", False
+        feedback = get(
+            f"{link_website}api/feedback/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+        if "message" not in feedback:
+            name = "отзыв " + feedback['heading']
+            if request.method == 'POST':
+                message = delete(
+                    f"{link_website}api/feedback/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
+                if "success" in message:
+                    result = True
+                message = " ".join(list(message.values()))
+                images = feedback["image"]
+                for image in images.split("//"):
+                    delete_img(image)
+                # containerManager.delete_container(f"feedback_{id}")
+        smartpages = get(f"{link_website}api/smartpage").json()
+        return render_template('admin-delete-form.html', title='Удаление отзыва', message=message, form=form,
+                               result=result, name=name, smartpages=smartpages)
+    return you_dont_have_permission()
+
+
+@app.route("/write-feedback", methods=['GET', 'POST'])
+def write_feedback():
+    form = FeedbackForm()
+    message, result, filenames = None, False, []
+    if request.method == 'POST':
+        if form.submit.data:
+            for name in request.files:
+                file = request.files[name]
+                if file.filename != "":
+                    if file and allowed_file(file.filename):
+                        filename = secure_filename(create_new_image_name(True))
+                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                        filenames.append(filename)
+            message = post(f"{link_website}api/feedback",
+                           json={"email": form.email.data, "fullname": form.fullname.data, "heading": form.heading.data,
+                                 "image": "//".join(filenames), "text": form.text.data, "code": form.code.data}).json()
+            if "success" in message:
+                result = True
+                message = "Спасибо за отзыв"
+            else:
+                message = " ".join(list(message.values()))
+        elif form.getcode.data:
+            code_helper.create_code(form.email.data)
+    page = get(f"{link_website}api/smartpage/1").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
     newslist = get(f"{link_website}api/newspage/0/9").json()
-    print(page)
-    print(content)
-    print(newslist)
-    return render_template('generated-page.html', title=page["heading"], page=page, content=content, newslist=newslist)
+    smartpages = get(f"{link_website}api/smartpage").json()
+    return render_template('write-feedback.html', title=page["heading"], page=page, content=content, newslist=newslist,
+                           smartpages=smartpages, result=result, flag=True, message=message, form=form)
+
+
+@app.route("/contacts")
+def contacts():
+    page = get(f"{link_website}api/smartpage/1").json()
+    content = get(f"{link_website}api/content/{page['id']}").json()
+    newslist = get(f"{link_website}api/newspage/0/9").json()
+    smartpages = get(f"{link_website}api/smartpage").json()
+    return render_template('contacts.html', title=page["heading"], page=page, content=content, newslist=newslist,
+                           smartpages=smartpages)
+
+
+@app.route("/page/<string:link>")
+def page_by_link(link):
+    if link == "Kontakty":
+        return redirect("/contacts")
+    page = get(f"{link_website}api/smartpage/{link}").json()
+    content = get(f"{link_website}api/content/{page['id']}").json()
+    newslist = get(f"{link_website}api/newspage/0/9").json()
+    smartpages = get(f"{link_website}api/smartpage").json()
+    return render_template('generated-page.html', title=page["heading"], page=page, content=content, newslist=newslist,
+                           smartpages=smartpages)
 
 
 @app.route("/test", methods=['GET', 'POST'])
 def test():
-    return render_template('partner.html')
+    smartpages = get(f"{link_website}api/smartpage").json()
+    return render_template('partner.html', smartpages=smartpages)
 
 
 if __name__ == '__main__':

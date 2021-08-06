@@ -52,7 +52,7 @@ class FeedbackResource(Resource):
     def get(self, email, password, feedback_id):
         admin, session = check_admin_status(email, password)
         feedback, session = find_by_id(feedback_id, session)
-        return jsonify(feedback.to_dict(only=('fullname', 'heading', 'email', 'image', 'text', 'created_date')))
+        return jsonify(feedback.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date')))
 
     def delete(self, email, password, feedback_id):
         admin, session = check_admin_status(email, password)
@@ -69,21 +69,20 @@ class FeedbackListRecourse(Resource):
     def get(self, email, password):
         admin, session = check_admin_status(email, password)
         feedbacks = session.query(Feedback).all()
-        return jsonify([item.to_dict(only=('fullname', 'heading', 'email', 'image', 'text', 'created_date')) for item in
-                        feedbacks])
+        return jsonify([item.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
+                        for item in feedbacks])
 
 
 class CreateFeedbackResource(Resource):
-    def post(self, code):
+    def post(self):
         session = db_session.create_session()
         args = parser_feedback.parse_args()
-        if not all(args[key] is not None for key in ['fullname', 'heading', 'email', 'text']):
+        if not all(args[key] is not None for key in ['fullname', 'heading', 'email', 'text', 'code']):
             raise_error('Пропущены некоторые аргументы, необходимые для оставления отзыва')
-        ch_code = check_code(session, args["email"], code)
+        ch_code = check_code(session, args["email"], args["code"])
         new_feedback = Feedback()
         new_feedback.fullname = args["fullname"]
-        if args["image"]:
-            new_feedback.image = args["image"]
+        new_feedback.image = args["image"] if args["image"] else ""
         new_feedback.heading = args["heading"]
         new_feedback.email = args["email"]
         new_feedback.text = args["text"]
@@ -91,7 +90,9 @@ class CreateFeedbackResource(Resource):
         session.add(new_feedback)
         session.delete(ch_code)
         session.commit()
+        # f'кол-во картинок: ' + str(len(new_feedback.image.split('//')))
+        params_dict = new_feedback.to_dict(only=('fullname', 'heading', 'email', 'text', 'created_date'))
+        params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//")) if args["image"] else 0}'
         add_auditlog("Создание",
-                     f"{args['fullname']} оставляет отзыв: {new_feedback.to_dict(only=('fullname', 'heading', 'email', 'image', 'text', 'created_date'))}",
-                     None, datetime.datetime.now())
+                     f"{args['fullname']} оставляет отзыв: {params_dict}", None, datetime.datetime.now())
         return jsonify({'success': f'{new_feedback.fullname} оставил отзыв'})
