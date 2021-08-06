@@ -42,7 +42,7 @@ class SmartpageResource(Resource):
     def get(self, email, password, smartpage_id):
         admin, session = check_admin_status(email, password)
         smartpage, session = find_by_id(smartpage_id, session)
-        return jsonify(smartpage.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id')))
+        return jsonify(smartpage.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id')))
 
     def delete(self, email, password, smartpage_id):
         admin, session = check_admin_status(email, password)
@@ -95,7 +95,16 @@ class SmartpageRecourseUsual(Resource):
     def get(self, smartpage_id):
         session = db_session.create_session()
         smartpage, session = find_by_id(smartpage_id, session)
-        return jsonify(smartpage.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id')))
+        return jsonify(smartpage.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id')))
+
+
+class SmartpageRecourseLink(Resource):
+    def get(self, link):
+        session = db_session.create_session()
+        smartpage = session.query(Smartpage).filter(Smartpage.link == link).get()
+        if smartpage:
+            return jsonify(smartpage.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id')))
+        raise_error("Страница не найдена")
 
 
 class SmartpageListRecourse(Resource):
@@ -103,7 +112,7 @@ class SmartpageListRecourse(Resource):
         session = db_session.create_session()
         smartpages = session.query(Smartpage).all()
         return jsonify(
-            [item.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id')) for item in smartpages])
+            [item.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id')) for item in smartpages])
 
 
 class CreateSmartpageResource(Resource):
@@ -116,6 +125,15 @@ class CreateSmartpageResource(Resource):
             raise_error("Этот заголовок уже занят")
         new_smartpage = Smartpage()
         new_smartpage.heading = args["heading"]
+        new_link = trans_link(args["heading"])
+        link, count = trans_link(args["heading"]), 0
+        while session.query(Smartpage).filter(Smartpage.link == link).first() is not None:
+            if link[-len(str(count)):] == str(count):
+                link = link[:-len(str(count))] + str(count + 1)
+                count += 1
+            else:
+                link += str(count)
+        new_smartpage.link = link
         new_smartpage.image = args['image'] if args['image'] is not None else "standard.png"
         new_smartpage.created_date = datetime.datetime.now()
         if args["id"] is not None:
@@ -125,7 +143,7 @@ class CreateSmartpageResource(Resource):
         admin.smartpage.append(new_smartpage)
         session.merge(admin)
         session.commit()
-        params_dict = new_smartpage.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id'))
+        params_dict = new_smartpage.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id'))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание",
                      f"{admin.name} {admin.surname} создаёт страницу {new_smartpage.heading}: {params_dict}",

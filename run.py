@@ -105,7 +105,7 @@ def main(port=8000):
     # print(code_helper.create_code("kolya.toropof@gmail.com"))
     # code_helper.clear_codes()
     """session = db_session.create_session()
-    session.execute("alter table content add column 'heading' VARCHAR")"""
+    session.execute("alter table smartpage add column 'link' VARCHAR")"""
     app.run(port=port)
 
 
@@ -568,7 +568,7 @@ def admin_edit_content(id):
         else:
             message = "Контент не найден"
         return render_template('admin-content-form.html', title='Редактирование контента', message=message, form=form,
-                               result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1)
+                               result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1 )
     return you_dont_have_permission()
 
 
