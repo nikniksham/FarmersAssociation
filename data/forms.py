@@ -23,7 +23,6 @@ class AdminForm(StartForm):
     password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
     status = SelectField("Права доступа",
                          choices=[(i, ["Без прав", "Модератор", "Админ", "Владелец"][i]) for i in range(stat)])
-    submit = SubmitField("Готово")
 
 
 class ContentForm(StartForm):
@@ -32,6 +31,7 @@ class ContentForm(StartForm):
     heading = StringField('Название', validators=[DataRequired()])
     # animation_type = StringField('Тип анимации', validators=[DataRequired()])
     text = StringField('Текст', validators=[DataRequired()])
+    preview = SubmitField("Предпросмотр")
 
 
 class FeedbackForm(StartForm):
