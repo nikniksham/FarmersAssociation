@@ -397,3 +397,7 @@ p.settings-element-move-empty {
 .visible.content-of-page > div {
     display: flex;
 }
+
+.hidden {
+    display: none;
+}
