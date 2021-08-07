@@ -2,6 +2,7 @@ import datetime
 import os
 import random
 import time
+from markupsafe import Markup
 from flask import Flask, render_template, url_for, request
 from flask_login import LoginManager, login_required, logout_user, current_user, login_user
 from flask_restful import abort, Api
@@ -27,7 +28,7 @@ from data.feedback import Feedback
 from data.newspage import Newspage
 from data.partner import Partner
 from data.smartpage import Smartpage
-from main import PasswordManager, ManagerContainer
+from main import PasswordManager, ManagerContainer, text_transform
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm
 from werkzeug.utils import secure_filename
 
@@ -79,6 +80,10 @@ containerManager = ManagerContainer()
 def load_user(user_id):
     session = db_session.create_session()
     return session.query(User).get(user_id)
+
+
+def save_image(filename, file):
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
 
 def delete_img(filename):
@@ -166,35 +171,51 @@ def admin_list_news():
 def admin_create_news():
     if current_user.status > 0:
         form = NewspageForm()
-        message, result, filenames, filename = None, False, [], None
+        message, result, filenames, filename, preview_text = None, False, [], None, None
         if request.method == 'POST':
-            for name in request.files:
+            cont = containerManager.get_container(f"news_{current_user.name}")
+            img_list = list(request.files)
+            for ind, name in enumerate(request.files):
                 file = request.files[name]
                 if file.filename != "":
+                    if img_list[ind] in cont:
+                        delete_img(cont[img_list[ind]])
                     if file and allowed_file(file.filename):
                         filename = secure_filename(create_new_image_name())
-                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                        save_image(filename, file)
+                        # file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                         filenames.append(filename)
+                else:
+                    if img_list[ind] in cont:
+                        filenames.append(cont[img_list[ind]])
             if len(filenames) == 0:
                 filenames = ["standard.png"]
-            message = post(
-                f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
-                json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data, "image": "//".join(filenames)}).json()
-            if "success" in message:
-                result = True
-            message = " ".join(list(message.values()))
+            containerManager.add_container(f"news_{current_user.name}", filenames)
+            if form.submit.data:
+                message = post(
+                    f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
+                    json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data, "image": "//".join(filenames)}).json()
+                if "success" in message:
+                    result = True
+                    containerManager.delete_container(f"news_{current_user.name}")
+                message = " ".join(list(message.values()))
+            elif form.preview.data:
+                preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
+        else:
+            filenames = containerManager.get_container(f"news_{current_user.name}")
         smartpages = get(f"{link_website}api/smartpage").json()
-        return render_template('admin-news-form.html', title='Создание новости', message=message,
-                               form=form, result=result, filenames=filenames, image_len=1, smartpages=smartpages, is_admin=(not current_user.is_anonymous))
+        print(len(filenames), filenames)
+        return render_template('admin-news-form.html', title='Создание новости', message=message, preview_text=preview_text,
+                               form=form, result=result, filenames=filenames, image_len=len(filenames) + 1, smartpages=smartpages, is_admin=(not current_user.is_anonymous))
     return you_dont_have_permission()
 
 
 @app.route("/admin-edit-news/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_news(id):
-    if current_user.status > 0:
+    if current_user.status > 0: # teleport
         form = NewspageForm()
-        message, result, filenames, filename = None, False, [], None
+        message, result, filenames, filename, preview_text = None, False, [], None, None
         news = get(
             f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
         if "message" not in list(news):
@@ -216,12 +237,15 @@ def admin_edit_news(id):
                 if len(filenames) == 0:
                     filenames = ["standard.png"]
                 containerManager.add_container(f"news_{id}", filenames)
-                message = put(
-                    f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
-                    json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data, "image": "//".join(filenames)}).json()
-                if "success" in message:
-                    result = True
-                message = " ".join(list(message.values()))
+                if form.submit.data:
+                    message = put(
+                        f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
+                        json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data, "image": "//".join(filenames)}).json()
+                    if "success" in message:
+                        result = True
+                    message = " ".join(list(message.values()))
+                elif form.preview.data:
+                    preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
             else:
                 form.heading.data = news["heading"]
                 form.text.data = news["text"]
@@ -232,7 +256,8 @@ def admin_edit_news(id):
             message = "Новость не найдена"
         smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-news-form.html', title='Редактирование новости', message=message, result=result,
-                               form=form, filenames=filenames, image_len=len(filenames) + 1, smartpages=smartpages, is_admin=(not current_user.is_anonymous))
+                               form=form, filenames=filenames, image_len=len(filenames) + 1, smartpages=smartpages,
+                               is_admin=(not current_user.is_anonymous), preview_text=preview_text)
     return you_dont_have_permission()
 
 
@@ -770,18 +795,29 @@ def admin_delete_feedback(id):
 
 
 @app.route("/write-feedback", methods=['GET', 'POST'])
-def write_feedback():
+def write_feedback():  # teleport
     form = FeedbackForm()
-    message, result, filenames = None, False, []
+    message, result, filenames, preview_text = None, False, [], None
     if request.method == 'POST':
+        img_list = list(request.files)
+        print(img_list)
+        cont = containerManager.get_container(f"feedback_{form.email.data}")
+        for ind, name in enumerate(request.files):
+            file = request.files[name]
+            if file.filename != "":
+                if img_list[ind] in cont:
+                    delete_img(cont[img_list[ind]])
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(create_new_image_name(True))
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    filenames.append(filename)
+            else:
+                if img_list[ind] in cont:
+                    filenames.append(cont[img_list[ind]])
+        print(form.email.data)
+        containerManager.add_container(f"feedback_{form.email.data}", filenames)
+        preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
         if form.submit.data:
-            for name in request.files:
-                file = request.files[name]
-                if file.filename != "":
-                    if file and allowed_file(file.filename):
-                        filename = secure_filename(create_new_image_name(True))
-                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                        filenames.append(filename)
             message = post(f"{link_website}api/feedback",
                            json={"email": form.email.data, "fullname": form.fullname.data, "heading": form.heading.data,
                                  "image": "//".join(filenames), "text": form.text.data, "code": form.code.data}).json()
@@ -792,12 +828,18 @@ def write_feedback():
                 message = " ".join(list(message.values()))
         elif form.getcode.data:
             code_helper.create_code(form.email.data)
-    page = get(f"{link_website}api/smartpage/1").json()
+        elif form.preview.data:
+            print(filenames)
+            preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
+    else:
+        filenames = containerManager.get_container(f"feedback_{form.email.data}")
+    page = get(f"{link_website}api/smartpage/5").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
     newslist = get(f"{link_website}api/newspage/0/9").json()
     smartpages = get(f"{link_website}api/smartpage").json()
-    return render_template('write-feedback.html', title=page["heading"], page=page, content=content, newslist=newslist,
-                           smartpages=smartpages, is_admin=(not current_user.is_anonymous), result=result, flag=True, message=message, form=form)
+    return render_template('write-feedback.html', title="Отзыв", page=page, content=content, newslist=newslist,
+                           smartpages=smartpages, is_admin=(not current_user.is_anonymous), result=result, flag=True,
+                           message=message, form=form, preview_text=preview_text, filenames=filenames, image_len=len(filenames) + 1)
 
 
 @app.route("/contacts")

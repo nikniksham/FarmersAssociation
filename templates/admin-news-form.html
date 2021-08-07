@@ -61,9 +61,15 @@
                 </div>
             </div>
             <div class="submit-block">
+                {{ form.preview(type="submit", class="btn btn-primary submit") }}
+            </div>
+            <div class="submit-block">
                 {{ form.submit(type="submit", class="btn btn-primary submit") }}
             </div>
         </div>
     </form>
+    {% if preview_text %}
+        {{preview_text|safe}}
+    {% endif %}
 </div>
 {% endblock %}

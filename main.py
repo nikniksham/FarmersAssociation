@@ -58,4 +58,62 @@ class ManagerContainer:
     def get_container(self, name):
         if name in self.containers:
             return self.containers[name].get_dict()
-        return None
+        return {}
+
+
+def text_transform(text, filenames, path):  # Я не знаю, как это работает, это писал безумный человек
+    commands = ['br>', 'p>', 'b>', 'h>', 'image ', 'a ', '/p>', '/b>', '/h>', '/a>']
+    text = text.split('<')
+    start_p = False
+    res = ""
+    for elem in text:
+        if any([elem.lower().startswith(com) for com in commands]):
+            if elem.lower().startswith('br>'):
+                res += "<br>"
+            elif elem.lower().startswith('p>'):
+                if not start_p:
+                    res += "<p>"
+                    start_p = True
+                res += "<i>"
+                res += elem[2:]
+            elif elem.lower().startswith('/p>'):
+                res += "<i>"
+                res += elem[3:]
+            elif elem.lower().startswith('b>'):
+                if not start_p:
+                    res += "<p>"
+                    start_p = True
+                res += "<b>"
+                res += elem[2:]
+            elif elem.lower().startswith('/p>'):
+                res += "</b>"
+                res += elem[3:]
+            elif elem.lower().startswith('h>'):
+                if start_p:
+                    res += "</p>"
+                res += "<p class='title'>"
+                res += elem[2:]
+            elif elem.lower().startswith('/h>'):
+                res += "</p>"
+                start_p = False
+                res += elem[3:]
+            elif elem.lower().startswith('image') and elem.lower().split()[1].split('>')[0].isdigit():
+                if start_p:
+                    res += "</p>"
+                    start_p = False
+                res += f"<img src='/{path}{filenames[int(elem.lower().split()[1].split('>')[0]) - 1]}'>"
+            elif elem.lower().startswith('a') and elem.find('>') > -1:
+                if not start_p:
+                    res += "<p>"
+                    start_p = True
+                res += f"<a href='{elem.split()[1].split('>')[0]}'>"
+                res += elem.split('>')[1]
+            elif elem.lower().startswith('/a>'):
+                res += "</a>"
+                res += elem[3:]
+        else:
+            if not start_p:
+                res += "<p>"
+                start_p = True
+            res += elem
+    return res

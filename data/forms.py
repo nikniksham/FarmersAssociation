@@ -11,6 +11,7 @@ class NewspageForm(StartForm):
     heading = StringField('Заголовок', validators=[DataRequired()])
     text = TextAreaField('Статья', validators=[DataRequired()])
     tags = StringField('Тэги', validators=[DataRequired()])
+    preview = SubmitField("Предпросмотр")
 
 
 class AdminForm(StartForm):
@@ -31,7 +32,6 @@ class ContentForm(StartForm):
     heading = StringField('Название', validators=[DataRequired()])
     # animation_type = StringField('Тип анимации', validators=[DataRequired()])
     text = StringField('Текст')
-    preview = SubmitField("Предпросмотр")
 
 
 class FeedbackForm(StartForm):
