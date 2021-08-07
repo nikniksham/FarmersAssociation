@@ -7,80 +7,82 @@
 {% block pageblock %}
 <div class="admin-settings-block">
     <div class="admin-settings">
-        <p class="settings-title">{{title}}</p>
-        <div class="settings">
-            <form action="" method="post">
-                <div class="main">
-                    {% if message %}
-                    {% if result %}
-                    <p class="message-success">{{message}}</p>
-                    {% else %}
-                    <p class="message-error">{{message}}</p>
-                    {% endif %}
-                    {% endif %}
-                    {{ form.hidden_tag() }}
-                    {{ form.fullname.label }}<br>
-                    {{ form.fullname(class="form-control") }}<br>
-                    {% for error in form.fullname.errors %}
-                    <div class="alert alert-danger" role="alert">
-                        {{ error }}
-                    </div>
-                    {% endfor %}
+        <div class="container">
+            <p class="settings-title">{{title}}</p>
+            <div class="settings">
+                <form action="" method="post">
+                    <div class="main">
+                        {% if message %}
+                        {% if result %}
+                        <p class="message-success">{{message}}</p>
+                        {% else %}
+                        <p class="message-error">{{message}}</p>
+                        {% endif %}
+                        {% endif %}
+                        {{ form.hidden_tag() }}
+                        {{ form.fullname.label }}<br>
+                        {{ form.fullname(class="form-control") }}<br>
+                        {% for error in form.fullname.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                        {% endfor %}
 
-                    {{ form.heading.label }}<br>
-                    {{ form.heading(class="form-control") }}<br>
-                    {% for error in form.heading.errors %}
-                    <div class="alert alert-danger" role="alert">
-                        {{ error }}
-                    </div>
-                    {% endfor %}
+                        {{ form.heading.label }}<br>
+                        {{ form.heading(class="form-control") }}<br>
+                        {% for error in form.heading.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                        {% endfor %}
 
-                    {{ form.text.label }}<br>
-                    {{ form.text(class="form-control") }}<br>
-                    {% for error in form.text.errors %}
-                    <div class="alert alert-danger" role="alert">
-                        {{ error }}
-                    </div>
-                    {% endfor %}
+                        {{ form.text.label }}<br>
+                        {{ form.text(class="form-control") }}<br>
+                        {% for error in form.text.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                        {% endfor %}
 
-                    <p>Изображения</p>
-                    <div class="settings-images">
-                        <div id="images1">
-                            <div class="input-file-row-1">
-                                <div class="upload-file-container">
-                                    <div class="delete-image"></div>
-                                    <img id="image1" class="this-is-image" src="#" alt="">
-                                    <input type=file name=imgInput1 class="photo" id="imgInput1">
+                        <p>Изображения</p>
+                        <div class="settings-images">
+                            <div id="images1">
+                                <div class="input-file-row-1">
+                                    <div class="upload-file-container">
+                                        <div class="delete-image"></div>
+                                        <img id="image1" class="this-is-image" src="#" alt="">
+                                        <input type=file name=imgInput1 class="photo" id="imgInput1">
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {{ form.email.label }}<br>
-                    {{ form.email(class="form-control") }}<br>
-                    {% for error in form.email.errors %}
-                    <div class="alert alert-danger" role="alert">
-                        {{ error }}
-                    </div>
-                    {% endfor %}
+                        {{ form.email.label }}<br>
+                        {{ form.email(class="form-control") }}<br>
+                        {% for error in form.email.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                        {% endfor %}
 
-                    <div class="submit-block">
-                        {{ form.getcode(type="submit", class="btn btn-primary submit") }}
-                    </div>
+                        <div class="submit-block">
+                            {{ form.getcode(type="submit", class="btn btn-primary submit") }}
+                        </div>
 
-                    {{ form.code.label }}<br>
-                    {{ form.code(class="form-control") }}<br>
-                    {% for error in form.code.errors %}
-                    <div class="alert alert-danger" role="alert">
-                        {{ error }}
-                    </div>
-                    {% endfor %}
+                        {{ form.code.label }}<br>
+                        {{ form.code(class="form-control") }}<br>
+                        {% for error in form.code.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ error }}
+                        </div>
+                        {% endfor %}
 
-                    <div class="submit-block">
-                        {{ form.submit(type="submit", class="btn btn-primary submit") }}
+                        <div class="submit-block">
+                            {{ form.submit(type="submit", class="btn btn-primary submit") }}
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </div>
