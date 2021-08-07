@@ -13,7 +13,9 @@
         <a class="settings-element-edit" href="/admin-create-content/{{page['id']}}">Добавть блок контента</a>
         <a class="settings-element-edit" name=contentPage{{page['id']}}>Показать контент</a>
         <a class="settings-element-edit" href="/admin-edit-smartpage/{{page['id']}}">Изменить</a>
+        {% if page["id"] > 5 %}
         <a class="settings-element-delete" href="/admin-delete-smartpage/{{page['id']}}">Удалить</a>
+        {% endif %}
     </div>
     <div id=contentPage{{page['id']}} class="content-of-page">
         {% for content in contentdict[page['id']] %}

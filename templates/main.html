@@ -15,14 +15,12 @@
 <body>
     <div class="navigation">
         <div class="navigation-hrefs">
-            <a>Агро и Агро-туристический сектор</a>
-            <a>Партнёры</a>
-            <a>Все новости</a>
-            <a>Команда</a>
-            <a>Контакты</a>
             {% for smartpage in smartpages %}
             <a href=/page/{{smartpage['link']}}>{{smartpage["heading"]}}</a>
             {% endfor %}
+            {% if is_admin %}
+            <a href=/admin>Панель администратора</a>
+            {% endif %}
         </div>
     </div>
     {% block popup %}{% endblock %}
