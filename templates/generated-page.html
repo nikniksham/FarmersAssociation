@@ -30,7 +30,7 @@
 {% endblock %}
 
 {% block pageblock %}
-<div class="carousel">
+<div class="header-carousel">
     {% for src in page['image'].split('//') %}
     <div class="carousel-head" style="background-image: url(/static/img/{{src}});"></div>
     {% endfor %}
@@ -126,17 +126,26 @@
     }
 
     $(document).ready(function(){
-        $(document).ready(function(){
-            $('.carousel').slick({
-                dots: false,
-                infinite: true,
-                autoplay: boolAutoplay,
-                autoplaySpeed: speedCarousel,
-                slidesToShow: 1,
-                draggable: true,
-                arrows: false,
-                swipeToSlide: true,
-            });
+        $('.header-carousel').slick({
+            dots: false,
+            infinite: true,
+            autoplay: boolAutoplay,
+            autoplaySpeed: speedCarousel,
+            slidesToShow: 1,
+            draggable: false,
+            arrows: false,
+            fade: true
+        });
+
+        $('.carousel').slick({
+            dots: false,
+            infinite: true,
+            autoplay: boolAutoplay,
+            autoplaySpeed: speedCarousel,
+            slidesToShow: 1,
+            draggable: true,
+            arrows: false,
+            swipeToSlide: true,
         });
 
         $('.partners-carousel').slick({
@@ -177,7 +186,5 @@
             ]
         });
     });
-
-
 </script>
 {% endblock %}
