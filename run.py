@@ -191,12 +191,6 @@ def login():
 def website_main():
     return render_template('main-page.html', title='Главная страница', params=get_standard_params())
 
-
-@app.route("/next")
-def test_page():
-    return render_template('test_page.html', title='Наследник от главной страницы', params=get_standard_params())
-
-
 @app.route("/admin")
 @login_required
 def admin():

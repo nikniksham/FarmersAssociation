@@ -4,6 +4,28 @@
 {% endblock %}
 
 {% block pageblockext %}
+    <div class="row" id="news">
+        {% for news in newslist %}
+        <div class="col-sm-12 col-md-6 col-lg-4">
+            <a href="/news/{{news['id']}}">
+                <div class="news">
+                    <div class="news-img"
+                         style="background-image: url('/static/img/{{news['image'].split('//')[0]}}');"></div>
+                    <div class="news-title">{{news['heading']}}</div>
+                    <div class="news-text">{{news['text']}}</div>
+                    <div class="news-navigation">
+                        <span class="date">{{news['created_date']}}</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="more-news">
+        <a onclick="add_news()">
+            <button>Все новости</button>
+        </a>
+    </div>
 {% endblock %}
 
 {% block endext %}
