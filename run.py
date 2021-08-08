@@ -856,7 +856,7 @@ def page_by_link(link):
     content = get(f"{link_website}api/content/{page['id']}").json()
     newslist = get(f"{link_website}api/newspage/0/9").json()
     return render_template('generated-page.html', title=page["heading"], page=page, content=content, newslist=newslist,
-                           params=get_standard_params(), link_website=link_website)
+                           params=get_standard_params())
 
 
 @app.route("/news-page/<string:link>")
