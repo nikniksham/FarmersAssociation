@@ -9,8 +9,7 @@ $(document).ready(function(){
         slidesToShow: 1,
         draggable: false,
         arrows: false,
-        fade: true
-        dots: false,
+        fade: true,
         cssEase: 'linear'
     });
 });
