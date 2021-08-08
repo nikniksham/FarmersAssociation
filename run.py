@@ -17,7 +17,7 @@ from data.API.ContentAPI.ContentResource import CreateContentResource, ContentRe
     ContentListRecourseId
 from data.API.FeedbackAPI.FeedbackResource import FeedbackResource, FeedbackListRecourse, CreateFeedbackResource
 from data.API.NewspageAPI.NewspageResource import NewspageResource, NewspageListRecourse, CreateNewspageResource, \
-    NewspageResourceUsual, NewspageListRecourseId
+    NewspageResourceUsual, NewspageListRecourseId, NewspageResourceLink
 from data.API.PartnerAPI.PartnerResource import PartnerResource, PartnerResourceUsual, PartnerListRecourse, \
     CreatePartnerResource
 from data.API.SmartpageAPI.SmartpageResource import CreateSmartpageResource, SmartpageResource, SmartpageListRecourse, \
@@ -62,6 +62,7 @@ api.add_resource(NewspageResource, "/api/newspage/<string:email>/<string:passwor
 api.add_resource(NewspageResourceUsual, "/api/newspage/<int:newspage_id>")
 api.add_resource(NewspageListRecourseId, "/api/newspage/<int:start_id>/<int:end_id>")
 api.add_resource(NewspageListRecourse, "/api/newspage")
+api.add_resource(NewspageResourceLink, "/api/newspage/<string:link>")
 api.add_resource(CreatePartnerResource, "/api/partner/<string:email>/<string:password>")
 api.add_resource(PartnerResource, "/api/partner/<string:email>/<string:password>/<int:partner_id>")
 api.add_resource(PartnerResourceUsual, "/api/partner/<int:partner_id>")
@@ -136,6 +137,10 @@ def main(port=8000):
 
 
 def you_dont_have_permission():
+    return redirect("/")
+
+
+def page_not_found():
     return redirect("/")
 
 
@@ -924,6 +929,14 @@ def page_by_link(link):
     newslist = get(f"{link_website}api/newspage/0/9").json()
     return render_template('generated-page.html', title=page["heading"], page=page, content=content, newslist=newslist,
                            smartpages=smartpages, is_admin=(not current_user.is_anonymous))
+
+
+@app.route("/news-page/<string:link>")
+def news_page(link):
+    news = get(f"{link_website}api/news/{link}").json()
+    if "message" in news:
+        page_not_found()
+    # Теперь какой-то рендер теймплейт
 
 
 @app.route("/test", methods=['GET', 'POST'])
