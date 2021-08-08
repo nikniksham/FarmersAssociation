@@ -118,89 +118,9 @@
 {% endblock %}
 
 {% block end %}
-<script>
-    var boolAutoplay = true
-    var speedPartners = 2000
-    var speedCarousel = 1000
-    loaded_news = 9
-    load_news = 9
-
-    function openPopUp(name) {
-        console.log("lol "+name);
-        $('#'+name).toggleClass('visible');
-    }
-
-    function add_news() {
-        $.get( "{{link_website}}/api/newspage/"+loaded_news+"/"+(loaded_news + load_news), function( data ) {
-            console.log(data);
-            console.log(loaded_news+"/"+(loaded_news + load_news));
-            loaded_news += load_news
-
-        });
-    }
-
-    $(document).ready(function(){
-        $('.header-carousel').slick({
-            dots: false,
-            infinite: true,
-            autoplay: boolAutoplay,
-            autoplaySpeed: speedCarousel,
-            slidesToShow: 1,
-            draggable: false,
-            arrows: false,
-            fade: true
-        });
-
-        $('.carousel').slick({
-            dots: false,
-            infinite: true,
-            autoplay: boolAutoplay,
-            autoplaySpeed: speedCarousel,
-            slidesToShow: 1,
-            draggable: true,
-            arrows: false,
-            swipeToSlide: true,
-        });
-
-        $('.partners-carousel').slick({
-            dots: false,
-            infinite: true,
-            autoplay: boolAutoplay,
-            autoplaySpeed: speedPartners,
-            slidesToShow: 4,
-            draggable: true,
-            arrows: false,
-            swipeToSlide: true,
-            responsive: [
-                {
-                  breakpoint: 768,
-                  settings: {
-                    autoplay: false,
-                    slidesToShow: 1
-                  }
-                },
-                {
-                  breakpoint: 991,
-                  settings: {
-                    slidesToShow: 2
-                  }
-                },
-                {
-                  breakpoint: 1200,
-                  settings: {
-                    slidesToShow: 3
-                  }
-                },
-                {
-                  breakpoint: 1300,
-                  settings: {
-                    slidesToShow: 4
-                  }
-                }
-            ]
-        });
-    });
-</script>
-{% block endext %}{% endblock %}
 <script src="/static/js/slick.js"></script>
+<script src="/static/js/subpages-carousel.js"></script>
+<script src="/static/js/news.js"></script>
+<script src="/static/js/partners.js"></script>
+{% block endext %}{% endblock %}
 {% endblock %}

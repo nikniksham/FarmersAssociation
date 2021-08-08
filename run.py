@@ -167,12 +167,6 @@ def website_main():
     return render_template('main-page.html', title='Главная страница', smartpages=smartpages, is_admin=(not current_user.is_anonymous))
 
 
-@app.route("/next")
-def test_page():
-    smartpages = get(f"{link_website}api/smartpage").json()
-    return render_template('test_page.html', title='Наследник от главной страницы', smartpages=smartpages, is_admin=(not current_user.is_anonymous))
-
-
 @app.route("/admin")
 @login_required
 def admin():
