@@ -2,6 +2,7 @@ import datetime
 import os
 import random
 import time
+import threading
 from markupsafe import Markup
 from flask import Flask, render_template, url_for, request
 from flask_login import LoginManager, login_required, logout_user, current_user, login_user
@@ -31,6 +32,7 @@ from data.smartpage import Smartpage
 from main import PasswordManager, ManagerContainer, text_transform
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm
 from werkzeug.utils import secure_filename
+from PIL import Image
 
 link_website = "http://127.0.0.1:8000/"
 app = Flask(__name__)
@@ -82,21 +84,38 @@ def load_user(user_id):
     return session.query(User).get(user_id)
 
 
+def create_random_name(name_len):
+    return ''.join([random.choice(let) for i in range(name_len)])
+
+
+def save_image_multithreading(filename, file):
+    file.save(filename)
+    image = Image.open(filename)
+    if image.size[0] > 720 or image.size[1] > 480:
+        image.thumbnail((720, 480))
+    path, format = filename.split(".")
+    if format != "png":
+        image = image.convert('RGB')
+    print(path, format)
+    image.save(filename)
+
+
 def save_image(filename, file):
-    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    t1 = threading.Thread(target=save_image_multithreading, args=(os.path.join(app.config["UPLOAD_FOLDER"], filename), file))
+    t1.start()
+    t1.join()
 
 
 def delete_img(filename):
     if filename not in ["", "standard.png"] and os.path.exists(f"{app.config['UPLOAD_FOLDER']}{filename}"):
-        print(filename)
         os.remove(f"{app.config['UPLOAD_FOLDER']}{filename}")
 
 
 def create_new_image_name(logo=False):
     filelist, format = os.listdir(app.config['UPLOAD_FOLDER']), ".png" if logo else ".jpg"
-    filename = ''.join([random.choice(let) for i in range(50)]) + format
+    filename = create_random_name(50) + format
     while filename in filelist:
-        filename = ''.join([random.choice(let) for i in range(50)]) + format
+        filename = create_random_name(50) + format
     return filename
 
 
@@ -183,7 +202,6 @@ def admin_create_news():
                     if file and allowed_file(file.filename):
                         filename = secure_filename(create_new_image_name())
                         save_image(filename, file)
-                        # file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                         filenames.append(filename)
                 else:
                     if img_list[ind] in cont:
@@ -202,9 +220,8 @@ def admin_create_news():
             elif form.preview.data:
                 preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
         else:
-            filenames = containerManager.get_container(f"news_{current_user.name}")
+            filenames = containerManager.get_container(f"news_{current_user.name}").values()
         smartpages = get(f"{link_website}api/smartpage").json()
-        print(len(filenames), filenames)
         return render_template('admin-news-form.html', title='Создание новости', message=message, preview_text=preview_text,
                                form=form, result=result, filenames=filenames, image_len=len(filenames) + 1, smartpages=smartpages, is_admin=(not current_user.is_anonymous))
     return you_dont_have_permission()
@@ -213,7 +230,7 @@ def admin_create_news():
 @app.route("/admin-edit-news/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_news(id):
-    if current_user.status > 0: # teleport
+    if current_user.status > 0:
         form = NewspageForm()
         message, result, filenames, filename, preview_text = None, False, [], None, None
         news = get(
@@ -229,7 +246,7 @@ def admin_edit_news(id):
                             delete_img(cont[img_list[ind]])
                         if file and allowed_file(file.filename):
                             filename = secure_filename(create_new_image_name())
-                            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                            save_image(filename, file)
                             filenames.append(filename)
                     else:
                         if img_list[ind] in cont:
@@ -421,7 +438,7 @@ def admin_create_smartpage():
                 if file.filename != "":
                     if file and allowed_file(file.filename):
                         filename = secure_filename(create_new_image_name())
-                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                        save_image(filename, file)
                         filenames.append(filename)
             if len(filenames) == 0:
                 filenames = ["standard.png"]
@@ -456,7 +473,7 @@ def admin_edit_smartpage(id):
                             delete_img(cont[img_list[ind]])
                         if file and allowed_file(file.filename):
                             filename = secure_filename(create_new_image_name())
-                            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                            save_image(filename, file)
                             filenames.append(filename)
                     else:
                         if img_list[ind] in cont:
@@ -521,7 +538,7 @@ def admin_create_content(page_id):
                 if file.filename != "":
                     if file and allowed_file(file.filename):
                         filename = secure_filename(create_new_image_name())
-                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                        save_image(filename, file)
                         filenames.append(filename)
             image = "" if len(filenames) == 0 else "//".join(filenames)
             message = post(
@@ -581,7 +598,7 @@ def admin_edit_content(id):
                             delete_img(cont[img_list[ind]])
                         if file and allowed_file(file.filename):
                             filename = secure_filename(create_new_image_name())
-                            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                            save_image(filename, file)
                             filenames.append(filename)
                     else:
                         if img_list[ind] in cont:
@@ -628,7 +645,6 @@ def admin_delete_content(id):
                 message = " ".join(list(message.values()))
                 images = content["image"]
                 for image in images.split("//"):
-                    print(image, images)
                     delete_img(image)
                 containerManager.delete_container(f"content_{id}")
         smartpages = get(f"{link_website}api/smartpage").json()
@@ -659,7 +675,7 @@ def admin_create_partner():
                 if file.filename != "":
                     if file and allowed_file(file.filename):
                         filename = secure_filename(create_new_image_name(True))
-                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                        save_image(filename, file)
                         filenames.append(filename)
             if len(filenames) == 0:
                 filenames = ["standard.png"]
@@ -695,7 +711,7 @@ def admin_edit_partner(id):
                             delete_img(cont[img_list[ind]])
                         if file and allowed_file(file.filename):
                             filename = secure_filename(create_new_image_name(True))
-                            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                            save_image(filename, file)
                             filenames.append(filename)
                     else:
                         if img_list[ind] in cont:
@@ -794,14 +810,13 @@ def admin_delete_feedback(id):
     return you_dont_have_permission()
 
 
-@app.route("/write-feedback", methods=['GET', 'POST'])
-def write_feedback():  # teleport
+@app.route("/write-feedback/<string:code>", methods=['GET', 'POST'])
+def write_feedback(code):
     form = FeedbackForm()
     message, result, filenames, preview_text = None, False, [], None
     if request.method == 'POST':
         img_list = list(request.files)
-        print(img_list)
-        cont = containerManager.get_container(f"feedback_{form.email.data}")
+        cont = containerManager.get_container(f"feedback_{code}")
         for ind, name in enumerate(request.files):
             file = request.files[name]
             if file.filename != "":
@@ -809,18 +824,18 @@ def write_feedback():  # teleport
                     delete_img(cont[img_list[ind]])
                 if file and allowed_file(file.filename):
                     filename = secure_filename(create_new_image_name(True))
-                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    save_image(filename, file)
                     filenames.append(filename)
             else:
                 if img_list[ind] in cont:
                     filenames.append(cont[img_list[ind]])
-        print(form.email.data)
-        containerManager.add_container(f"feedback_{form.email.data}", filenames)
+        containerManager.add_container(f"feedback_{code}", filenames)
         preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
         if form.submit.data:
             message = post(f"{link_website}api/feedback",
                            json={"email": form.email.data, "fullname": form.fullname.data, "heading": form.heading.data,
                                  "image": "//".join(filenames), "text": form.text.data, "code": form.code.data}).json()
+            containerManager.delete_container(f"feedback_{code}")
             if "success" in message:
                 result = True
                 message = "Спасибо за отзыв"
@@ -829,10 +844,9 @@ def write_feedback():  # teleport
         elif form.getcode.data:
             code_helper.create_code(form.email.data)
         elif form.preview.data:
-            print(filenames)
             preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
     else:
-        filenames = containerManager.get_container(f"feedback_{form.email.data}")
+        filenames = containerManager.get_container(f"feedback_{code}").values()
     page = get(f"{link_website}api/smartpage/5").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
     newslist = get(f"{link_website}api/newspage/0/9").json()
@@ -849,7 +863,7 @@ def contacts():
     newslist = get(f"{link_website}api/newspage/0/9").json()
     smartpages = get(f"{link_website}api/smartpage").json()
     return render_template('contacts.html', title=page["heading"], page=page, content=content, newslist=newslist,
-                           smartpages=smartpages, is_admin=(not current_user.is_anonymous))
+                           smartpages=smartpages, is_admin=(not current_user.is_anonymous), code=create_random_name(10))
 
 
 @app.route("/agro_and_agro-tourism_sector")
