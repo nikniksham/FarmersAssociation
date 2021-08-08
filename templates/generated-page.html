@@ -38,7 +38,7 @@
 <div class="container">
     {% for block in content %}
     {% if block['type'] == "News" %}
-    <div class="row">
+    <div class="row" id="news">
         {% for news in newslist %}
         <div class="col-sm-12 col-md-6 col-lg-4">
             <a href="/news/{{news['id']}}">
@@ -54,6 +54,11 @@
             </a>
         </div>
         {% endfor %}
+    </div>
+    <div class="more-news">
+        <a onclick="add_news()">
+            <button>Все новости</button>
+        </a>
     </div>
     {% elif block['type'] == "Text" %}
     <div class="text-block">
@@ -113,16 +118,25 @@
 {% endblock %}
 
 {% block end %}
-{% block endext %}{% endblock %}
-<script src="/static/js/slick.js"></script>
 <script>
     var boolAutoplay = true
     var speedPartners = 2000
     var speedCarousel = 1000
+    loaded_news = 9
+    load_news = 9
 
     function openPopUp(name) {
         console.log("lol "+name);
         $('#'+name).toggleClass('visible');
+    }
+
+    function add_news() {
+        $.get( "{{link_website}}/api/newspage/"+loaded_news+"/"+(loaded_news + load_news), function( data ) {
+            console.log(data);
+            console.log(loaded_news+"/"+(loaded_news + load_news));
+            loaded_news += load_news
+
+        });
     }
 
     $(document).ready(function(){
@@ -187,4 +201,6 @@
         });
     });
 </script>
+{% block endext %}{% endblock %}
+<script src="/static/js/slick.js"></script>
 {% endblock %}
