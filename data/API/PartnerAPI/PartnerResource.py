@@ -40,7 +40,7 @@ class PartnerResource(Resource):
     def get(self, email, password, partner_id):
         admin, session = check_admin_status(email, password)
         partner, session = find_by_id(partner_id, session)
-        return jsonify(partner.to_dict(only=('id', 'name', 'image', 'text', 'link', 'created_date', 'author_id')))
+        return jsonify(partner.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'link', 'created_date', 'author_id')))
 
     def delete(self, email, password, partner_id):
         admin, session = check_admin_status(email, password)
@@ -55,7 +55,7 @@ class PartnerResource(Resource):
         admin, session = check_admin_status(email, password)
         partner, session = find_by_id(partner_id, session)
         args, count = parser_partner.parse_args(), 0
-        part_dict = partner.to_dict(only=('id', 'name', 'image', 'text', 'link'))
+        part_dict = partner.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'link'))
         keys = list(filter(lambda key: args[key] is not None and args[key] != part_dict[key] and key in list(part_dict.keys()), list(args.keys())))
         name = partner.name
         for key in list(args.keys()):
@@ -67,6 +67,8 @@ class PartnerResource(Resource):
                     partner.id = args['id']
                 if key == "name":
                     partner.name = args["name"]
+                if key == "logo":
+                    partner.logo = args["logo"]
                 if key == 'image':
                     partner.image = args['image']
                 if key == "text":
@@ -75,8 +77,8 @@ class PartnerResource(Resource):
                     partner.tags = args["link"]
         if count == 0:
             return raise_error("Пустой запрос")
-        part_dict_2 = partner.to_dict(only=('id', 'name', 'image', 'text', 'link'))
-        list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key != "image" else "изменяет изображения" for key in keys]
+        part_dict_2 = partner.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'link'))
+        list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key not in ["image", "logo"] else "изменяет изображения/аватарку" for key in keys]
         session.commit()
         add_auditlog("Изменение",
                      f"{admin.name} {admin.surname} изменяет партнёра {name}: {', '.join(list_chang)}", admin,
@@ -88,24 +90,25 @@ class PartnerResourceUsual(Resource):
     def get(self, partner_id):
         session = db_session.create_session()
         partner, session = find_by_id(partner_id, session)
-        return jsonify(partner.to_dict(only=('id', 'name', 'image', 'text', 'link')))
+        return jsonify(partner.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'link')))
 
 
 class PartnerListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
         partners = session.query(Partner).all()
-        return jsonify([item.to_dict(only=('id', 'name', 'image', 'text', 'link')) for item in partners])
+        return jsonify([item.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'link')) for item in partners])
 
 
 class CreatePartnerResource(Resource):
     def post(self, email, password):
         admin, session = check_admin_status(email, password)
         args = parser_partner.parse_args()
-        if not all(args[key] is not None for key in ['name', 'image', 'text', 'link']):
+        if not all(args[key] is not None for key in ['name', 'logo', 'image', 'text', 'link']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания партнёра')
         new_partner = Partner()
         new_partner.name = args["name"]
+        new_partner.logo = args["logo"]
         new_partner.image = args["image"]
         new_partner.text = args["text"]
         new_partner.link = args["link"]
