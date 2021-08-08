@@ -1,3 +1,7 @@
+import datetime
+import os
+
+
 class User:
     def __init__(self, email, password, status):
         self.email = email
@@ -42,13 +46,17 @@ class ImageContainer:
 
 class ManagerContainer:
     def __init__(self):
+        self.delete_superfluous_image = DeleteSuperfluousImage()
         self.containers = {}
 
-    def add_container(self, name, filenames):
+    def add_container(self, name, filenames, auto_delete=False):
         self.containers[name] = ImageContainer(filenames)
+        if auto_delete:
+            self.delete_superfluous_image.create_container(name, filenames)
 
     def delete_container(self, name):
         if name in self.containers:
+            self.delete_superfluous_image.delete_container(name)
             new_container = {}
             for container in self.containers.keys():
                 if name != container:
@@ -59,6 +67,32 @@ class ManagerContainer:
         if name in self.containers:
             return self.containers[name].get_dict()
         return {}
+
+    def clear_container(self, folder):
+        self.delete_superfluous_image.clear_container(folder)
+
+
+class DeleteSuperfluousImage:
+    def __init__(self):
+        self.container = {}
+
+    def create_container(self, name, filenames):
+        self.container[name] = [filenames, datetime.datetime.now()]
+
+    def delete_container(self, name):
+        if name in self.container:
+            new_container = {}
+            for container in self.container.keys():
+                if name != container:
+                    new_container[container] = self.container[container]
+            self.container = new_container
+
+    def clear_container(self, folder):
+        for images, created_date in self.container.values():
+            if (datetime.datetime.now() - created_date).total_seconds() > 1800:
+                for image in images:
+                    if image not in ["", "standard.png"] and os.path.exists(f"{folder}{image}"):
+                        os.remove(f"{folder}{image}")
 
 
 def text_transform(text, filenames, path):  # Я не знаю, как это работает, это писал безумный человек

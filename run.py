@@ -213,7 +213,7 @@ def admin_create_news():
                         filenames.append(cont[img_list[ind]])
             if len(filenames) == 0:
                 filenames = ["standard.png"]
-            containerManager.add_container(f"news_{current_user.name}", filenames)
+            containerManager.add_container(f"news_{current_user.name}", filenames, True)
             if form.submit.data:
                 message = post(
                     f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
@@ -828,22 +828,22 @@ def write_feedback(code):
                 if img_list[ind] in cont:
                     delete_img(cont[img_list[ind]])
                 if file and allowed_file(file.filename):
-                    filename = secure_filename(create_new_image_name(True))
+                    filename = secure_filename(create_new_image_name())
                     save_image(filename, file)
                     filenames.append(filename)
             else:
                 if img_list[ind] in cont:
                     filenames.append(cont[img_list[ind]])
-        containerManager.add_container(f"feedback_{code}", filenames)
+        containerManager.add_container(f"feedback_{code}", filenames, True)
         preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
         if form.submit.data:
             message = post(f"{link_website}api/feedback",
                            json={"email": form.email.data, "fullname": form.fullname.data, "heading": form.heading.data,
                                  "image": "//".join(filenames), "text": form.text.data, "code": form.code.data}).json()
-            containerManager.delete_container(f"feedback_{code}")
             if "success" in message:
                 result = True
                 message = "Спасибо за отзыв"
+                containerManager.delete_container(f"feedback_{code}")
             else:
                 message = " ".join(list(message.values()))
         elif form.getcode.data:
@@ -913,6 +913,7 @@ def team():
 
 @app.route("/page/<string:link>")
 def page_by_link(link):
+    containerManager.clear_container(app.config['UPLOAD_FOLDER'])
     smartpages = get(f"{link_website}api/smartpage").json()
     if link == smartpages[0]["link"]:
         return redirect("/agro_and_agro-tourism_sector")
