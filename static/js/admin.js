@@ -20,16 +20,15 @@ function readURL(input) {
     if (input.files && input.files[0]) {
         var num = parseInt(input.id.match(/\d+/))
         var fr = new FileReader();
-        console.log(1)
         fr.onload = function () {
-            console.log(2)
             $('#image'+num).attr('src', fr.result);
-            console.log(3)
             if ($('#image'+num).attr('class') === 'this-is-image') {
                 addImage(parseInt($($($(input).closest('.settings-images')).children()[0]).attr('id').match(/\d+/)));
                 $('#image'+num).toggleClass("visible");
                 $($($('#image'+num).closest('.upload-file-container')[0]).children()[0]).toggleClass("hidden");
-                count_used += 1;
+                return true;
+            } else {
+                return false;
             }
         }
         fr.readAsDataURL(input.files[0]);
@@ -39,7 +38,9 @@ function readURL(input) {
 
 $("body").delegate('[id^="imgInput"]', "change", function(){
     console.log('loadImage');
-    readURL(this);
+    if (readURL(this)) {
+        count_used += 1;
+    }
 });
 
 $('[id^="imgInput"]').each(function(){

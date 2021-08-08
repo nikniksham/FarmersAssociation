@@ -1,3 +1,5 @@
+var speedHeadCarousel = 1000
+
 $(document).ready(function(){
     $('.header-carousel').slick({
         accessibility: false,

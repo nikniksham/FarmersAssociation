@@ -1,4 +1,3 @@
-var speedHeadCarousel = 1000
 var speedCarousel = 1000
 
 $(document).ready(function(){
