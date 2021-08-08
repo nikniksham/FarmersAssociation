@@ -95,8 +95,9 @@ def save_image_multithreading(filename, file):
     if image.size[0] > 720 or image.size[1] > 480:
         image.thumbnail((720, 480))
     path, format = filename.split(".")
-    if format != "png":
+    if format not in ["png", "gif"]:
         image = image.convert('RGB')
+    print(filename)
     image.save(filename)
 
 
@@ -111,8 +112,6 @@ def save_images(cont_name, files, r_img=True):
     for ind, name in enumerate(files):
         file = files[name]
         if file.filename != "":
-            if img_list[ind] in cont:
-                delete_img(cont[img_list[ind]])
             if file and allowed_file(file.filename):
                 filename = secure_filename(create_new_image_name())
                 save_image(filename, file)
@@ -138,8 +137,9 @@ def delete_img(filename):
         os.remove(f"{app.config['UPLOAD_FOLDER']}{filename}")
 
 
-def create_new_image_name(logo=False):
-    filelist, format = os.listdir(app.config['UPLOAD_FOLDER']), ".png" if logo else ".jpg"
+def create_new_image_name(logo=False, gif=False):
+    filelist, format = os.listdir(app.config['UPLOAD_FOLDER']), ".gif" if gif else (".png" if logo else ".jpg")
+    print(format, gif)
     filename = create_random_name(50) + format
     while filename in filelist:
         filename = create_random_name(50) + format
@@ -147,7 +147,7 @@ def create_new_image_name(logo=False):
 
 
 def allowed_file(filename):
-    ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg']
+    ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', 'gif']
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -617,7 +617,7 @@ def admin_create_partner():
                             save_image(filename, file)
                             filenames1.append(filename)
                         else:
-                            filename = secure_filename(create_new_image_name(False))
+                            filename = secure_filename(create_new_image_name())
                             save_image(filename, file)
                             filenames2.append(filename)
             if len(filenames1) == 0:
@@ -659,9 +659,17 @@ def admin_edit_partner(id):
                                 save_image(filename, file)
                                 filenames1.append(filename)
                             else:
-                                filename = secure_filename(create_new_image_name(False))
+                                filename = secure_filename(create_new_image_name())
                                 save_image(filename, file)
                                 filenames2.append(filename)
+                    else:
+                        if img_list[ind] in ["icon", "iconInput"]:
+                            if "image1" in cont1:
+                                filenames1.append(cont1["image1"])
+                        else:
+                            if img_list[ind] in cont2:
+                                filenames2.append(cont2[img_list[ind]])
+
                 if len(filenames1) == 0:
                     filenames1 = ["standard.png"]
                 if len(filenames2) == 0:
@@ -686,9 +694,11 @@ def admin_edit_partner(id):
                 form.text.data = partner["text"]
                 form.link.data = partner["link"]
                 filenames1 = partner["logo"].split("//") if containerManager.get_container(f"partner_logo_{id}") == {} \
-                    else containerManager.get_container(f"partner_logo_{id}")
+                    else list(containerManager.get_container(f"partner_logo_{id}").values())
                 filenames2 = partner["image"].split("//") if containerManager.get_container(f"partner_image_{id}") == {} \
-                    else containerManager.get_container(f"partner_image_{id}")
+                    else list(containerManager.get_container(f"partner_image_{id}").values())
+                containerManager.add_container(f"partner_logo_{id}", filenames1)
+                containerManager.add_container(f"partner_image_{id}", filenames2)
         else:
             message = "Партнёр не найден"
         return render_template('admin-partner-form.html', title='Редактирование партнёра', message=message, form=form,
