@@ -411,9 +411,9 @@ def admin_delete_admin(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-list-smartpage")
+@app.route("/admin-list-smartpage/<int:page_id>")
 @login_required
-def admin_list_smartpage():
+def admin_list_smartpage(page_id):
     if current_user.status > 0:
         smartpagelist, contentdict = get(f"{link_website}api/smartpage").json(), {}
         contentlist = get(f"{link_website}api/content").json()
@@ -427,7 +427,7 @@ def admin_list_smartpage():
         smartpages = get(f"{link_website}api/smartpage").json()
         return render_template('admin-list-smartpage.html', title='Страницы', smartpagelist=smartpagelist,
                                contentdict=contentdict, types={"News": "Новости", "Image": "Картинки", "Text": "Текст", "Partner": "Партнёры"},
-                               smartpages=smartpages, is_admin=(not current_user.is_anonymous))
+                               smartpages=smartpages, is_admin=(not current_user.is_anonymous), page_id=page_id)
     return you_dont_have_permission()
 
 
@@ -568,7 +568,7 @@ def admin_content_move_up(id):
         put(
             f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
             json={"position": content["position"] - 1})
-        return redirect("/admin-list-smartpage")
+        return redirect(f"/admin-list-smartpage/{content['smartpage_id']}")
     return you_dont_have_permission()
 
 
@@ -580,7 +580,7 @@ def admin_content_move_down(id):
             f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
         put(f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}",
             json={"position": content["position"] + 1}).json()
-        return redirect("/admin-list-smartpage")
+        return redirect(f"/admin-list-smartpage/{content['smartpage_id']}")
     return you_dont_have_permission()
 
 

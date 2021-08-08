@@ -17,7 +17,11 @@
         <a class="settings-element-delete" href="/admin-delete-smartpage/{{page['id']}}">Удалить</a>
         {% endif %}
     </div>
+    {% if page['id'] == page_id %}
+    <div id=contentPage{{page['id']}} class="content-of-page visible">
+    {% else %}
     <div id=contentPage{{page['id']}} class="content-of-page">
+    {% endif %}
         {% for content in contentdict[page['id']] %}
         <div class="settings-element manifesting" style="animation-delay: {{loop.index/10}}s;">
             <p class="settings-element-title">{{content['heading']}} ({{types[content['type']]}})</p>
