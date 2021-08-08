@@ -929,7 +929,7 @@ def page_by_link(link):
     content = get(f"{link_website}api/content/{page['id']}").json()
     newslist = get(f"{link_website}api/newspage/0/9").json()
     return render_template('generated-page.html', title=page["heading"], page=page, content=content, newslist=newslist,
-                           smartpages=smartpages, is_admin=(not current_user.is_anonymous))
+                           smartpages=smartpages, is_admin=(not current_user.is_anonymous), link_website=link_website)
 
 
 @app.route("/news-page/<string:link>")
