@@ -220,9 +220,13 @@ div.un-visible {
     background-size: 30px 30px;
 }
 
-.settings-element-edit, .settings-element-delete, .settings-element-add, .settings-element-move, .settings-element-move-empty {
+.settings-element-edit, .settings-element-delete, .settings-element-add, .settings-element-move, .settings-element-move-empty, .element-exit {
     color: black;
     padding: 0 5px;
+}
+
+.element-exit {
+    font=size: 32px;
 }
 
 .admin-settings-block {
