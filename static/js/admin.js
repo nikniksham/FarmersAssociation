@@ -1,41 +1,19 @@
 var count_images = 1
+var count = 1
+var count_used = -1
 var max_count = 15
 
 
 function addImage(num) {
-    if count_images > max_count:
-        return
+    console.log(count, max_count, count_images, count_used)
+    if (count > max_count)
+        return ""
     let block = document.createElement('div');
     block.className = "input-file-row-1";
-    block.innerHTML = '<div class="upload-file-container"><div class="delete-image"></div><img id="image'+count_images+'" class="this-is-image" src="#" alt=""/><input type="file" name="image'+count_images+'" class="photo" id="imgInput'+count_images+'"/></div>';
+    block.innerHTML = '<div class="upload-file-container"><div class="delete-image hidden"></div><img id="image'+count_images+'" class="this-is-image" src="#" alt=""/><input type="file" name="image'+count_images+'" class="photo" id="imgInput'+count_images+'"/></div>';
     document.getElementById("images"+num).append(block);
     count_images += 1;
-    $('[id^="imgInput"]').change(function(){
-        console.log('loadImage');
-        readURL(this);
-    });
-
-    $('[id^="imgInput"]').each(function(){
-        count_images += 1;
-    });
-
-    $('[id^="addImage"]').click(function() {
-        console.log('add');
-        var num = parseInt(this.id.match(/\d+/))
-        addImage(num);
-    });
-
-    $('.delete-image').click(function() {
-        console.log('delete');
-        var father = $(this).closest('.input-file-row-1');
-        var src = $($(father.children()[0]).children()[1]).attr('src');
-        if (src === undefined || src === '' || src === '#') {
-            console.log('no i don"t delet')
-        } else {
-            console.log('delete')
-            $(this).closest('.input-file-row-1').remove();
-        }
-    });
+    count += 1;
 }
 
 function readURL(input) {
@@ -50,6 +28,7 @@ function readURL(input) {
             if ($('#image'+num).attr('class') === 'this-is-image') {
                 addImage(parseInt($($($(input).closest('.settings-images')).children()[0]).attr('id').match(/\d+/)));
                 $('#image'+num).toggleClass("visible");
+                $($($('#image'+num).closest('.upload-file-container')[0]).children()[0]).toggleClass("hidden");
             }
         }
         fr.readAsDataURL(input.files[0]);
@@ -57,31 +36,40 @@ function readURL(input) {
 }
 
 
-$(document).ready(function(){
-    $('[id^="imgInput"]').change(function(){
-        console.log('loadImage');
-        readURL(this);
-    });
+$("body").delegate('[id^="imgInput"]', "change", function(){
+    console.log('loadImage');
+    count_used += 1;
+    readURL(this);
+});
 
-    $('[id^="imgInput"]').each(function(){
-        count_images += 1;
-    });
+$('[id^="imgInput"]').each(function(){
+    count_images += 1;
+    count += 1;
+    count_used += 1;
+});
 
-    $('[id^="addImage"]').click(function() {
-        console.log('add');
-        var num = parseInt(this.id.match(/\d+/))
-        addImage(num);
-    });
 
-    $('.delete-image').click(function(){
-        console.log('delete');
-        var father = $(this).closest('.input-file-row-1');
-        var src = $($(father.children()[0]).children()[1]).attr('src');
-        if (src === undefined || src === '' || src === '#') {
-            console.log('no i don"t delet')
-        } else {
-            console.log('delete')
-            $(this).closest('.input-file-row-1').remove();
+$("body").delegate('[id^="addImage"]', "click", function() {
+    console.log('add');
+    var num = parseInt(this.id.match(/\d+/))
+    addImage(num);
+});
+
+$("body").delegate('.delete-image', "click", function(){
+    console.log('delete');
+    var num = parseInt($($(this).closest('[id^="images"]')[0]).attr('id').match(/\d+/))
+    count -= 1;
+    var father = $(this).closest('.input-file-row-1');
+    var src = $($(father.children()[0]).children()[1]).attr('src');
+    if (src === undefined || src === '' || src === '#') {
+        console.log('no i don"t delet')
+    } else {
+        console.log('delete')
+        count_used -= 1;
+        $(this).closest('.input-file-row-1').remove();
+        console.log(count, (max_count), count_used)
+        if (count_used + 1 == max_count) {
+            addImage(num);
         }
-    });
+    }
 });
