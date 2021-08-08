@@ -29,6 +29,7 @@ function readURL(input) {
                 addImage(parseInt($($($(input).closest('.settings-images')).children()[0]).attr('id').match(/\d+/)));
                 $('#image'+num).toggleClass("visible");
                 $($($('#image'+num).closest('.upload-file-container')[0]).children()[0]).toggleClass("hidden");
+                count_used += 1;
             }
         }
         fr.readAsDataURL(input.files[0]);
@@ -38,7 +39,6 @@ function readURL(input) {
 
 $("body").delegate('[id^="imgInput"]', "change", function(){
     console.log('loadImage');
-    count_used += 1;
     readURL(this);
 });
 
