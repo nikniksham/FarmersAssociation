@@ -101,6 +101,7 @@ def text_transform(text, filenames, path):  # Я не знаю, как это р
     tegs = []
     res = ""
     for elem in text:
+        elem = "<br>".join(elem.split("\n"))
         if any([elem.lower().startswith(com) for com in commands]):
             if elem.lower().startswith('br>'):
                 res += "<br>" + elem[3:]
@@ -187,6 +188,8 @@ def text_transform(text, filenames, path):  # Я не знаю, как это р
                 res += elem
     if tegs != []:
         return f"Error: тег {tegs[-1]} не был закрыт"
+    if start_p:
+        res += "</p>"
     return res
 
 
@@ -266,5 +269,7 @@ if __name__ == '__main__':
     print('test news')
     print(text_transform("<p>",[""],"") == "Error: тег p не был закрыт")
     print(text_transform("<a https://rostec.ru/ Ссылка на ростех</a>", ["", ""], "") == "Error: тэг a не был открыт")
+    print(text_transform("a\na", ["", ""], "") == "<p>a<br>a</p>")
+    print(text_transform("<p>a\na", ["", ""], "") == "Error: тег p не был закрыт")
     print(text_transform("Урааа, у нас теперь можно писать новости<br><br><p>Текст курсивом</p><h>Какой-то заголовок</h><image 1><image 2><a https://rostec.ru/%3E Ссылка на ростех</a>", ["", ""], "") == "Error: тэг a не был открыт")
     print(text_transform("this is statya about statyu about statyu about statyu about statyu about statyu kotoraya o statye kotoraya statye I talk about this <a />statya</a><image 1><h>this is imgage fom sobranie</h>", [""], "") == "<p>this is statya about statyu about statyu about statyu about statyu about statyu kotoraya o statye kotoraya statye I talk about this <a href='/'>statya</a></p><div><img src='/'></div><p class='title'>this is imgage fom sobranie</p>")
