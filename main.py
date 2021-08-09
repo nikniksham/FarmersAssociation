@@ -95,97 +95,108 @@ class DeleteSuperfluousImage:
 
 def text_transform(text, filenames, path):  # Я не знаю, как это работает, это писал безумный человек
     # крейзи здесь
-    commands = ['br>', 'p>', 'b>', 'h>', 'image ', 'a ', '/p>', '/b>', '/h>', '/a>', '\n']
+    commands = ['br>', 'p>', 'b>', 'h>', 'image ', 'a ', '/p>', '/b>', '/h>', '/a>', "a>", "image>", '\n']
     text = text.split('<')
     start_p = False
     tegs = []
     res = ""
-    for elem in text:
-        elem = "<br>".join(elem.split("\n"))
-        if any([elem.lower().startswith(com) for com in commands]):
-            if elem.lower().startswith('br>'):
-                res += "<br>" + elem[3:]
-            elif elem.lower().startswith('\n'):
-                res += "<br>" + elem[2:]
-            elif elem.lower().startswith('p>'):
-                tegs.append('p')
-                if not start_p:
-                    res += "<p>"
-                    start_p = True
-                res += "<i>"
-                res += elem[2:]
-            elif elem.lower().startswith('/p>'):
-                if len(tegs) == 0:
-                    return "Error: тэг p не был открыт"
-                elif tegs[-1] == 'p':
-                    tegs.pop(-1)
-                else:
-                    return f'Error: тэг {tegs[-1]} не был закрыт'
-                res += "<i>"
-                res += elem[3:]
-            elif elem.lower().startswith('b>'):
-                if not start_p:
-                    res += "<p>"
-                    start_p = True
-                tegs.append('b')
-                res += "<b>"
-                res += elem[2:]
-            elif elem.lower().startswith('/b>'):
-                if len(tegs) == 0:
-                    return "Error: тэг b не был открыт"
-                elif tegs[-1] == 'b':
-                    tegs.pop(-1)
-                else:
-                    return f'Error: тэг {tegs[-1]} не был закрыт'
-                res += "</b>"
-                res += elem[3:]
-            elif elem.lower().startswith('h>'):
-                if start_p:
-                    res += "</p>"
-                tegs.append('h')
-                res += "<p class='title'>"
-                res += elem[2:]
-            elif elem.lower().startswith('/h>'):
-                if len(tegs) == 0:
-                    return "Error: тэг h не был открыт"
-                elif tegs[-1] == 'h':
-                    tegs.pop(-1)
-                else:
-                    return f'Error: тэг {tegs[-1]} не был закрыт'
-                res += "</p>"
-                start_p = False
-                res += elem[3:]
-            elif elem.lower().startswith('image') and elem.lower().split()[1].split('>')[0].isdigit():
-                if start_p:
+    for data in text:
+        for i, elem in enumerate(data.split("\n")):
+            if i != 0:
+                elem = "br>" + elem
+            # elem = "<br>".join(elem.split("\n"))
+            if any([elem.lower().startswith(com) for com in commands]):
+                if elem.lower().find('\n') > -1:
+                    elem.lower().find('\n')
+                    elem = "<br>".join(elem.split("\n"))
+                    continue
+                if elem.lower().startswith('br>'):
+                    res += "<br>" + elem[3:]
+                elif elem.lower().startswith('p>'):
+                    tegs.append('p')
+                    if not start_p:
+                        res += "<p>"
+                        start_p = True
+                    res += "<i>"
+                    res += elem[2:]
+                elif elem.lower().startswith('/p>'):
+                    if len(tegs) == 0:
+                        return "Error: тэг p не был открыт"
+                    elif tegs[-1] == 'p':
+                        tegs.pop(-1)
+                    else:
+                        return f'Error: тэг {tegs[-1]} не был закрыт'
+                    res += "<i>"
+                    res += elem[3:]
+                elif elem.lower().startswith('b>'):
+                    if not start_p:
+                        res += "<p>"
+                        start_p = True
+                    tegs.append('b')
+                    res += "<b>"
+                    res += elem[2:]
+                elif elem.lower().startswith('/b>'):
+                    if len(tegs) == 0:
+                        return "Error: тэг b не был открыт"
+                    elif tegs[-1] == 'b':
+                        tegs.pop(-1)
+                    else:
+                        return f'Error: тэг {tegs[-1]} не был закрыт'
+                    res += "</b>"
+                    res += elem[3:]
+                elif elem.lower().startswith('h>'):
+                    if start_p:
+                        res += "</p>"
+                    tegs.append('h')
+                    res += "<p class='title'>"
+                    res += elem[2:]
+                elif elem.lower().startswith('/h>'):
+                    if len(tegs) == 0:
+                        return "Error: тэг h не был открыт"
+                    elif tegs[-1] == 'h':
+                        tegs.pop(-1)
+                    else:
+                        return f'Error: тэг {tegs[-1]} не был закрыт'
                     res += "</p>"
                     start_p = False
-                if len(filenames) <= int(elem.lower().split()[1].split('>')[0]) - 1 or int(elem.lower().split()[1].split('>')[0]) - 1 < 0:
-                    return f'Error: нет такой картинки {elem.lower().split()[1].split(">")[0]}'
-                res += f"<div><img src='/{path}{filenames[int(elem.lower().split()[1].split('>')[0])-1]}'></div>"
-            elif elem.lower().startswith('a') and elem.find('>') > -1:
+                    res += elem[3:]
+                elif elem.lower().startswith('image>'):
+                    return "Error: нет картинки в теге image"
+                elif elem.lower().startswith('image') and (elem.lower().split()[1].split('>')[0].isdigit() or elem.lower().split()[1].split('>')[0][0] == "-" and elem.lower().split()[1].split('>')[0][1:].isdigit()):
+                    if start_p:
+                        res += "</p>"
+                        start_p = False
+                    if len(filenames) <= int(elem.lower().split()[1].split('>')[0]) - 1 or int(elem.lower().split()[1].split('>')[0]) - 1 < 0:
+                        return f'Error: нет такой картинки {elem.lower().split()[1].split(">")[0]}'
+                    res += f"<div><img src='/{path}{filenames[int(elem.lower().split()[1].split('>')[0])-1]}'></div>"
+                elif elem.lower().startswith('a>'):
+                    return "Error: нет ссылки в теге a"
+                elif elem.lower().startswith('a') and elem.find('>') > -1:
+                    if not start_p:
+                        res += "<p>"
+                        start_p = True
+                    tegs.append('a')
+                    res += f"<a href='{elem.split()[1].split('>')[0]}'>"
+                    res += elem.split('>')[1]
+                elif elem.lower().startswith('/a>'):
+                    if len(tegs) == 0:
+                        return "Error: тэг a не был открыт"
+                    elif tegs[-1] == 'a':
+                        tegs.pop(-1)
+                    else:
+                        return f'Error: тэг {tegs[-1]} не был закрыт'
+                    res += "</a>"
+                    res += elem[3:]
+            else:
                 if not start_p:
                     res += "<p>"
                     start_p = True
-                tegs.append('a')
-                res += f"<a href='{elem.split()[1].split('>')[0]}'>"
-                res += elem.split('>')[1]
-            elif elem.lower().startswith('/a>'):
-                if len(tegs) == 0:
-                    return "Error: тэг a не был открыт"
-                elif tegs[-1] == 'a':
-                    tegs.pop(-1)
+                if ">" in elem:
+                    return "Error: нет такого тега"
+                if elem in text[1:]:
+                    res += "<" + elem
                 else:
-                    return f'Error: тэг {tegs[-1]} не был закрыт'
-                res += "</a>"
-                res += elem[3:]
-        else:
-            if not start_p:
-                res += "<p>"
-                start_p = True
-            if elem in text[1:]:
-                res += "<" + elem
-            else:
-                res += elem
+                    res += elem
     if tegs != []:
         return f"Error: тег {tegs[-1]} не был закрыт"
     if start_p:
@@ -270,6 +281,11 @@ if __name__ == '__main__':
     print(text_transform("<p>",[""],"") == "Error: тег p не был закрыт")
     print(text_transform("<a https://rostec.ru/ Ссылка на ростех</a>", ["", ""], "") == "Error: тэг a не был открыт")
     print(text_transform("a\na", ["", ""], "") == "<p>a<br>a</p>")
+    print(text_transform("<a></a>", ["", ""], "") == "Error: нет ссылки в теге a")
+    print(text_transform("<image>", ["", ""], "") == "Error: нет картинки в теге image")
+    print(text_transform("<afafa>", ["", ""], "") == "Error: нет такого тега")
+    print(text_transform("<gei>", ["", ""], "") == "Error: нет такого тега")
+    print(text_transform("<image -2141>", ["", ""], "") == "Error: нет такой картинки -2141")
     print(text_transform("<p>a\na", ["", ""], "") == "Error: тег p не был закрыт")
     print(text_transform("Урааа, у нас теперь можно писать новости<br><br><p>Текст курсивом</p><h>Какой-то заголовок</h><image 1><image 2><a https://rostec.ru/%3E Ссылка на ростех</a>", ["", ""], "") == "Error: тэг a не был открыт")
     print(text_transform("this is statya about statyu about statyu about statyu about statyu about statyu kotoraya o statye kotoraya statye I talk about this <a />statya</a><image 1><h>this is imgage fom sobranie</h>", [""], "") == "<p>this is statya about statyu about statyu about statyu about statyu about statyu kotoraya o statye kotoraya statye I talk about this <a href='/'>statya</a></p><div><img src='/'></div><p class='title'>this is imgage fom sobranie</p>")
