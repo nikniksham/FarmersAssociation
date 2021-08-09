@@ -74,14 +74,9 @@
     {% elif block['type'] == "Partner" %}
     <div class="partners-carousel">
         {% for partner in special_params["partner"] %}
-        <div class="partner-item">
-            <a class="partner-href" onclick="openPopUp({{partner['id']}})">
+        <div class="partner-item" onclick="openPopUp({{partner['id']}})">
                 <img class="partner-item-image" src="/static/img/{{partner['logo']}}" alt={{partner['id']}}>
-                <div class="partner-item-text">
-                    <p>{{partner['name']}}</p>
-                    <p>Эко-Ферма</p>
-                </div>
-            </a>
+                <p class="partner-item-text">{{partner['name']}}</p>
         </div>
         {% endfor %}
     </div>
