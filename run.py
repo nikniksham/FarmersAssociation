@@ -906,6 +906,7 @@ def news_page(link):
     if "message" in news:
         page_not_found()
     print(news)
+    return render_template('news.html', title=news["heading"], params=get_standard_params(), news=news)
 
 
 @app.route("/test", methods=['GET', 'POST'])
