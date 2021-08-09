@@ -315,10 +315,8 @@ def admin_change_password(id):
         form = AdminForm()
         if current_user.id == id:
             admin = get(f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email)}").json()
-            print(1)
         else:
             admin = get(f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
-            print(2)
         message, result, name = None, False, ""
         if "message" not in admin:
             name = f'{admin["name"]} {admin["surname"]}'
@@ -327,11 +325,9 @@ def admin_change_password(id):
                     if id == current_user.id:
                         message = put(f"{link_website}api/admin/{current_user.email}/{form.password_current.data}",
                                       json={"password": form.password.data}).json()
-                        print(11)
                     else:
                         message = put(f"{link_website}api/admin/{current_user.email}/{form.password_current.data}/{id}",
                                       json={"password": form.password.data}).json()
-                        print(22)
                     if "success" in message:
                         password_manager.add_user(admin["email"], form.password.data)
                         result = True

@@ -6,6 +6,7 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.newspage import Newspage
 from data.API.NewspageAPI.parser_newspage import parser_newspage
+from main import mini_text
 
 
 def raise_error(error):
@@ -56,7 +57,7 @@ class NewspageResource(Resource):
         admin, session = check_admin_status(email, password)
         newspage, session = find_by_id(newspage_id, session)
         news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date', 'author_id'))
-        news_dict["mini_text"] = "Я мини текст"
+        news_dict["mini_text"] = mini_text(newspage.text)
         return jsonify(news_dict)
 
     def delete(self, email, password, newspage_id):
@@ -110,7 +111,7 @@ class NewspageResourceUsual(Resource):
         session = db_session.create_session()
         newspage, session = find_by_id(newspage_id, session)
         news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
-        news_dict["mini_text"] = "Я мини текст"
+        news_dict["mini_text"] = mini_text(newspage.text)
         return jsonify(news_dict)
 
 
@@ -120,7 +121,7 @@ class NewspageResourceLink(Resource):
         newspage = session.query(Newspage).filter(Newspage.link == link).first()
         if newspage:
             news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
-            news_dict["mini_text"] = "Я мини текст"
+            news_dict["mini_text"] = mini_text(newspage.text)
             return jsonify(news_dict)
         raise_error("Новость не найдена")
 
@@ -136,7 +137,7 @@ class NewspageListRecourseId(Resource):
         newspages, news_list = newspages[start_id:end_id], []
         for item in newspages:
             news_dict = item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
-            news_dict["mini_text"] = "Я мини текст"
+            news_dict["mini_text"] = mini_text(item.text)
             news_list.append(news_dict)
         return jsonify(news_list)
 
@@ -147,7 +148,7 @@ class NewspageListRecourse(Resource):
         newspages, news_list = session.query(Newspage).order_by(Newspage.created_date)[::-1], []
         for item in newspages:
             news_dict = item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
-            news_dict["mini_text"] = "Я мини текст"
+            news_dict["mini_text"] = mini_text(item.text)
             news_list.append(news_dict)
         return jsonify(news_list)
 
