@@ -15,15 +15,14 @@ class NewspageForm(StartForm):
 
 
 class AdminForm(StartForm):
-    stat = 3
-
-    name = StringField('Имя', validators=[DataRequired()])
-    surname = StringField('Фамилия', validators=[DataRequired()])
-    email = StringField('Почта', validators=[DataRequired()])
-    password = PasswordField('Пароль', validators=[DataRequired()])
-    password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
+    stat = 4
+    name = StringField('Имя', validators=[DataRequired("Пожалуйста введите имя")])
+    surname = StringField('Фамилия', validators=[DataRequired("Напишите вашу фамилию")])
+    email = StringField('Почта', validators=[DataRequired("Сюда надо написать почту")])
+    password = PasswordField('Пароль', validators=[DataRequired("Введите пароль")])
+    password_again = PasswordField('Повторите пароль', validators=[DataRequired("Введите пароль повторно")])
     status = SelectField("Права доступа",
-                         choices=[(i, ["Без прав", "Модератор", "Админ", "Владелец"][i]) for i in range(stat)])
+                         choices=[(i, ["Без прав", "Модератор", "Админ", "Владелец"][i]) for i in range(min(4, stat))])
 
 
 class ContentForm(StartForm):

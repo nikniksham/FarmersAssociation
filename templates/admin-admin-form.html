@@ -37,13 +37,16 @@
             </div>
             {% endfor %}
 
-            {{ form.status.label }}<br>
-            {{ form.status(class="form-control") }}<br>
-            {% for error in form.status.errors %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
-            {% endfor %}
+            <label>Права доступа</label>
+            <select name="status" class="form-control" id="status">
+                {% for role in roles %}
+                {% if admin_status == loop.index - 1 %}
+                <option value="{{loop.index - 1}}" selected="selected">{{role}}</option>
+                {% else %}
+                <option value="{{loop.index - 1}}">{{role}}</option>
+                {% endif %}
+                {% endfor %}
+            </select><br>
 
             {% if flag %}
                 {{ form.password.label }}<br>

@@ -44,7 +44,7 @@ def find_by_id(id, session, status=0):
     user = session.query(User).get(id)
     if not user:
         raise_error(f"Пользователь не найден")
-    if user.status > status or status < 1:
+    if user.status >= status or status < 1:
         raise_error("У вас недостаточно прав для этого")
     return user, session
 
@@ -168,8 +168,11 @@ class CreateAdminResource(Resource):
             if session.query(User).get(args["id"]) is not None:
                 raise_error("Этот id уже занят")
             new_admin.id = args["id"]
-        if args['status'] is not None and admin.status > args['status']:
-            new_admin.status = args['status']
+        if args['status'] is not None:
+            if admin.status > args['status']:
+                new_admin.status = args['status']
+            else:
+                raise_error("Слишком высокий статус нового админа")
         else:
             new_admin.status = 0
         new_admin.created_date = datetime.datetime.now()
