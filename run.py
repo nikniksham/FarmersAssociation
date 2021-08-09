@@ -74,7 +74,14 @@ login_manager.init_app(app)
 code_helper = CodeForConfirmation()
 password_manager = PasswordManager()
 containerManager = ManagerContainer()
-
+news_instruction = """
+<br> новая строка
+Указывается в месте переноса на новую строку
+<p> курсив
+<b> жирный ники
+<h> текст по центру, заголовок
+<image [id]> картинка
+<a [href]> ссылка (делает текст с нижним подчёркиванием)"""
 
 # Получение пользователя
 @login_manager.user_loader
