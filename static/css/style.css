@@ -165,16 +165,24 @@ header img {
     padding: 0 10px;
 }
 
+.partner-item div {
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
 .partner-item-image {
     height: 75px;
     display: inline-block;
     width: 75px;
     border-radius: 10px;
+    margin-right: 10px;
 }
 
 .partner-item-text {
     width: calc(100% - 80px);
     font-size: 28px;
+    vertical-align: middle;
     line-height: 1.1;
     margin-bottom: 2px;
     font-family: 'Oswald';

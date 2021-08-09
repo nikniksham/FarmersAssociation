@@ -13,6 +13,10 @@
 <div id={{partner["id"]}} class="partner">
     <div class="container">
         <div class="partner-Pop-up">
+            <div class="up" onclick="openPopUp({{partner['id']}})"></div>
+            <div class="right "onclick="openPopUp({{partner['id']}})"></div>
+            <div class="left" onclick="openPopUp({{partner['id']}})"></div>
+            <div class="down" onclick="openPopUp({{partner['id']}})"></div>
             <div class="partner-Pop-up-header">
                 <img class="partner-Pop-up-img" src="/static/img/{{partner['logo']}}" alt={{partner["name"]}}>
                 <p class="partner-Pop-up-title">{{partner["name"]}}</p>
@@ -75,8 +79,10 @@
     <div class="partners-carousel">
         {% for partner in special_params["partner"] %}
         <div class="partner-item" onclick="openPopUp({{partner['id']}})">
+            <div>
                 <img class="partner-item-image" src="/static/img/{{partner['logo']}}" alt={{partner['id']}}>
                 <p class="partner-item-text">{{partner['name']}}</p>
+            </div>
         </div>
         {% endfor %}
     </div>
