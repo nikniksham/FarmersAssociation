@@ -810,6 +810,16 @@ def admin_delete_feedback(id):
     return you_dont_have_permission()
 
 
+@app.route("/write-feedback/<int:id>", methods=['GET', 'POST'])
+@login_required
+def write_feedback(id):
+    feedback = get(f"{link_website}api/feedback/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+    print(feedback)
+    if "message" not in feedback:
+        return page_not_found()
+    return render_template('news.html', title=feedback["heading"], params=get_standard_params(), feedback=feedback)
+
+
 @app.route("/write-feedback/<string:code>", methods=['GET', 'POST'])
 def write_feedback(code):
     form = FeedbackForm()
@@ -902,7 +912,6 @@ def page_by_link(link):
 
 @app.route("/news-page/<string:link>")
 def news_page(link):
-    print(list)
     news = get(f"{link_website}api/newspage/{link}").json()
     if "message" in news:
         return page_not_found()
