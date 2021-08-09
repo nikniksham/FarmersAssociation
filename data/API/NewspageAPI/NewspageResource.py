@@ -6,7 +6,14 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.newspage import Newspage
 from data.API.NewspageAPI.parser_newspage import parser_newspage
-from main import mini_text
+from main import mini_text, text_transform
+
+path = ""
+
+
+def set_path(new_path):
+    global path
+    path = new_path
 
 
 def raise_error(error):
@@ -60,6 +67,7 @@ class NewspageResource(Resource):
         newspage, session = find_by_id(newspage_id, session)
         news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date', 'author_id'))
         news_dict["mini_text"] = mini_text(newspage.text)
+        news_dict["text_render"] = text_transform(newspage.text, newspage.image.split("//"), path)
         return jsonify(news_dict)
 
     def delete(self, email, password, newspage_id):
@@ -114,6 +122,7 @@ class NewspageResourceUsual(Resource):
         newspage, session = find_by_id(newspage_id, session)
         news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
         news_dict["mini_text"] = mini_text(newspage.text)
+        news_dict["text_render"] = text_transform(newspage.text, newspage.image.split("//"), path)
         return jsonify(news_dict)
 
 
@@ -124,6 +133,7 @@ class NewspageResourceLink(Resource):
         if newspage:
             news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
             news_dict["mini_text"] = mini_text(newspage.text)
+            news_dict["text_render"] = text_transform(newspage.text, newspage.image.split("//"), path)
             return jsonify(news_dict)
         raise_error("Новость не найдена")
 
@@ -140,6 +150,7 @@ class NewspageListRecourseId(Resource):
         for item in newspages:
             news_dict = item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
             news_dict["mini_text"] = mini_text(item.text)
+            news_dict["text_render"] = text_transform(item.text, item.image.split("//"), path)
             news_list.append(news_dict)
         return jsonify(news_list)
 
@@ -151,6 +162,7 @@ class NewspageListRecourse(Resource):
         for item in newspages:
             news_dict = item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
             news_dict["mini_text"] = mini_text(item.text)
+            news_dict["text_render"] = text_transform(item.text, item.image.split("//"), path)
             news_list.append(news_dict)
         return jsonify(news_list)
 

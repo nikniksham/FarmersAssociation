@@ -17,7 +17,7 @@ from data.API.ContentAPI.ContentResource import CreateContentResource, ContentRe
     ContentListRecourseId
 from data.API.FeedbackAPI.FeedbackResource import FeedbackResource, FeedbackListRecourse, CreateFeedbackResource
 from data.API.NewspageAPI.NewspageResource import NewspageResource, NewspageListRecourse, CreateNewspageResource, \
-    NewspageResourceUsual, NewspageListRecourseId, NewspageResourceLink
+    NewspageResourceUsual, NewspageListRecourseId, NewspageResourceLink, set_path
 from data.API.PartnerAPI.PartnerResource import PartnerResource, PartnerResourceUsual, PartnerListRecourse, \
     CreatePartnerResource
 from data.API.SmartpageAPI.SmartpageResource import CreateSmartpageResource, SmartpageResource, SmartpageListRecourse, \
@@ -76,6 +76,7 @@ login_manager.init_app(app)
 code_helper = CodeForConfirmation()
 password_manager = PasswordManager()
 containerManager = ManagerContainer()
+set_path(app.config["UPLOAD_FOLDER"])
 
 
 # Получение пользователя
@@ -537,7 +538,7 @@ def admin_create_content(page_id):
             message = " ".join(list(message.values()))
         return render_template('admin-content-form.html', title='Создание контента', message=message, form=form,
                                result=result, flag=True, filenames=filenames, image_len=1, params=get_standard_params(),
-                               page_id=0)
+                               page_id=page_id)
     return you_dont_have_permission()
 
 

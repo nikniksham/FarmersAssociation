@@ -7,6 +7,7 @@ from data.user import User
 from data.feedback import Feedback
 from data.confirmationcode import ConfirmationCode
 from data.API.FeedbackAPI.parser_feedback import parser_feedback
+from data.API.NewspageAPI.NewspageResource import path
 
 
 def raise_error(error):
@@ -52,7 +53,9 @@ class FeedbackResource(Resource):
     def get(self, email, password, feedback_id):
         admin, session = check_admin_status(email, password)
         feedback, session = find_by_id(feedback_id, session)
-        return jsonify(feedback.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date')))
+        news_dict = feedback.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
+        news_dict["text_render"] = feedback(feedback.text, feedback.image.split("//"), path)
+        return jsonify(news_dict)
 
     def delete(self, email, password, feedback_id):
         admin, session = check_admin_status(email, password)
@@ -68,9 +71,12 @@ class FeedbackResource(Resource):
 class FeedbackListRecourse(Resource):
     def get(self, email, password):
         admin, session = check_admin_status(email, password)
-        feedbacks = session.query(Feedback).all()
-        return jsonify([item.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
-                        for item in feedbacks])
+        feedbacks, dict_list = session.query(Feedback).all(), []
+        for feedback in feedbacks:
+            news_dict = feedback.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
+            news_dict["text_render"] = feedback(feedback.text, feedback.image.split("//"), path)
+            dict_list.append(news_dict)
+        return jsonify(dict_list)
 
 
 class CreateFeedbackResource(Resource):
