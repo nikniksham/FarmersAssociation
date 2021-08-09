@@ -198,11 +198,6 @@ def login():
     return render_template('login.html', title='Авторизация', form=form)
 
 
-@app.route("/")
-def website_main():
-    return render_template('main-page.html', title='Главная страница', params=get_standard_params())
-
-
 @app.route("/admin")
 @login_required
 def admin():
@@ -859,7 +854,7 @@ def write_feedback(code):
 
 @app.route("/contacts")
 def contacts():
-    page = get(f"{link_website}api/smartpage/5").json()
+    page = get(f"{link_website}api/smartpage/6").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
     return render_template('contacts.html', title=page["heading"], page=page, content=content,
                            params=get_standard_params(), code=create_random_name(10), special_params=get_special_params())
@@ -867,7 +862,7 @@ def contacts():
 
 @app.route("/agro_and_agro-tourism_sector")
 def agro_and_agro_tourism_sector():
-    page = get(f"{link_website}api/smartpage/1").json()
+    page = get(f"{link_website}api/smartpage/2").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
     return render_template('agro_and_agro_tourism_sector.html', title=page["heading"], page=page, content=content,
                            params=get_standard_params(), special_params=get_special_params())
@@ -875,7 +870,7 @@ def agro_and_agro_tourism_sector():
 
 @app.route("/partners")
 def partners():
-    page = get(f"{link_website}api/smartpage/2").json()
+    page = get(f"{link_website}api/smartpage/3").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
     return render_template('partners.html', title=page["heading"], page=page, content=content,
                            params=get_standard_params(), special_params=get_special_params())
@@ -883,7 +878,7 @@ def partners():
 
 @app.route("/all_news")
 def all_news():
-    page = get(f"{link_website}api/smartpage/3").json()
+    page = get(f"{link_website}api/smartpage/4").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
     return render_template('all_news.html', title=page["heading"], page=page, content=content,
                            params=get_standard_params(), special_params=get_special_params())
@@ -891,9 +886,17 @@ def all_news():
 
 @app.route("/team")
 def team():
-    page = get(f"{link_website}api/smartpage/4").json()
+    page = get(f"{link_website}api/smartpage/5").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
     return render_template('team.html', title=page["heading"], page=page, content=content, params=get_standard_params(),
+                           special_params=get_special_params())
+
+
+@app.route("/")
+def website_main():
+    page = get(f"{link_website}api/smartpage/1").json()
+    content = get(f"{link_website}api/content/{page['id']}").json()
+    return render_template('main-page.html', title=page["heading"], page=page, content=content, params=get_standard_params(),
                            special_params=get_special_params())
 
 
