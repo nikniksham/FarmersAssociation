@@ -196,6 +196,7 @@ def login():
 def website_main():
     return render_template('main-page.html', title='Главная страница', params=get_standard_params())
 
+
 @app.route("/admin")
 @login_required
 def admin():
