@@ -29,14 +29,6 @@
             </div>
             {% endfor %}
 
-            {{ form.tags.label }}<br>
-            {{ form.tags(class="form-control") }}<br>
-            {% for error in form.tags.errors %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
-            {% endfor %}
-
             <p>Изображения</p>
             <div class="settings-images">
                 <div id="images1">

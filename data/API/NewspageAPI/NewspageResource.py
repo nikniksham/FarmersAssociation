@@ -171,7 +171,7 @@ class CreateNewspageResource(Resource):
     def post(self, email, password):
         admin, session = check_admin_status(email, password)
         args = parser_newspage.parse_args()
-        if not all(args[key] is not None for key in ['heading', 'text', 'tags']):
+        if not all(args[key] is not None for key in ['heading', 'text']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания новостной страницы')
         new_newspage = Newspage()
         new_newspage.heading = args["heading"]
