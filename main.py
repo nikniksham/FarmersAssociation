@@ -114,7 +114,9 @@ def text_transform(text, filenames, path):  # Я не знаю, как это р
                 res += "<i>"
                 res += elem[2:]
             elif elem.lower().startswith('/p>'):
-                if tegs[-1] == 'p':
+                if len(tegs) == 0:
+                    return "Error: тэг p не был открыт"
+                elif tegs[-1] == 'p':
                     tegs.pop(-1)
                 else:
                     return f'Error: тэг {tegs[-1]} не был закрыт'
@@ -128,7 +130,9 @@ def text_transform(text, filenames, path):  # Я не знаю, как это р
                 res += "<b>"
                 res += elem[2:]
             elif elem.lower().startswith('/b>'):
-                if tegs[-1] == 'b':
+                if len(tegs) == 0:
+                    return "Error: тэг b не был открыт"
+                elif tegs[-1] == 'b':
                     tegs.pop(-1)
                 else:
                     return f'Error: тэг {tegs[-1]} не был закрыт'
@@ -141,7 +145,9 @@ def text_transform(text, filenames, path):  # Я не знаю, как это р
                 res += "<p class='title'>"
                 res += elem[2:]
             elif elem.lower().startswith('/h>'):
-                if tegs[-1] == 'h':
+                if len(tegs) == 0:
+                    return "Error: тэг h не был открыт"
+                elif tegs[-1] == 'h':
                     tegs.pop(-1)
                 else:
                     return f'Error: тэг {tegs[-1]} не был закрыт'
@@ -163,7 +169,9 @@ def text_transform(text, filenames, path):  # Я не знаю, как это р
                 res += f"<a href='{elem.split()[1].split('>')[0]}'>"
                 res += elem.split('>')[1]
             elif elem.lower().startswith('/a>'):
-                if tegs[-1] == 'a':
+                if len(tegs) == 0:
+                    return "Error: тэг a не был открыт"
+                elif tegs[-1] == 'a':
                     tegs.pop(-1)
                 else:
                     return f'Error: тэг {tegs[-1]} не был закрыт'
@@ -197,7 +205,9 @@ def mini_text(text):  # Я не знаю, как это работает, это
                 res += "<i>"
                 res += elem[2:]
             elif elem.lower().startswith('/p>'):
-                if tegs[-1] == 'p':
+                if len(tegs) == 0:
+                    return "Error: тэг p не был открыт"
+                elif tegs[-1] == 'p':
                     tegs.pop(-1)
                 else:
                     return f'Error: тэг {tegs[-1]} не был закрыт'
@@ -208,7 +218,9 @@ def mini_text(text):  # Я не знаю, как это работает, это
                 res += "<b>"
                 res += elem[2:]
             elif elem.lower().startswith('/b>'):
-                if tegs[-1] == 'b':
+                if len(tegs) == 0:
+                    return "Error: тэг b не был открыт"
+                elif tegs[-1] == 'b':
                     tegs.pop(-1)
                 else:
                     return f'Error: тэг {tegs[-1]} не был закрыт'
@@ -253,4 +265,6 @@ if __name__ == '__main__':
     print(mini_text("<yes>") == "<yes>")
     print('test news')
     print(text_transform("<p>",[""],"") == "Error: тег p не был закрыт")
+    print(text_transform("<a https://rostec.ru/ Ссылка на ростех</a>", ["", ""], "") == "Error: тэг a не был открыт")
+    print(text_transform("Урааа, у нас теперь можно писать новости<br><br><p>Текст курсивом</p><h>Какой-то заголовок</h><image 1><image 2><a https://rostec.ru/%3E Ссылка на ростех</a>", ["", ""], "") == "Error: тэг a не был открыт")
     print(text_transform("this is statya about statyu about statyu about statyu about statyu about statyu kotoraya o statye kotoraya statye I talk about this <a />statya</a><image 1><h>this is imgage fom sobranie</h>", [""], "") == "<p>this is statya about statyu about statyu about statyu about statyu about statyu kotoraya o statye kotoraya statye I talk about this <a href='/'>statya</a></p><div><img src='/'></div><p class='title'>this is imgage fom sobranie</p>")
