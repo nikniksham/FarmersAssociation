@@ -915,6 +915,7 @@ def test():
 @app.route('/logout')
 @login_required
 def logout():
+    password_manager.delete_user(current_user.email)
     logout_user()
     return redirect("/")
 
