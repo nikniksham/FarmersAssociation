@@ -223,7 +223,7 @@ def admin_create_news():
             if form.submit.data:
                 message = post(
                     f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}",
-                    json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data, "image": "//".join(filenames)}).json()
+                    json={"heading": form.heading.data, "text": form.text.data, "image": "//".join(filenames)}).json()
                 if "success" in message:
                     result = True
                     containerManager.delete_container(f"news_{current_user.email}")
@@ -251,7 +251,7 @@ def admin_edit_news(id):
                 if form.submit.data:
                     message = put(
                         f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                        json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data, "image": "//".join(filenames)}).json()
+                        json={"heading": form.heading.data, "text": form.text.data, "image": "//".join(filenames)}).json()
                     if "success" in message:
                         result = True
                     message = " ".join(list(message.values()))
@@ -260,7 +260,6 @@ def admin_edit_news(id):
             else:
                 form.heading.data = news["heading"]
                 form.text.data = news["text"]
-                form.tags.data = news["tags"]
                 if containerManager.get_container(f"news_{id}") == {}:
                     filenames = news["image"].split("//")
                 else:
@@ -906,7 +905,7 @@ def news_page(link):
     print(list)
     news = get(f"{link_website}api/newspage/{link}").json()
     if "message" in news:
-        page_not_found()
+        return page_not_found()
     print(news)
     return render_template('news.html', title=news["heading"], params=get_standard_params(), news=news)
 

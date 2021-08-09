@@ -25,6 +25,7 @@ def trans_link(text):
              "й": "j", "к": "k", "л": "l", "м": "m", "н": "n", "о": "o", "п": "p", "р": "r", "с": "s", "т": "t",
              "у": "u", "ф": "f", "х": "x", "ц": "cz", "ч": "ch", "ш": "sh", "щ": "sch", "ы": "y", "э": "e", "ю": "yu",
              "я": "ya", " ": "_"}
+    eng_letter = "qwertyuiopasdfghjklzxcvbnm"
     link, keys, isup = "", list(trans.keys()), False
     for letter in text:
         isup = letter.isupper()
@@ -32,7 +33,7 @@ def trans_link(text):
             link += letter
         elif letter.lower() in keys:
             link += trans[letter.lower()].upper() if isup else trans[letter]
-        elif letter.lower() in trans:
+        elif letter.lower() in eng_letter:
             link += letter
     return link
 
@@ -83,12 +84,12 @@ class NewspageResource(Resource):
     def put(self, email, password, newspage_id):
         admin, session = check_admin_status(email, password)
         newspage, session = find_by_id(newspage_id, session)
-        args, count = parser_newspage.parse_args(), 0
+        args, count_params = parser_newspage.parse_args(), 0
         page_dict = newspage.to_dict(only=('heading', 'text', 'image', 'tags'))
         keys = list(filter(lambda key: args[key] is not None and args[key] != page_dict[key] and key in list(page_dict.keys()), list(args.keys())))
         for key in list(args.keys()):
             if args[key] is not None and args[key] != page_dict[key]:
-                count += 1
+                count_params += 1
                 if key == 'image':
                     newspage.image = args['image']
                 if key == 'heading':
@@ -105,7 +106,7 @@ class NewspageResource(Resource):
                     newspage.text = args["text"]
                 if key == "tags":
                     newspage.tags = args["tags"]
-        if count == 0:
+        if count_params == 0:
             return raise_error("Пустой запрос")
         page_dict_2 = newspage.to_dict(only=('heading', 'text', 'image', 'tags'))
         list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' if key != "image" else "изменяет изображения" for key in keys]
