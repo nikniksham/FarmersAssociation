@@ -95,6 +95,7 @@ class DeleteSuperfluousImage:
 
 def text_transform(text, filenames, path):  # Я не знаю, как это работает, это писал безумный человек
     # крейзи здесь
+    text = "".join(text.split("\r"))
     commands = ['br>', 'p>', 'b>', 'h>', 'image ', 'a ', '/p>', '/b>', '/h>', '/a>', "a>", "image>", '\n']
     text = text.split('<')
     start_p = False
@@ -192,7 +193,7 @@ def text_transform(text, filenames, path):  # Я не знаю, как это р
                     res += "<p>"
                     start_p = True
                 if ">" in elem:
-                    return "Error: нет такого тега"
+                    return "Error: нет тега " + elem.split(">")[0]
                 if elem in text[1:]:
                     res += "<" + elem
                 else:
@@ -206,86 +207,43 @@ def text_transform(text, filenames, path):  # Я не знаю, как это р
 
 def mini_text(text):  # Я не знаю, как это работает, это умный писал человек
     # умный здесь
-    commands = ['br>', 'p>', 'b>', 'h>', 'image ', 'a ', '/p>', '/b>', '/h>', '/a>']
-    text = text.split('<')
-    tegs = []
     res = ""
-    for elem in text:
-        if any([elem.lower().startswith(com) for com in commands]):
-            if elem.lower().startswith('br>'):
-                res += " "
-            elif elem.lower().startswith('p>'):
-                tegs.append('p')
-                res += "<i>"
-                res += elem[2:]
-            elif elem.lower().startswith('/p>'):
-                if len(tegs) == 0:
-                    return "Error: тэг p не был открыт"
-                elif tegs[-1] == 'p':
-                    tegs.pop(-1)
-                else:
-                    return f'Error: тэг {tegs[-1]} не был закрыт'
-                res += "<i>"
-                res += elem[3:]
-            elif elem.lower().startswith('b>'):
-                tegs.append('b')
-                res += "<b>"
-                res += elem[2:]
-            elif elem.lower().startswith('/b>'):
-                if len(tegs) == 0:
-                    return "Error: тэг b не был открыт"
-                elif tegs[-1] == 'b':
-                    tegs.pop(-1)
-                else:
-                    return f'Error: тэг {tegs[-1]} не был закрыт'
-                res += "</b>"
-                res += elem[3:]
-            elif elem.lower().startswith('h>'):
-                pass
-            elif elem.lower().startswith('/h>'):
-                pass
-            elif elem.lower().startswith('image') and elem.lower().split()[1].split('>')[0].isdigit():
-                pass
-            elif elem.lower().startswith('a') and elem.find('>') > -1:
-                pass
-            elif elem.lower().startswith('/a>'):
-                pass
+    for elem in text.split("<"):
+        if ">" in elem:
+            res += " " + elem[elem.find(">")+1:].strip()
         else:
-            if elem in text[1:]:
-                res += "<" + elem
-            else:
-                res += elem
+            res += " " + elem.strip()
     tmp = ""
     for word in res.split():
         if len(word) > 20:
             word = word[:17] + "..."
-        if tmp == "":
-            tmp += word
-        elif len(tmp + " " + word) < 200:
-            tmp += " " + word
-        else:
+        if len((tmp + " " + word).strip()) > 200:
             break
-    res = tmp
-    return res
+        tmp += " " + word
+    return tmp.strip()
 
 
 if __name__ == '__main__':
     print('test for mini text')
-    print(mini_text("teeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeext") == "teeeeeeeeeeeeeeee...")
-    print(mini_text("<a />teext</a>") == "")
-    print(mini_text("<p>teext</p>") == "<i>teext<i>")
-    print(mini_text("<b>teext</b>") == "<b>teext</b>")
-    print(mini_text("<b>teext</b><br><p>teext</p><br><yes>") == "<b>teext</b> <i>teext<i> <yes>")
-    print(mini_text("<yes>") == "<yes>")
+    print(mini_text("teeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeext"))
+    print(mini_text("<a />teext</a>"))
+    print(mini_text("<p>teext</p>"))
+    print(mini_text("<b>teext</b>"))
+    print(mini_text("<b>teext</b><br><p>teext</p><br><yes>"))
+    print(mini_text("<yes>"))
+    print(mini_text("<b>Мы почти сделали сайт, нам осталось совсем чуть чуть!</b><br>Много текста.<p>И немного курсивом</p>, а <p><b>еще немного жирным курсивом</b></p>!<h>А теперь картинка застолья!</h><image 1><p>Вот и новости конец</p><a />а теперь на главную</a><a /all-news>или на все новости!</a>"))
     print('test news')
     print(text_transform("<p>",[""],"") == "Error: тег p не был закрыт")
     print(text_transform("<a https://rostec.ru/ Ссылка на ростех</a>", ["", ""], "") == "Error: тэг a не был открыт")
     print(text_transform("a\na", ["", ""], "") == "<p>a<br>a</p>")
     print(text_transform("<a></a>", ["", ""], "") == "Error: нет ссылки в теге a")
     print(text_transform("<image>", ["", ""], "") == "Error: нет картинки в теге image")
-    print(text_transform("<afafa>", ["", ""], "") == "Error: нет такого тега")
-    print(text_transform("<gei>", ["", ""], "") == "Error: нет такого тега")
+    print(text_transform("<afafa>", ["", ""], "") == "Error: нет тега afafa")
+    print(text_transform("<gei>", ["", ""], "") == "Error: нет тега gei")
     print(text_transform("<image -2141>", ["", ""], "") == "Error: нет такой картинки -2141")
     print(text_transform("<p>a\na", ["", ""], "") == "Error: тег p не был закрыт")
     print(text_transform("Урааа, у нас теперь можно писать новости<br><br><p>Текст курсивом</p><h>Какой-то заголовок</h><image 1><image 2><a https://rostec.ru/%3E Ссылка на ростех</a>", ["", ""], "") == "Error: тэг a не был открыт")
     print(text_transform("this is statya about statyu about statyu about statyu about statyu about statyu kotoraya o statye kotoraya statye I talk about this <a />statya</a><image 1><h>this is imgage fom sobranie</h>", [""], "") == "<p>this is statya about statyu about statyu about statyu about statyu about statyu kotoraya o statye kotoraya statye I talk about this <a href='/'>statya</a></p><div><img src='/'></div><p class='title'>this is imgage fom sobranie</p>")
+    print(text_transform("<p><b>iii</b></p><b>bbb</b>", ["", ""], "") == "<p><i><b>iii</b><i><b>bbb</b></p>")
+    print(text_transform("<image 1>", ["gei.png"], "foolder/") == "<p></p><div><img src='/foolder/gei.png'></div>")
+    print(text_transform("Красивый текст\r\n<b>Толстый</b>\r\n<p>Курсивный</p>\r\n<a 127.0.0.1:8000/>Ссылка на сайт</a>\r\n<image 1>\r\n<h>Заголовок</h>", ["gei.png"], "foolder/") == "<p>Красивый текст<br><b>Толстый</b><br><i>Курсивный<i><br><a href='127.0.0.1:8000/'>Ссылка на сайт</a><br></p><div><img src='/foolder/gei.png'></div><br><p class='title'>Заголовок</p>")
