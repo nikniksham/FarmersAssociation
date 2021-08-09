@@ -39,14 +39,14 @@
     {% for block in content %}
     {% if block['type'] == "News" %}
     <div class="row" id="news">
-        {% for news in newslist %}
+        {% for news in special_params["news"] %}
         <div class="col-sm-12 col-md-6 col-lg-4">
-            <a href="/news/{{news['id']}}">
+            <a href="/news-page/{{news['link']}}">
                 <div class="news">
                     <div class="news-img"
                          style="background-image: url('/static/img/{{news['image'].split('//')[0]}}');"></div>
                     <div class="news-title">{{news['heading']}}</div>
-                    <div class="news-text">{{news['text']}}</div>
+                    <div class="news-text">{{news['mini_text']}}</div>
                     <div class="news-navigation">
                         <span class="date">{{news['created_date']}}</span>
                     </div>

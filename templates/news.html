@@ -1,0 +1,11 @@
+{% extends "main.html" %}
+
+{% block pageblock %}
+<div class="container">
+    <p class="news-header">{{news["heading"]}}</p>
+    <div class="render-text">
+        {{news["text"]|safe}}
+    </div>
+    <span class="date">date: {{news["created_date"]}}</span>
+</div>
+{% endblock %}

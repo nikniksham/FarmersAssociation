@@ -218,7 +218,7 @@ header img {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,.5);
+  background: rgba(0,0,0,.7);
   z-index: 2;
   transition: background 0.2s ease;
 }
@@ -238,11 +238,11 @@ header img {
     flex: 1 0;
     font-size: 18px;
     font-family: 'Open Sans', sans-serif;
-    font-weight: 300;
+    font-weight: 400;
     letter-spacing: 1px;
 }
 
-.news-navigation span {
+.date {
     color: #eca137;
     font-size: 16px;
     font-family: 'Open Sans', sans-serif;
@@ -252,7 +252,7 @@ header img {
 }
 
 .news-2:hover .news-img:after, .news:hover .news-img:after {
-    background: rgba(0,0,0,.7);
+    background: rgba(0,0,0,.8);
 }
 
 .news-2 {
@@ -446,4 +446,39 @@ footer p {
 #nav-icon2.open span:nth-child(6) {
   left: calc(50% - 2px);
   top: 20px;
+}
+
+.news-header {
+    font-size: 56px;
+    font-width: 400;
+    font-family: 'Oswald', sans-serif;
+    text-align: center;
+}
+
+.render-text {
+    color: black;
+    margin: 30px 0;
+}
+.render-text a {
+    text-decoration: underline;
+    color: inherit;
+}
+.render-text a:hover {
+    color: inherit;
+}
+.render-text .title {
+    width: 100%;
+    text-align: center;
+    font-size: 35px;
+    font-width: 400;
+}
+.render-text p {
+    font-size: 21px;
+}
+.render-text div {
+    text-align: center;
+}
+.render-text img {
+    width: 70%;
+    border-radius: 15px;
 }
