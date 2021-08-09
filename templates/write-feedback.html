@@ -58,6 +58,7 @@
                                 </div>
                                 {% endfor %}
                                 {% endif %}
+                                {% if image_len < 5 %}
                                 <div class="input-file-row-1">
                                     <div class="upload-file-container">
                                         <div class="delete-image hidden"></div>
@@ -66,6 +67,7 @@
                                                id="imgInput{{image_len}}">
                                     </div>
                                 </div>
+                                {% endif %}
                             </div>
                         </div>
 

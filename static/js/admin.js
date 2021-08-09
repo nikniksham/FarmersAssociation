@@ -1,12 +1,12 @@
 var count_images = 1
 var count = 1
-var count_used = -1
+var count_used = 0
 var max_count = 15
 
 
 function addImage(num) {
     console.log(count, max_count, count_images, count_used)
-    if (count > max_count)
+    if (count_used >= max_count)
         return ""
     let block = document.createElement('div');
     block.className = "input-file-row-1";
@@ -22,13 +22,13 @@ function readURL(input) {
         var fr = new FileReader();
         fr.onload = function () {
             $('#image'+num).attr('src', fr.result);
-            if ($('#image'+num).attr('class') === 'this-is-image') {
+            if ($('#image'+num).attr('class') === 'this-is-image' || $('#image'+num).attr('class') === '') {
+                console.log("im gay " + count_used)
+                count_used += 1;
+                console.log("im realy gay " + count_used)
                 addImage(parseInt($($($(input).closest('.settings-images')).children()[0]).attr('id').match(/\d+/)));
                 $('#image'+num).toggleClass("visible");
                 $($($('#image'+num).closest('.upload-file-container')[0]).children()[0]).toggleClass("hidden");
-                return true;
-            } else {
-                return false;
             }
         }
         fr.readAsDataURL(input.files[0]);
@@ -38,15 +38,16 @@ function readURL(input) {
 
 $("body").delegate('[id^="imgInput"]', "change", function(){
     console.log('loadImage');
-    if (readURL(this)) {
-        count_used += 1;
-    }
+    readURL(this)
 });
 
-$('[id^="imgInput"]').each(function(){
+$('[id^="image"]').each(function(){
     count_images += 1;
     count += 1;
-    count_used += 1;
+    if ($(this).attr('src') !== "" && $(this).attr('src') !== "#" && $(this).attr('src') !== undefined) {
+        count_used += 1;
+        console.log(count_used)
+    }
 });
 
 
@@ -70,6 +71,7 @@ $("body").delegate('.delete-image', "click", function(){
         $(this).closest('.input-file-row-1').remove();
         console.log(count, (max_count), count_used)
         if (count_used + 1 == max_count) {
+            console.log("add empty to " + num)
             addImage(num);
         }
     }
