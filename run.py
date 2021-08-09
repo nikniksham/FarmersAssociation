@@ -95,8 +95,9 @@ def save_image_multithreading(filename, file):
     if image.size[0] > 720 or image.size[1] > 480:
         image.thumbnail((720, 480))
     path, format = filename.split(".")
-    if format != "png":
+    if format not in ["png", "gif"]:
         image = image.convert('RGB')
+    print(filename)
     image.save(filename)
 
 
@@ -111,8 +112,6 @@ def save_images(cont_name, files, r_img=True):
     for ind, name in enumerate(files):
         file = files[name]
         if file.filename != "":
-            if img_list[ind] in cont:
-                delete_img(cont[img_list[ind]])
             if file and allowed_file(file.filename):
                 filename = secure_filename(create_new_image_name())
                 save_image(filename, file)
@@ -138,8 +137,9 @@ def delete_img(filename):
         os.remove(f"{app.config['UPLOAD_FOLDER']}{filename}")
 
 
-def create_new_image_name(logo=False):
-    filelist, format = os.listdir(app.config['UPLOAD_FOLDER']), ".png" if logo else ".jpg"
+def create_new_image_name(logo=False, gif=False):
+    filelist, format = os.listdir(app.config['UPLOAD_FOLDER']), ".gif" if gif else (".png" if logo else ".jpg")
+    print(format, gif)
     filename = create_random_name(50) + format
     while filename in filelist:
         filename = create_random_name(50) + format
@@ -147,7 +147,7 @@ def create_new_image_name(logo=False):
 
 
 def allowed_file(filename):
-    ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg']
+    ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', 'gif']
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -289,7 +289,7 @@ def admin_delete_news(id):
                     delete_img(image)
                 containerManager.delete_container(f"news_{id}")
         return render_template('admin-delete-form.html', title='Удаление новости', message=message, form=form,
-                               result=result, name=name, params=get_standard_params())
+                               result=result, name=name, params=get_standard_params(), link_back="/admin-list-news")
     return you_dont_have_permission()
 
 
@@ -387,7 +387,7 @@ def admin_delete_admin(id):
         else:
             name = "пользователь не найден"
         return render_template('admin-delete-form.html', title='Удаление админа', message=message, form=form,
-                               result=result, name=name, params=get_standard_params())
+                               result=result, name=name, params=get_standard_params(), link_back="/admin-list-admin")
     return you_dont_have_permission()
 
 
@@ -479,7 +479,7 @@ def admin_delete_smartpage(id):
                     delete_img(image)
                 containerManager.delete_container(f"smartpage_{id}")
         return render_template('admin-delete-form.html', title='Удаление страницы', message=message, form=form,
-                               result=result, name=name, params=get_standard_params())
+                               result=result, name=name, params=get_standard_params(), link_back="/admin-list-smartpage/0")
     return you_dont_have_permission()
 
 
@@ -500,7 +500,8 @@ def admin_create_content(page_id):
                 result = True
             message = " ".join(list(message.values()))
         return render_template('admin-content-form.html', title='Создание контента', message=message, form=form,
-                               result=result, flag=True, filenames=filenames, image_len=1, params=get_standard_params())
+                               result=result, flag=True, filenames=filenames, image_len=1, params=get_standard_params(),
+                               page_id=0)
     return you_dont_have_permission()
 
 
@@ -536,7 +537,7 @@ def admin_edit_content(id):
         form = ContentForm()
         content = get(
             f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
-        message, result, filenames, filename = None, False, [], None
+        message, result, filenames, filename, page_id = None, False, [], None, 0
         if "message" not in content:
             if request.method == 'POST':
                 filenames = save_images(f"content_{id}", request.files, False)
@@ -551,6 +552,7 @@ def admin_edit_content(id):
                 form.type.data = content["type"]
                 form.text.data = content["text"]
                 form.heading.data = content["heading"]
+                page_id = content["smartpage_id"]
                 if content["image"]:
                     filenames = content["image"].split("//")
                 containerManager.add_container(f"content_{id}", filenames)
@@ -558,7 +560,7 @@ def admin_edit_content(id):
             message = "Контент не найден"
         return render_template('admin-content-form.html', title='Редактирование контента', message=message, form=form,
                                result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1,
-                               params=get_standard_params())
+                               params=get_standard_params(), page_id=page_id)
     return you_dont_have_permission()
 
 
@@ -567,10 +569,11 @@ def admin_edit_content(id):
 def admin_delete_content(id):
     if current_user.status > 0:
         form = DeleteForm()
-        message, name, result = "", "контент не найден", False
+        message, name, result, page_id = "", "контент не найден", False, 0
         content = get(
             f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}/{id}").json()
         if "message" not in content:
+            page_id = content["smartpage_id"]
             name = "контент " + content['heading']
             if request.method == 'POST':
                 message = delete(
@@ -583,7 +586,8 @@ def admin_delete_content(id):
                     delete_img(image)
                 containerManager.delete_container(f"content_{id}")
         return render_template('admin-delete-form.html', title='Удаление контента', message=message, form=form,
-                               result=result, name=name, params=get_standard_params())
+                               result=result, name=name, params=get_standard_params(),
+                               link_back=f"/admin-list-smartpage/{page_id}")
     return you_dont_have_permission()
 
 
@@ -603,20 +607,23 @@ def admin_create_partner():
         form = PartnerForm()
         message, result, filenames1, filenames2 = None, False, [], []
         if request.method == 'POST':
-            for name in request.files:
+            img_list = list(request.files)
+            for ind, name in enumerate(request.files):
                 file = request.files[name]
                 if file.filename != "":
                     if file and allowed_file(file.filename):
-                        if file.filename in ["image1", "ImgInput1"]:
+                        if img_list[ind] in ["icon", "iconInput"]:
                             filename = secure_filename(create_new_image_name(True))
                             save_image(filename, file)
                             filenames1.append(filename)
                         else:
-                            filename = secure_filename(create_new_image_name(False))
+                            filename = secure_filename(create_new_image_name())
                             save_image(filename, file)
                             filenames2.append(filename)
             if len(filenames1) == 0:
                 filenames1 = ["standard.png"]
+            if len(filenames2) == 0:
+                filenames2 = ["standard.png"]
             message = post(
                 f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email, current_user.status)}",
                 json={"name": form.name.data, "logo": "//".join(filenames1), "image": "//".join(filenames2),
@@ -625,7 +632,7 @@ def admin_create_partner():
                 result = True
             message = " ".join(list(message.values()))
         return render_template('admin-partner-form.html', title='Создание партнёра', message=message, form=form,
-                               result=result, flag=True, filenames1=filenames1, filenames2=filenames2, image_len=1,
+                               result=result, flag=True, filenames1=filenames1, filenames2=filenames2, image_len=len(filenames2),
                                params=get_standard_params())
     return you_dont_have_permission()
 
@@ -643,19 +650,29 @@ def admin_edit_partner(id):
                 cont1 = containerManager.get_container(f"partner_logo_{id}")
                 cont2 = containerManager.get_container(f"partner_image_{id}")
                 img_list = list(request.files)
-                for name in request.files:
+                for ind, name in enumerate(request.files):
                     file = request.files[name]
                     if file.filename != "":
                         if file and allowed_file(file.filename):
-                            if file.filename in ["image1", "ImgInput1"]:
+                            if img_list[ind] in ["icon", "iconInput"]:
                                 filename = secure_filename(create_new_image_name(True))
                                 save_image(filename, file)
                                 filenames1.append(filename)
                             else:
-                                filename = secure_filename(create_new_image_name(False))
+                                filename = secure_filename(create_new_image_name())
                                 save_image(filename, file)
                                 filenames2.append(filename)
+                    else:
+                        if img_list[ind] in ["icon", "iconInput"]:
+                            if "image1" in cont1:
+                                filenames1.append(cont1["image1"])
+                        else:
+                            if img_list[ind] in cont2:
+                                filenames2.append(cont2[img_list[ind]])
+
                 if len(filenames1) == 0:
+                    filenames1 = ["standard.png"]
+                if len(filenames2) == 0:
                     filenames1 = ["standard.png"]
                 for key in cont1.keys():
                     if key not in img_list:
@@ -676,10 +693,12 @@ def admin_edit_partner(id):
                 form.name.data = partner["name"]
                 form.text.data = partner["text"]
                 form.link.data = partner["link"]
-                filenames1 = partner["logo"].split("//")
-                filenames2 = partner["image"].split("//")
+                filenames1 = partner["logo"].split("//") if containerManager.get_container(f"partner_logo_{id}") == {} \
+                    else list(containerManager.get_container(f"partner_logo_{id}").values())
+                filenames2 = partner["image"].split("//") if containerManager.get_container(f"partner_image_{id}") == {} \
+                    else list(containerManager.get_container(f"partner_image_{id}").values())
                 containerManager.add_container(f"partner_logo_{id}", filenames1)
-                containerManager.add_container(f"partner_logo_{id}", filenames2)
+                containerManager.add_container(f"partner_image_{id}", filenames2)
         else:
             message = "Партнёр не найден"
         return render_template('admin-partner-form.html', title='Редактирование партнёра', message=message, form=form,
@@ -709,7 +728,7 @@ def admin_delete_partner(id):
                     delete_img(image)
                 containerManager.delete_container(f"partner_{id}")
         return render_template('admin-delete-form.html', title='Удаление партнёра', message=message, form=form,
-                               result=result, name=name, params=get_standard_params())
+                               result=result, name=name, params=get_standard_params(), link_back="/admin-list-partner")
     return you_dont_have_permission()
 
 
@@ -750,7 +769,7 @@ def admin_delete_feedback(id):
                     delete_img(image)
                 # containerManager.delete_container(f"feedback_{id}")
         return render_template('admin-delete-form.html', title='Удаление отзыва', message=message, form=form,
-                               result=result, name=name, params=get_standard_params())
+                               result=result, name=name, params=get_standard_params(), link_back="/admin-list-feedback")
     return you_dont_have_permission()
 
 
@@ -760,7 +779,6 @@ def write_feedback(code):
     message, result, filenames, preview_text = None, False, [], None
     if request.method == 'POST':
         filenames = save_images(f"feedback_{code}", request.files)
-        preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
         if form.submit.data:
             message = post(f"{link_website}api/feedback",
                            json={"email": form.email.data, "fullname": form.fullname.data, "heading": form.heading.data,
