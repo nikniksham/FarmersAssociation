@@ -31,12 +31,12 @@ div.visible {
 }
 
 p {
-    font-family: 'Yanone Kaffeesatz', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-weight: 300;
 }
 
 a {
-    font-family: 'Yanone Kaffeesatz', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-weight: 300;
     color: inherit;
     text-decoration: none;
@@ -237,7 +237,7 @@ header img {
     padding: 10px 0;
     flex: 1 0;
     font-size: 18px;
-    font-family: 'Yanone Kaffeesatz', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-weight: 300;
     letter-spacing: 1px;
 }
@@ -245,7 +245,7 @@ header img {
 .news-navigation span {
     color: #eca137;
     font-size: 16px;
-    font-family: 'Yanone Kaffeesatz', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-weight: 300;
     text-decoration: underline;
     letter-spacing: 1px;
@@ -268,7 +268,7 @@ header img {
 }
 
 .more-news button {
-    font-family: 'Yanone Kaffeesatz', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-weight: 300;
     font-size: 24px;
     color: #eca137;

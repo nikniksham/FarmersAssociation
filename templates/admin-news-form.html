@@ -70,7 +70,10 @@
         </div>
     </form>
     {% if preview_text %}
-        {{preview_text|safe}}
+        <p class="news-header">{{form.heading.data}}</p>
+        <div class="render-text">
+            {{preview_text|safe}}
+        </div>
     {% endif %}
 </div>
 {% endblock %}

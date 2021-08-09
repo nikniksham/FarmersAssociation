@@ -94,6 +94,7 @@ class DeleteSuperfluousImage:
 
 
 def text_transform(text, filenames, path):  # Я не знаю, как это работает, это писал безумный человек
+    # крейзи здесь
     commands = ['br>', 'p>', 'b>', 'h>', 'image ', 'a ', '/p>', '/b>', '/h>', '/a>']
     text = text.split('<')
     start_p = False
@@ -151,7 +152,7 @@ def text_transform(text, filenames, path):  # Я не знаю, как это р
                     start_p = False
                 if len(filenames) <= int(elem.lower().split()[1].split('>')[0]) - 1 or int(elem.lower().split()[1].split('>')[0]) - 1 < 0:
                     return f'Error: нет такой картинки {elem.lower().split()[1].split(">")[0]}'
-                res += f"<img src='/{path}{filenames[int(elem.lower().split()[1].split('>')[0])-1]}'>"
+                res += f"<div><img src='/{path}{filenames[int(elem.lower().split()[1].split('>')[0])-1]}'></div>"
             elif elem.lower().startswith('a') and elem.find('>') > -1:
                 if not start_p:
                     res += "<p>"

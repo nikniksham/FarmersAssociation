@@ -1,0 +1,42 @@
+{% extends "admin-panel.html" %}
+
+{% block adminblock %}
+<p class="settings-title">Настройки SEO</p>
+<div class="settings">
+    <p>Заголовок</p>
+    <input type="text" name=header>
+    <p>Описание</p>
+        <textarea name=description rows="3" cols="50"></textarea>
+    <p>Тэги</p>
+    <textarea name=tags rows="3" cols="50"></textarea>
+    <p>Иконка</p>
+    <div class="input-file-row-1">
+        <div class="upload-file-container">
+            {% if filenames1 == [] %}
+            <img id="icon1" class="this-is-image" src="#" alt="">
+            {% else %}
+            <img id="icon1" class="this-is-image visible " src="/static/img/{{filenames1[0]}}" alt="">
+            {% endif %}
+            <input type=file name=icon1 class="photo" id="iconInput1">
+        </div>
+    </div>
+    <p>Иконка для ссылок</p>
+    <div class="input-file-row-1">
+        <div class="upload-file-container">
+            {% if filenames1 == [] %}
+            <img id="icon2" class="this-is-image" src="#" alt="">
+            {% else %}
+            <img id="icon2" class="this-is-image visible " src="/static/img/{{filenames1[0]}}" alt="">
+            {% endif %}
+            <input type=file name=icon2 class="photo" id="iconInput2">
+        </div>
+    </div>
+    <div class="submit-block">
+        <button type="submit">Сохранить</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block adminend %}
+<script src="/static/js/set-icon.js"></script>
+{% endblock %}

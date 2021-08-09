@@ -3,10 +3,9 @@ function readIconURL(input) {
         var num = parseInt(input.id.match(/\d+/))
         var fr = new FileReader();
         fr.onload = function () {
-            $('#icon').attr('src', fr.result);
-            if ($('#icon').attr('class') === 'this-is-image') {
-                $('#icon').toggleClass("visible");
-                $($($('#icon').closest('.upload-file-container')[0]).children()[0]).toggleClass("hidden");
+            $('#'+input.name).attr('src', fr.result);
+            if ($('#'+input.name).attr('class') === 'this-is-image') {
+                $('#'+input.name).toggleClass("visible");
             }
         }
         fr.readAsDataURL(input.files[0]);
