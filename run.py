@@ -132,6 +132,10 @@ def get_standard_params():
     return {"smartpages": get(f"{link_website}api/smartpage").json(), "is_admin": (not current_user.is_anonymous)}
 
 
+def get_special_params():
+    return {"news": get(f"{link_website}api/newspage/0/9").json(), "partner": get(f"{link_website}api/partner").json()}
+
+
 def delete_img(filename):
     if filename not in ["", "standard.png"] and os.path.exists(f"{app.config['UPLOAD_FOLDER']}{filename}"):
         os.remove(f"{app.config['UPLOAD_FOLDER']}{filename}")
@@ -795,55 +799,50 @@ def write_feedback(code):
         filenames = containerManager.get_container(f"feedback_{code}").values()
     page = get(f"{link_website}api/smartpage/5").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
-    newslist = get(f"{link_website}api/newspage/0/9").json()
-    return render_template('write-feedback.html', title="Отзыв", page=page, content=content, newslist=newslist,
+    return render_template('write-feedback.html', title="Отзыв", page=page, content=content,
                            params=get_standard_params(), result=result, flag=True, message=message, form=form,
-                           preview_text=preview_text, filenames=filenames, image_len=len(filenames) + 1)
+                           preview_text=preview_text, filenames=filenames, image_len=len(filenames) + 1,
+                           special_params=get_special_params())
 
 
 @app.route("/contacts")
 def contacts():
     page = get(f"{link_website}api/smartpage/5").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
-    newslist = get(f"{link_website}api/newspage/0/9").json()
-    return render_template('contacts.html', title=page["heading"], page=page, content=content, newslist=newslist,
-                           params=get_standard_params(), code=create_random_name(10))
+    return render_template('contacts.html', title=page["heading"], page=page, content=content,
+                           params=get_standard_params(), code=create_random_name(10), special_params=get_special_params())
 
 
 @app.route("/agro_and_agro-tourism_sector")
 def agro_and_agro_tourism_sector():
     page = get(f"{link_website}api/smartpage/1").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
-    newslist = get(f"{link_website}api/newspage/0/9").json()
-    return render_template('agro_and_agro_tourism_sector.html', title=page["heading"], page=page, content=content, newslist=newslist,
-                           params=get_standard_params())
+    return render_template('agro_and_agro_tourism_sector.html', title=page["heading"], page=page, content=content,
+                           params=get_standard_params(), special_params=get_special_params())
 
 
 @app.route("/partners")
 def partners():
     page = get(f"{link_website}api/smartpage/2").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
-    newslist = get(f"{link_website}api/newspage/0/9").json()
-    return render_template('partners.html', title=page["heading"], page=page, content=content, newslist=newslist,
-                           params=get_standard_params())
+    return render_template('partners.html', title=page["heading"], page=page, content=content,
+                           params=get_standard_params(), special_params=get_special_params())
 
 
 @app.route("/all_news")
 def all_news():
     page = get(f"{link_website}api/smartpage/3").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
-    newslist = get(f"{link_website}api/newspage/0/9").json()
-    return render_template('all_news.html', title=page["heading"], page=page, content=content, newslist=newslist,
-                           params=get_standard_params())
+    return render_template('all_news.html', title=page["heading"], page=page, content=content,
+                           params=get_standard_params(), special_params=get_special_params())
 
 
 @app.route("/team")
 def team():
     page = get(f"{link_website}api/smartpage/4").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
-    newslist = get(f"{link_website}api/newspage/0/9").json()
-    return render_template('team.html', title=page["heading"], page=page, content=content, newslist=newslist,
-                           params=get_standard_params())
+    return render_template('team.html', title=page["heading"], page=page, content=content, params=get_standard_params(),
+                           special_params=get_special_params())
 
 
 @app.route("/page/<string:link>")
@@ -862,9 +861,8 @@ def page_by_link(link):
         return redirect("/contacts")
     page = get(f"{link_website}api/smartpage/{link}").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
-    newslist = get(f"{link_website}api/newspage/0/9").json()
-    return render_template('generated-page.html', title=page["heading"], page=page, content=content, newslist=newslist,
-                           params=get_standard_params())
+    return render_template('generated-page.html', title=page["heading"], page=page, content=content,
+                           params=get_standard_params(), special_params=get_special_params())
 
 
 @app.route("/news-page/<string:link>")
