@@ -9,24 +9,23 @@
 {% endblock %}
 
 {% block popup %}
-<div id="fermaroigas" class="partner">
+{% for partner in special_params["partner"] %}
+<div id={{partner["id"]}} class="partner">
     <div class="container">
         <div class="partner-Pop-up">
             <div class="partner-Pop-up-header">
-                <img class="partner-Pop-up-img" src="/static/img/partner-1.jpg" alt="fermaroigas">
-                <p class="partner-Pop-up-title">fermaroigas</p>
+                <img class="partner-Pop-up-img" src="/static/img/{{partner['logo']}}" alt={{partner["name"]}}>
+                <p class="partner-Pop-up-title">{{partner["name"]}}</p>
                 <img class="partner-Pop-up-close" src="/static/img/close.png" alt="закрыть"
-                     onclick="openPopUp('fermaroigas')">
+                     onclick="openPopUp({{partner['id']}})">
             </div>
-            <p>Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма.
-                Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма.
-                Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма.
-                Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма. Эко-ферма.</p>
+            <p>{{partner["text"]}}</p>
             <p><b>Преференции:</b> ВЫ можете узнать о существовании этой Эко-фермы!</p>
-            <div class="partner-Pop-up-footer"><a>На страничку фермы</a></div>
+            <div class="partner-Pop-up-footer"><a href={{partner["link"]}}>На страничку фермы</a></div>
         </div>
     </div>
 </div>
+{% endfor %}
 {% endblock %}
 
 {% block pageblock %}
@@ -74,42 +73,17 @@
     </div>
     {% elif block['type'] == "Partner" %}
     <div class="partners-carousel">
+        {% for partner in special_params["partner"] %}
         <div class="partner-item">
-            <a class="partner-href" onclick="openPopUp('fermaroigas')">
-                <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
+            <a class="partner-href" onclick="openPopUp({{partner['id']}})">
+                <img class="partner-item-image" src="/static/img/{{partner['logo']}}" alt={{partner['id']}}>
                 <div class="partner-item-text">
-                    <p>fermaroigas</p>
+                    <p>{{partner['name']}}</p>
                     <p>Эко-Ферма</p>
                 </div>
             </a>
         </div>
-        <div class="partner-item">
-            <a class="partner-href" onclick="openPopUp('fermaroigas')">
-                <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
-                <div class="partner-item-text">
-                    <p>fermaroigas</p>
-                    <p>Эко-Ферма</p>
-                </div>
-            </a>
-        </div>
-        <div class="partner-item">
-            <a class="partner-href" onclick="openPopUp('fermaroigas')">
-                <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
-                <div class="partner-item-text">
-                    <p>fermaroigas</p>
-                    <p>Эко-Ферма</p>
-                </div>
-            </a>
-        </div>
-        <div class="partner-item">
-            <a class="partner-href" onclick="openPopUp('fermaroigas')">
-                <img class="partner-item-image" src="/static/img/partner-1.jpg" alt="fermaroigas">
-                <div class="partner-item-text">
-                    <p>fermaroigas</p>
-                    <p>Эко-Ферма</p>
-                </div>
-            </a>
-        </div>
+        {% endfor %}
     </div>
     {% endif %}
     {% endfor %}
