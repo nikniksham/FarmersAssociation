@@ -25,6 +25,8 @@ def trans_link(text):
             link += letter
         elif letter.lower() in keys:
             link += trans[letter.lower()].upper() if isup else trans[letter]
+        elif letter.lower() in trans:
+            link += letter
     return link
 
 
