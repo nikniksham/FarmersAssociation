@@ -47,7 +47,7 @@ class SmartpageResource(Resource):
     def delete(self, email, password, smartpage_id):
         admin, session = check_admin_status(email, password)
         smartpage, session = find_by_id(smartpage_id, session)
-        if smartpage.id < 6:
+        if smartpage.id < 7:
             raise_error("У вас недостаточно прав для этого")
         contentlist = session.query(Content).filter(Content.smartpage_id == smartpage.id).all()
         for content in contentlist:

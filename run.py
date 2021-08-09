@@ -902,14 +902,16 @@ def page_by_link(link):
     containerManager.clear_container(app.config['UPLOAD_FOLDER'])
     smartpages = get(f"{link_website}api/smartpage").json()
     if link == smartpages[0]["link"]:
-        return redirect("/agro_and_agro-tourism_sector")
+        return redirect("/")
     if link == smartpages[1]["link"]:
-        return redirect("/partners")
+        return redirect("/agro_and_agro-tourism_sector")
     if link == smartpages[2]["link"]:
-        return redirect("/all_news")
+        return redirect("/partners")
     if link == smartpages[3]["link"]:
-        return redirect("/team")
+        return redirect("/all_news")
     if link == smartpages[4]["link"]:
+        return redirect("/team")
+    if link == smartpages[5]["link"]:
         return redirect("/contacts")
     page = get(f"{link_website}api/smartpage/{link}").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
