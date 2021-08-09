@@ -901,10 +901,11 @@ def page_by_link(link):
 
 @app.route("/news-page/<string:link>")
 def news_page(link):
-    news = get(f"{link_website}api/news/{link}").json()
+    print(list)
+    news = get(f"{link_website}api/newspage/{link}").json()
     if "message" in news:
         page_not_found()
-    # Теперь какой-то рендер теймплейт
+    print(news)
 
 
 @app.route("/test", methods=['GET', 'POST'])
