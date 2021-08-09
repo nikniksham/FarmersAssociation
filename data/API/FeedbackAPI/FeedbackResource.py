@@ -7,7 +7,8 @@ from data.user import User
 from data.feedback import Feedback
 from data.confirmationcode import ConfirmationCode
 from data.API.FeedbackAPI.parser_feedback import parser_feedback
-from data.API.NewspageAPI.NewspageResource import path
+from main import text_transform
+from config import UPLOAD_FOLDER as path
 
 
 def raise_error(error):
@@ -54,7 +55,7 @@ class FeedbackResource(Resource):
         admin, session = check_admin_status(email, password)
         feedback, session = find_by_id(feedback_id, session)
         news_dict = feedback.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
-        news_dict["text_render"] = feedback(feedback.text, feedback.image.split("//"), path)
+        news_dict["text_render"] = text_transform(feedback.text, feedback.image.split("//"), path)
         return jsonify(news_dict)
 
     def delete(self, email, password, feedback_id):
@@ -74,7 +75,7 @@ class FeedbackListRecourse(Resource):
         feedbacks, dict_list = session.query(Feedback).all(), []
         for feedback in feedbacks:
             news_dict = feedback.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
-            news_dict["text_render"] = feedback(feedback.text, feedback.image.split("//"), path)
+            news_dict["text_render"] = text_transform(feedback.text, feedback.image.split("//"), path)
             dict_list.append(news_dict)
         return jsonify(dict_list)
 

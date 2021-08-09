@@ -7,13 +7,7 @@ from data.user import User
 from data.newspage import Newspage
 from data.API.NewspageAPI.parser_newspage import parser_newspage
 from main import mini_text, text_transform
-
-path = ""
-
-
-def set_path(new_path):
-    global path
-    path = new_path
+from config import UPLOAD_FOLDER as path
 
 
 def raise_error(error):

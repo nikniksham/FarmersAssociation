@@ -127,7 +127,7 @@ def text_transform(text, filenames, path):  # Я не знаю, как это р
                         tegs.pop(-1)
                     else:
                         return f'Error: тэг {tegs[-1]} не был закрыт'
-                    res += "<i>"
+                    res += "</i>"
                     res += elem[3:]
                 elif elem.lower().startswith('b>'):
                     if not start_p:
@@ -244,6 +244,6 @@ if __name__ == '__main__':
     print(text_transform("<p>a\na", ["", ""], "") == "Error: тег p не был закрыт")
     print(text_transform("Урааа, у нас теперь можно писать новости<br><br><p>Текст курсивом</p><h>Какой-то заголовок</h><image 1><image 2><a https://rostec.ru/%3E Ссылка на ростех</a>", ["", ""], "") == "Error: тэг a не был открыт")
     print(text_transform("this is statya about statyu about statyu about statyu about statyu about statyu kotoraya o statye kotoraya statye I talk about this <a />statya</a><image 1><h>this is imgage fom sobranie</h>", [""], "") == "<p>this is statya about statyu about statyu about statyu about statyu about statyu kotoraya o statye kotoraya statye I talk about this <a href='/'>statya</a></p><div><img src='/'></div><p class='title'>this is imgage fom sobranie</p>")
-    print(text_transform("<p><b>iii</b></p><b>bbb</b>", ["", ""], "") == "<p><i><b>iii</b><i><b>bbb</b></p>")
+    print(text_transform("<p><b>iii</b></p><b>bbb</b>", ["", ""], "") == "<p><i><b>iii</b></i><b>bbb</b></p>")
     print(text_transform("<image 1>", ["gei.png"], "foolder/") == "<p></p><div><img src='/foolder/gei.png'></div>")
-    print(text_transform("Красивый текст\r\n<b>Толстый</b>\r\n<p>Курсивный</p>\r\n<a 127.0.0.1:8000/>Ссылка на сайт</a>\r\n<image 1>\r\n<h>Заголовок</h>", ["gei.png"], "foolder/") == "<p>Красивый текст<br><b>Толстый</b><br><i>Курсивный<i><br><a href='127.0.0.1:8000/'>Ссылка на сайт</a><br></p><div><img src='/foolder/gei.png'></div><br><p class='title'>Заголовок</p>")
+    print(text_transform("Красивый текст\r\n<b>Толстый</b>\r\n<p>Курсивный</p>\r\n<a 127.0.0.1:8000/>Ссылка на сайт</a>\r\n<image 1>\r\n<h>Заголовок</h>", ["gei.png"], "foolder/"))

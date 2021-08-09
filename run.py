@@ -17,7 +17,7 @@ from data.API.ContentAPI.ContentResource import CreateContentResource, ContentRe
     ContentListRecourseId
 from data.API.FeedbackAPI.FeedbackResource import FeedbackResource, FeedbackListRecourse, CreateFeedbackResource
 from data.API.NewspageAPI.NewspageResource import NewspageResource, NewspageListRecourse, CreateNewspageResource, \
-    NewspageResourceUsual, NewspageListRecourseId, NewspageResourceLink, set_path
+    NewspageResourceUsual, NewspageListRecourseId, NewspageResourceLink
 from data.API.PartnerAPI.PartnerResource import PartnerResource, PartnerResourceUsual, PartnerListRecourse, \
     CreatePartnerResource
 from data.API.SmartpageAPI.SmartpageResource import CreateSmartpageResource, SmartpageResource, SmartpageListRecourse, \
@@ -33,14 +33,12 @@ from main import PasswordManager, ManagerContainer, text_transform
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm
 from werkzeug.utils import secure_filename
 from PIL import Image
+import config
 
 link_website = "http://127.0.0.1:8000/"
-app = Flask(__name__)
 let = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890"
-app.config['SECRET_KEY'] = os.urandom(30)
-app.config['UPLOAD_FOLDER'] = 'static/img/'
-# app.config["DEBUG"] = False
-# app.config["TESTING"] = False
+app = Flask(__name__)
+app.config.from_object(config)
 api = Api(app)
 api.add_resource(CreateAdminResource, "/api/admin/<string:email>/<string:password>")
 api.add_resource(AdminResource, "/api/admin/<string:email>/<string:password>")
@@ -76,7 +74,6 @@ login_manager.init_app(app)
 code_helper = CodeForConfirmation()
 password_manager = PasswordManager()
 containerManager = ManagerContainer()
-set_path(app.config["UPLOAD_FOLDER"])
 
 
 # Получение пользователя
@@ -178,7 +175,10 @@ def page_not_found():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if not current_user.is_anonymous:
-        return redirect("/")
+        if password_manager.get_password(current_user.email) is False:
+            logout_user()
+        else:
+            return redirect("/")
     form = AdminForm()
     if request.method == 'POST':
         session = db_session.create_session()
@@ -782,7 +782,7 @@ def admin_auditlog():
 def admin_feedback():
     feedbacks = get(
         f"{link_website}api/feedback/{current_user.email}/{password_manager.get_password(current_user.email)}").json()
-    return render_template('admin-feedback-list.html', title='Отзывы', feedbacks=feedbacks, params=get_standard_params())
+    return render_template('admin-list-feedback.html', title='Отзывы', feedbacks=feedbacks, params=get_standard_params())
 
 
 @app.route("/admin-delete-feedback/<int:id>", methods=['GET', 'POST'])
@@ -810,14 +810,14 @@ def admin_delete_feedback(id):
     return you_dont_have_permission()
 
 
-@app.route("/write-feedback/<int:id>", methods=['GET', 'POST'])
+@app.route("/view-feedback/<int:id>", methods=['GET', 'POST'])
 @login_required
-def write_feedback(id):
+def view_feedback(id):
     feedback = get(f"{link_website}api/feedback/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
     print(feedback)
-    if "message" not in feedback:
+    if "message" in feedback:
         return page_not_found()
-    return render_template('news.html', title=feedback["heading"], params=get_standard_params(), feedback=feedback)
+    return render_template('feedback.html', title=feedback["heading"], params=get_standard_params(), feedback=feedback)
 
 
 @app.route("/write-feedback/<string:code>", methods=['GET', 'POST'])
