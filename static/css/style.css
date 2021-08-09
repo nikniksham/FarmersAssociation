@@ -108,10 +108,6 @@ header img {
     background-position: center;
 }
 
-.partners-carousel {
-    margin-bottom: 20px;
-}
-
 .main-news-container {
     position: absolute;
     z-index: 20;
@@ -265,7 +261,7 @@ header img {
 
 .more-news {
     text-align: center;
-    padding: 10px 0;
+    padding: 15px 0;
 }
 
 .more-news button {

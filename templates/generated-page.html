@@ -23,6 +23,13 @@
                 <img class="partner-Pop-up-close" src="/static/img/close.png" alt="закрыть"
                      onclick="openPopUp({{partner['id']}})">
             </div>
+            <div class="carousel image-block">
+                {% for src in partner['image'].split('//') %}
+                <div class="carousel-item">
+                    <div style="background-image: url(/static/img/{{src}});"></div>
+                </div>
+                {% endfor %}
+            </div>
             <p>{{partner["text"]}}</p>
             <p><b>Преференции:</b> ВЫ можете узнать о существовании этой Эко-фермы!</p>
             <div class="partner-Pop-up-footer"><a href={{partner["link"]}}>На страничку фермы</a></div>
@@ -60,7 +67,7 @@
     </div>
     <div class="more-news">
         <a onclick="add_news()">
-            <button>Все новости</button>
+            <button>Больше новостей</button>
         </a>
     </div>
     {% elif block['type'] == "Text" %}

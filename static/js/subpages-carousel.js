@@ -1,4 +1,4 @@
-var speedCarousel = 1000
+var speedCarousel = 2000
 
 $(document).ready(function(){
     $('.carousel').slick({
