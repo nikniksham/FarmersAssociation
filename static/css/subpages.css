@@ -24,6 +24,7 @@
 }
 
 .partner-Pop-up {
+    position: relative;
     z-index: 2;
     font-size: 18px;
     letter-spacing: 0.8px;
@@ -86,7 +87,7 @@
 
 .partner-Pop-up .down {
     position: absolute;
-    down: -10000px;
+    bottom: -10000px;
     left: 0;
     height: 10000px;
     width: 100%;
