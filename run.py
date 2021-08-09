@@ -303,7 +303,45 @@ def admin_list_admin():
     if current_user.status > 0:
         adminlist = get(
             f"{link_website}api/admin/list/{current_user.email}/{password_manager.get_password(current_user.email)}").json()
-        return render_template('admin-list-admin.html', title='Новости', adminlist=adminlist, params=get_standard_params())
+        return render_template('admin-list-admin.html', title='Новости', adminlist=adminlist, params=get_standard_params(),
+                               status=current_user.status, current_id=current_user.id, flag=(current_user.status > 0))
+    return you_dont_have_permission()
+
+
+@app.route("/admin-change-password/<int:id>", methods=['GET', 'POST'])
+@login_required
+def admin_change_password(id):
+    if current_user.status > 1:
+        form = AdminForm()
+        if current_user.id == id:
+            admin = get(f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email)}").json()
+            print(1)
+        else:
+            admin = get(f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+            print(2)
+        message, result, name = None, False, ""
+        if "message" not in admin:
+            name = f'{admin["name"]} {admin["surname"]}'
+            if request.method == 'POST':
+                if form.password.data == form.password_again.data:
+                    if id == current_user.id:
+                        message = put(f"{link_website}api/admin/{current_user.email}/{form.password_current.data}",
+                                      json={"password": form.password.data}).json()
+                        print(11)
+                    else:
+                        message = put(f"{link_website}api/admin/{current_user.email}/{form.password_current.data}/{id}",
+                                      json={"password": form.password.data}).json()
+                        print(22)
+                    if "success" in message:
+                        password_manager.add_user(admin["email"], form.password.data)
+                        result = True
+                    message = " ".join(list(message.values()))
+                else:
+                    message = "Новые пароли не совпадают"
+        else:
+            message = list(admin.values())[0]
+        return render_template('admin-change-password.html', title=f'Изменение пароля админу {name}', message=message,
+                               form=form, result=result, params=get_standard_params())
     return you_dont_have_permission()
 
 

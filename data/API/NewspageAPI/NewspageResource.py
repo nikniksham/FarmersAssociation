@@ -55,7 +55,9 @@ class NewspageResource(Resource):
     def get(self, email, password, newspage_id):
         admin, session = check_admin_status(email, password)
         newspage, session = find_by_id(newspage_id, session)
-        return jsonify(newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date', 'author_id')))
+        news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date', 'author_id'))
+        news_dict["mini_text"] = "Я мини текст"
+        return jsonify(news_dict)
 
     def delete(self, email, password, newspage_id):
         admin, session = check_admin_status(email, password)
@@ -107,7 +109,9 @@ class NewspageResourceUsual(Resource):
     def get(self, newspage_id):
         session = db_session.create_session()
         newspage, session = find_by_id(newspage_id, session)
-        return jsonify(newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date')))
+        news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
+        news_dict["mini_text"] = "Я мини текст"
+        return jsonify(news_dict)
 
 
 class NewspageResourceLink(Resource):
@@ -115,7 +119,9 @@ class NewspageResourceLink(Resource):
         session = db_session.create_session()
         newspage = session.query(Newspage).filter(Newspage.link == link).first()
         if newspage:
-            return jsonify(newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date')))
+            news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
+            news_dict["mini_text"] = "Я мини текст"
+            return jsonify(news_dict)
         raise_error("Новость не найдена")
 
 
@@ -127,15 +133,23 @@ class NewspageListRecourseId(Resource):
             return jsonify([])
         if end_id > len(newspages):
             end_id = len(newspages)
-        newspages = newspages[start_id:end_id]
-        return jsonify([item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date')) for item in newspages])
+        newspages, news_list = newspages[start_id:end_id], []
+        for item in newspages:
+            news_dict = item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
+            news_dict["mini_text"] = "Я мини текст"
+            news_list.append(news_dict)
+        return jsonify(news_list)
 
 
 class NewspageListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
-        newspages = session.query(Newspage).order_by(Newspage.created_date)[::-1]
-        return jsonify([item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date')) for item in newspages])
+        newspages, news_list = session.query(Newspage).order_by(Newspage.created_date)[::-1], []
+        for item in newspages:
+            news_dict = item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
+            news_dict["mini_text"] = "Я мини текст"
+            news_list.append(news_dict)
+        return jsonify(news_list)
 
 
 class CreateNewspageResource(Resource):

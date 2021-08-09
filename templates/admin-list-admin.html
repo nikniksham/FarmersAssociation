@@ -10,8 +10,13 @@
     {% for admin in adminlist %}
     <div class="settings-element">
         <p class="settings-element-title">{{admin['name']}} {{admin['surname']}}</p>
+        {% if flag %}
+        {% if admin["status"] < status or admin["id"] == current_id %}
+        <a class="settings-element-edit" href="/admin-change-password/{{admin['id']}}">Изменить пароль</a>
         <a class="settings-element-edit" href="/admin-edit-admin/{{admin['id']}}">Изменить</a>
         <a class="settings-element-delete" href="/admin-delete-admin/{{admin['id']}}">Удалить</a>
+        {% endif %}
+        {% endif %}
     </div>
     {% endfor %}
 </div>

@@ -15,7 +15,7 @@ def check_password(password):
     errors = {0: 'Пароль должен быть в длину 8 или более символов', 1: 'Пароль должен содержать хотя бы 1 букву',
               2: 'Пароль должен содержать хотя бы 1 цифру'}
     if not len(password) >= 8:
-        raise_error([0])
+        raise_error(errors[0])
     if password.isdigit():
         raise_error(errors[1])
     if password.isalpha():
@@ -64,11 +64,11 @@ class AdminResource(Resource):
 
     def put(self, email, password):
         admin, session = check_admin(email, password)
-        args, count = parser_admin.parse_args(), 0
+        args, count, f = parser_admin.parse_args(), 0, False
         admin_dict = admin.to_dict(only=('id', 'name', 'surname', 'status', 'email'))
-        keys = list(filter(lambda key: args[key] is not None and args[key] != admin_dict[key], list(args.keys())))
+        keys = list(filter(lambda key: args[key] is not None and key in admin_dict and args[key] != admin_dict[key], list(args.keys())))
         for key in list(args.keys()):
-            if args[key] is not None and args[key] != admin_dict[key]:
+            if args[key] is not None and (key == "password" or args[key] != admin_dict[key]):
                 count += 1
                 if key == 'id':
                     if session.query(User).filter(User.id == args["id"]).first():
@@ -82,13 +82,16 @@ class AdminResource(Resource):
                     admin.name = args["name"]
                 if key == 'surname':
                     admin.surname = args["surname"]
-                """if key == 'password':
-                    check_password(args[key])
-                    admin.set_password(password)"""
+                if key == 'password':
+                    check_password(args["password"])
+                    admin.set_password(args["password"])
+                    f = True
         if count == 0:
             return raise_error("Пустой запрос")
         admin_dict_2 = admin.to_dict(only=('id', 'name', 'surname', 'status', 'email'))
         list_chang = [f'изменяет {key} с {admin_dict[key]} на {admin_dict_2[key]}' for key in keys]
+        if f:
+            list_chang.append("изменяет пароль")
         session.commit()
         add_auditlog("Изменение", f"Пользователь {admin.name} {admin.surname} изменяет сам себя: {', '.join(list_chang)}", admin,
                      datetime.datetime.now())
@@ -121,11 +124,11 @@ class UserResourceAdmin(Resource):
     def put(self, email, password, user_id):
         admin, session = check_admin_status(email, password, 2)
         user, session = find_by_id(user_id, session, admin.status)
-        args, count = parser_admin.parse_args(), 0
+        args, count, f = parser_admin.parse_args(), 0, False
         user_dict = user.to_dict(only=('id', 'name', 'surname', 'status', 'email'))
-        keys = list(filter(lambda key: args[key] is not None and args[key] != user_dict[key], list(args.keys())))
+        keys = list(filter(lambda key: args[key] is not None and key in user_dict and args[key] != user_dict[key], list(args.keys())))
         for key in list(args.keys()):
-            if args[key] is not None and args[key] != user_dict[key]:
+            if args[key] is not None and (key == "password" or args[key] != user_dict[key]):
                 count += 1
                 if key == 'email':
                     if session.query(User).filter(User.id == args["email"]).first():
@@ -139,10 +142,16 @@ class UserResourceAdmin(Resource):
                     if admin.status < args['status']:
                         raise_error("У вас недостаточно прав для этого")
                     user.status = args["status"]
+                if key == 'password':
+                    check_password(args["password"])
+                    user.set_password(args["password"])
+                    f = True
         if count == 0:
             return raise_error("Пустой запрос")
         user_dict_2 = user.to_dict(only=('id', 'name', 'surname', 'status', 'email'))
         list_chang = [f'изменяет {key} с {user_dict[key]} на {user_dict_2[key]}' for key in keys]
+        if f:
+            list_chang.append("изменяет пароль")
         session.commit()
         add_auditlog("Изменение",
                      f"Админ {admin.name} {admin.surname} изменяет пользователя {user.name} {user.surname}: {', '.join(list_chang)}",
