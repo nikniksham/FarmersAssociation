@@ -218,7 +218,7 @@ header img {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,.5);
+  background: rgba(0,0,0,.7);
   z-index: 2;
   transition: background 0.2s ease;
 }
@@ -238,7 +238,7 @@ header img {
     flex: 1 0;
     font-size: 18px;
     font-family: 'Open Sans', sans-serif;
-    font-weight: 300;
+    font-weight: 400;
     letter-spacing: 1px;
 }
 
@@ -252,7 +252,7 @@ header img {
 }
 
 .news-2:hover .news-img:after, .news:hover .news-img:after {
-    background: rgba(0,0,0,.7);
+    background: rgba(0,0,0,.8);
 }
 
 .news-2 {
