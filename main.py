@@ -171,10 +171,7 @@ def text_transform(text, filenames, path):  # Я не знаю, как это р
             if not start_p:
                 res += "<p>"
                 start_p = True
-            if elem in text[1:]:
-                res += "<" + elem
-            else:
-                res += elem
+            res += elem
     return res
 
 
@@ -221,10 +218,7 @@ def mini_text(text):  # Я не знаю, как это работает, это
             elif elem.lower().startswith('/a>'):
                 pass
         else:
-            if elem in text[1:]:
-                res += "<" + elem
-            else:
-                res += elem
+            res += elem
     tmp = ""
     for word in res.split():
         if len(word) > 20:
