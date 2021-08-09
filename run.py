@@ -74,14 +74,13 @@ login_manager.init_app(app)
 code_helper = CodeForConfirmation()
 password_manager = PasswordManager()
 containerManager = ManagerContainer()
-news_instruction = """
-<br> новая строка
-Указывается в месте переноса на новую строку
-<p> курсив
-<b> жирный ники
-<h> текст по центру, заголовок
-<image [id]> картинка
-<a [href]> ссылка (делает текст с нижним подчёркиванием)"""
+formatting_text_instruction = \
+    ["<br> новая строка - Указывается в месте переноса на новую строку",
+     "<p></p> Текст между тэгов будет курсивным", "<b></b> Текст между тэгов будет жирным",
+     "<h></h> Текст между тэгов будет заголовочным и по середине экрана",
+     "<a href></a> Текст между тэгов будет подчёркнутым и содержать в себе ссылку, написанную на месте href",
+     "<image id> Вставляет на этом месте картинку из поля загрузки картинок (нумерация изображений идёт с 1)"]
+
 
 # Получение пользователя
 @login_manager.user_loader
@@ -240,7 +239,8 @@ def admin_create_news():
         else:
             filenames = containerManager.get_container(f"news_{current_user.email}").values()
         return render_template('admin-news-form.html', title='Создание новости', message=message, preview_text=preview_text,
-                               form=form, result=result, filenames=filenames, image_len=len(filenames) + 1, params=get_standard_params())
+                               form=form, result=result, filenames=filenames, image_len=len(filenames) + 1, params=get_standard_params(),
+                               formatting_text_instruction=formatting_text_instruction)
     return you_dont_have_permission()
 
 
@@ -275,8 +275,8 @@ def admin_edit_news(id):
         else:
             message = "Новость не найдена"
         return render_template('admin-news-form.html', title='Редактирование новости', message=message, result=result,
-                               form=form, filenames=filenames, image_len=len(filenames) + 1,
-                               params=get_standard_params(), preview_text=preview_text)
+                               form=form, filenames=filenames, image_len=len(filenames) + 1, params=get_standard_params(),
+                               preview_text=preview_text,  formatting_text_instruction=formatting_text_instruction)
     return you_dont_have_permission()
 
 
@@ -832,7 +832,7 @@ def write_feedback(code):
     form = FeedbackForm()
     message, result, filenames, preview_text = None, False, [], None
     if request.method == 'POST':
-        filenames = save_images(f"feedback_{code}", request.files)
+        filenames = save_images(f"feedback_{code}", request.files, False)
         if form.submit.data:
             message = post(f"{link_website}api/feedback",
                            json={"email": form.email.data, "fullname": form.fullname.data, "heading": form.heading.data,
@@ -854,7 +854,7 @@ def write_feedback(code):
     return render_template('write-feedback.html', title="Отзыв", page=page, content=content,
                            params=get_standard_params(), result=result, flag=True, message=message, form=form,
                            preview_text=preview_text, filenames=filenames, image_len=len(filenames) + 1,
-                           special_params=get_special_params())
+                           special_params=get_special_params(), formatting_text_instruction=formatting_text_instruction)
 
 
 @app.route("/contacts")

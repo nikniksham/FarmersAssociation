@@ -30,8 +30,11 @@
             {% endfor %}
 
             <label>
-                ""
-            </label>
+                {% for instruction in formatting_text_instruction%}
+                {{instruction}}<br>
+                {% endfor %}
+            </label><br><br>
+
             <p>Изображения</p>
             <div class="settings-images">
                 <div id="images1">
