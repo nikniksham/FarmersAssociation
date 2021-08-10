@@ -42,10 +42,11 @@ from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, Partn
 from werkzeug.utils import secure_filename
 from PIL import Image
 import config
+from PIL import ImageSequence
 
 link_website = "http://127.0.0.1:8000/"
 link_website_heroku = "https://farmersassociation.herokuapp.com/"
-link_website = link_website_heroku
+# link_website = link_website_heroku
 let = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890"
 app = Flask(__name__)
 app.config.from_object(config)
@@ -131,8 +132,8 @@ def save_image_multithreading(filename, file):
     path, format = filename.split(".")
     if format not in ["png", "gif"]:
         image = image.convert('RGB')
-    print(filename)
-    image.save(filename)
+    if format != "gif":
+        image.save(filename)
 
 
 def check_user():
@@ -153,7 +154,10 @@ def save_images(cont_name, files, r_img=True, max_image=None):
         file = files[name]
         if file.filename != "":
             if file and allowed_file(file.filename):
-                filename = secure_filename(create_new_image_name())
+                gif = False
+                if file.filename.split(".")[-1] == "gif":
+                    gif = True
+                filename = secure_filename(create_new_image_name(gif=gif))
                 save_image(filename, file)
                 filenames.append(filename)
         else:
