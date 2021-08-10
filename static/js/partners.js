@@ -2,6 +2,7 @@ var speedPartners = 2000
 
 function openPopUp(name) {
     $('#'+name).toggleClass('visible');
+    $('.carousel').slick('refresh');
 }
 
 $(document).ready(function(){
