@@ -166,10 +166,13 @@ def text_transform(text, filenames, path):  # Я не знаю, как это р
                 elif elem.lower().startswith('image') and (elem.lower().split()[1].split('>')[0].isdigit() or elem.lower().split()[1].split('>')[0][0] == "-" and elem.lower().split()[1].split('>')[0][1:].isdigit()):
                     if start_p:
                         res += "</p>"
-                        start_p = False
                     if len(filenames) <= int(elem.lower().split()[1].split('>')[0]) - 1 or int(elem.lower().split()[1].split('>')[0]) - 1 < 0:
                         return f'Error: нет такой картинки {elem.lower().split()[1].split(">")[0]}'
                     res += f"<div><img src='/{path}{filenames[int(elem.lower().split()[1].split('>')[0])-1]}'></div>"
+                    if len(">".join(elem.split(">")[1:])) > 0:
+                        res += "<p>" + ">".join(elem.split(">")[1:])
+                    else:
+                        start_p = False
                 elif elem.lower().startswith('a>'):
                     return "Error: нет ссылки в теге a"
                 elif elem.lower().startswith('a') and elem.find('>') > -1:
@@ -246,4 +249,6 @@ if __name__ == '__main__':
     print(text_transform("this is statya about statyu about statyu about statyu about statyu about statyu kotoraya o statye kotoraya statye I talk about this <a />statya</a><image 1><h>this is imgage fom sobranie</h>", [""], "") == "<p>this is statya about statyu about statyu about statyu about statyu about statyu kotoraya o statye kotoraya statye I talk about this <a href='/'>statya</a></p><div><img src='/'></div><p class='title'>this is imgage fom sobranie</p>")
     print(text_transform("<p><b>iii</b></p><b>bbb</b>", ["", ""], "") == "<p><i><b>iii</b></i><b>bbb</b></p>")
     print(text_transform("<image 1>", ["gei.png"], "foolder/") == "<p></p><div><img src='/foolder/gei.png'></div>")
-    print(text_transform("Красивый текст\r\n<b>Толстый</b>\r\n<p>Курсивный</p>\r\n<a 127.0.0.1:8000/>Ссылка на сайт</a>\r\n<image 1>\r\n<h>Заголовок</h>", ["gei.png"], "foolder/"))
+    print(text_transform("<image 1>asd<image 1>", ["gei.png"], "foolder/") == "<p></p><div><img src='/foolder/gei.png'></div><p>asd</p><div><img src='/foolder/gei.png'></div>")
+
+    #print(text_transform("Красивый текст\r\n<b>Толстый</b>\r\n<p>Курсивный</p>\r\n<a 127.0.0.1:8000/>Ссылка на сайт</a>\r\n<image 1>\r\n<h>Заголовок</h>", ["gei.png"], "foolder/"))
