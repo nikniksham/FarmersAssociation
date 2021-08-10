@@ -1219,7 +1219,7 @@ def write_feedback(code):
             preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
     else:
         filenames = containerManager.get_container(f"feedback_{code}").values()
-    page = get(f"{link_website}api/smartpage/5").json()
+    page = get(f"{link_website}api/smartpage/6").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
     return render_template('write-feedback.html', title="Отзыв", page=page, content=content,
                            params=get_standard_params(), result=result, flag=True, message=message, form=form,

@@ -38,7 +38,7 @@ class FeedbackForm(StartForm):
     fullname = StringField('ФИО', validators=[DataRequired()])
     email = StringField('Почта', validators=[DataRequired()])
     heading = StringField('Заголовок', validators=[DataRequired()])
-    text = StringField('Текст', validators=[DataRequired()])
+    text = TextAreaField('Текст', validators=[DataRequired()])
     code = StringField('Код подверждения')
     getcode = SubmitField("Получить код")
     preview = SubmitField("Предпросмотр")

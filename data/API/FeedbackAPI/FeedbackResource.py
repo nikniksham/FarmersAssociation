@@ -72,7 +72,7 @@ class FeedbackResource(Resource):
 class FeedbackListRecourse(Resource):
     def get(self, email, password):
         admin, session = check_admin_status(email, password)
-        feedbacks, dict_list = session.query(Feedback).all(), []
+        feedbacks, dict_list = session.query(Feedback).all()[::-1], []
         for feedback in feedbacks:
             news_dict = feedback.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
             news_dict["text_render"] = text_transform(feedback.text, feedback.image.split("//"), path)
