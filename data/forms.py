@@ -72,5 +72,5 @@ class PhoneForm(StartForm):
 
 class SocialmediaForm(StartForm):
     link = StringField('Ссылка на соцсеть', validators=[DataRequired()])
-    icon_type = SelectField('Социальная сеть', choices=[(1, "Фейсбук"), (2, "Инстаграм"), (3, "ВКонтакте"),
-                                                        (4, "Твиттер"), (5, "Телеграм")])
+    icon_type = SelectField('Социальная сеть', choices=[("facebook.png", "Фейсбук"), ("instagram.png", "Инстаграм"), ("vk.png", "ВКонтакте"),
+                                                        ("twitter.png", "Твиттер"), ("telegram.png", "Телеграм")])

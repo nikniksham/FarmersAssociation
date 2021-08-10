@@ -170,6 +170,7 @@ def get_standard_params():
 
 
 def get_special_params():
+    set_footer_params()
     footer_params["news"] = get(f"{link_website}api/newspage/0/9").json()
     footer_params["partner"] = get(f"{link_website}api/partner").json()
     return footer_params
@@ -1316,7 +1317,6 @@ def logout():
 if __name__ == '__main__':
     print("http://127.0.0.1:8000/admin")
     print("http://127.0.0.1:8000/login")
-    print("http://127.0.0.1:8000/test")
     main()
     test_db = False
     if test_db:
