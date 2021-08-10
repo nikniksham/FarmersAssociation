@@ -476,6 +476,7 @@ footer p {
 }
 .render-text div {
     text-align: center;
+    margin: 10px 0;
 }
 .render-text img {
     width: 70%;
