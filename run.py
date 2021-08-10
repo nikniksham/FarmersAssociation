@@ -1302,8 +1302,8 @@ def news_page(link):
     news = get(f"{link_website}api/newspage/{link}").json()
     if "message" in news:
         return page_not_found()
-    print(news)
-    return render_template('news.html', title=news["heading"], params=get_standard_params(), news=news)
+    return render_template('news.html', title=news["heading"], params=get_standard_params(), news=news,
+                           special_params=get_special_params())
 
 
 @app.route('/logout')
