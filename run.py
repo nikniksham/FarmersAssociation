@@ -45,7 +45,7 @@ import config
 
 link_website = "http://127.0.0.1:8000/"
 link_website_heroku = "https://farmersassociation.herokuapp.com/"
-link_website = link_website_heroku
+# link_website = link_website_heroku
 let = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890"
 app = Flask(__name__)
 app.config.from_object(config)
