@@ -4,8 +4,37 @@
 {% endblock %}
 
 {% block pageblockext %}
-<div class="container">
-    <h1><a href="write-feedback/{{code}}">Оставить отзыв</a></h1>
+<div class="row">
+    <div class="col-md-6 col-sm-12">
+        <p class="contacts-title">Адрес</p>
+        <p class="contacts-data">адрес компании</p>
+    </div>
+    <div class="col-md-6 col-sm-12">
+        <p class="contacts-title">Почтовый адрес</p>
+        <p class="contacts-data">почтовый адресс компании</p>
+    </div>
+    <div class="col-md-6 col-sm-12">
+        <p class="contacts-title">Телефон</p>
+        <p class="contacts-data"><a href="tel:+81112223344">+8 (111) 222-33-44</a></p>
+    </div>
+    <div class="col-md-6 col-sm-12">
+        <p class="contacts-title">Почта</p>
+        <p class="contacts-data">почта компании</p>
+    </div>
+    <div class="col-md-6 col-sm-12">
+        <p class="contacts-title">Реквизиты</p>
+        <p class="contacts-data">реквизиты компании</p>
+    </div>
+    <div class="col-md-6 col-sm-12">
+        <p class="contacts-title">Мы в соц. сетях</p>
+    </div>
+</div>
+<div class="map">
+    <script type="text/javascript" charset="utf-8" async src="https://api-maps.yandex.ru/services/constructor/1.0/js/?um=constructor%3Aa720be7f3b65c4133f2896f03173d31cb2ac5f749ab24705c35fd4d9334febff&amp;width=100%25&amp;height=400&amp;lang=ru_RU&amp;scroll=true">
+    </script>
+</div>
+<div class="feedback">
+    <button class="button-feedback"><a href=/admin-list-admin>Оставить отзыв</a></button>
 </div>
 {% endblock %}
 

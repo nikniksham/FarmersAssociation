@@ -42,3 +42,49 @@ p {
 .image-block {
     margin: 15px 0;
 }
+
+.button-feedback {
+    margin: 10px;
+    background: transparent;
+    padding: 10px 13px;
+    color: black;
+    border-radius: 13px;
+    font-weight: 500;
+    font-family: 'Open Sans', sans-serif;
+    outline: none;
+    border: 1px solid black;
+}
+
+.button-feedback a {
+    font-weight: 400;
+    font-size: 18px;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.button-feedback a:hover {
+    color: black;
+    cursor: pointer;
+}
+
+.contacts-title {
+    margin: 0;
+    margin-top: 10px;
+    font-weight: 500;
+    font-size: 20px;
+}
+
+.contacts-data {
+    margin: 0;
+    margin-bottom: 10px;
+}
+
+.feedback {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.map {
+    border-radius: 15px;
+    overflow: hidden;
+}
