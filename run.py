@@ -109,6 +109,7 @@ def set_footer_params():
     footer_params["socials"] = get(f"{link_website}api/socialmedia").json()
     footer_params["emails"] = get(f"{link_website}api/email").json()
     footer_params["address"] = get(f"{link_website}api/address").json()
+    footer_params["link"] = link_website
 
 
 # Получение пользователя
