@@ -1314,7 +1314,7 @@ def logout():
     password_manager.delete_user(current_user.email)
     logout_user()
     return redirect("/")
-
+ 
 
 if __name__ == '__main__':
     print("http://127.0.0.1:8000/admin")
