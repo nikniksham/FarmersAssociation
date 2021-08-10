@@ -20,10 +20,11 @@
     height: calc(100% - 50px);
     background: rgba(0,0,0,.9);
     display: none;
-    z-index: 20;
+    z-index: 1;
 }
 
 .partner-Pop-up {
+    position: relative;
     z-index: 2;
     font-size: 18px;
     letter-spacing: 0.8px;
@@ -52,6 +53,7 @@
 
 .partner-Pop-up-img {
     height: 80px;
+    width: 80px;
     border-radius: 40px;
 }
 
@@ -73,4 +75,36 @@
 .partner-href:hover, .partner-Pop-up-close {
     cursor: pointer;
     color: inherit;
+}
+
+.partner-Pop-up .up {
+    position: absolute;
+    top: -10000px;
+    left: -1000px;
+    height: 10000px;
+    width: 10000px;
+}
+
+.partner-Pop-up .down {
+    position: absolute;
+    bottom: -10000px;
+    left: 0;
+    height: 10000px;
+    width: 100%;
+}
+
+.partner-Pop-up .left {
+    position: absolute;
+    top: 0;
+    left: -10000px;
+    height: 10000px;
+    width: 10000px;
+}
+
+.partner-Pop-up .right {
+    position: absolute;
+    top: 0;
+    right: -10000px;
+    height: 10000px;
+    width: 10000px;
 }
