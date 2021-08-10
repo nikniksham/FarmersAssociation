@@ -19,7 +19,7 @@
         <div class="main">
             {{ form.hidden_tag() }}
             <div class="submit-block">
-                <button class="element-exit"><a href=/admin-list-smartpage/{{page_id}}>Назад</a></button>
+                <button class="element-exit"><a href={{link_back}}>Назад</a></button>
                 {{ form.submit(type="submit", class="btn btn-primary submit") }}
             </div>
         </div>

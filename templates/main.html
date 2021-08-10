@@ -45,33 +45,36 @@
                     <p class="footer-header">Контакты</p>
                 </div>
                 <div class="col-sm-6 col-md-4 col-xl-4">
-                    <p class="footer-title">Где мы</p>
-                    <p>Москва, Усачева, 24, 119048, Российская Федерация</p>
+                    <p class="footer-title">Физический адрес</p>
+                    <p>{{special_params["address"][0]["place"]}}</p>
                 </div>
                 <div class="col-sm-6 col-md-5 col-xl-4">
                     <p class="footer-title">Почтовый адрес</p>
-                    <p>Москва, Гоголевский бульвар, дом 21, 119991, Российская Федерация</p>
+                    <p>{{special_params["address"][1]["place"]}}</p>
                 </div>
                 <div class="col-sm-12 col-md-3 col-xl-4">
                     <div class="row">
+                        {% for phone in special_params["numbers"] %}
+                        <p class="footer-title">Телефон</p>
                         <div class="col-md-12 col-xl-6">
-                            <p class="footer-title">Телефон</p>
-                            <a href="tel:+74952872525">+7 (495) 287-25-25</a>
+                            <a href="tel:{{phone['number']}}">{{phone['number']}}</a>
                         </div>
+                        {% endfor %}
+
+                        {% for email in special_params["emails"] %}
+                        <p class="footer-title">e-mail</p>
                         <div class="col-md-12 col-xl-6">
-                            <p class="footer-title">e-mail</p>
-                            <a href="mailto:info@rostec.ru">info@rostec.ru</a>
+                            <a href="mailto:{{email['email_address']}}">{{email['email_address']}}</a>
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
                 <div class="col-12">
                     <div class="social">
                         <p class="footer-title">Мы в соц. сетях:</p>
-                        <a href="https://facebook.com/sirotaoleg" target="_blank"><img src="/static/img/facebook.png" alt="facebook"></a>
-                        <a href="https://instagram.com/fermaroigas/" target="_blank"><img src="/static/img/instagram.png" alt="instagram"></a>
-                        <a href=" https://instagram.com/sirotaoleg/" target="_blank"><img src="/static/img/instagram.png" alt="instargam"></a>
-                        <a href="  https://instagram.com/veselaya.korova/" target="_blank"><img src="/static/img/instagram.png" alt="instargam"></a>
-                        <a href="  https://instagram.com/sotovhoney/" target="_blank"><img src="/static/img/instagram.png" alt="instargam"></a>
+                        {% for socialmedia in special_params["socials"] %}
+                        <a href="{{socialmedia['link']}}" target="_blank"><img src="/static/img/{{socialmedia['icon_type']}}" alt="facebook"></a>
+                        {% endfor %}
                     </div>
                 </div>
             </div>

@@ -1,0 +1,79 @@
+{% extends "admin-panel.html" %}
+
+{% block adminblock %}
+<p class="settings-title">{{title}}</p>
+<div class="settings">
+    <form action="" method="post" enctype=multipart/form-data>
+        <div class="main">
+            {% if message %}
+            {% if result %}
+            <p class="message-success">{{message}}</p>
+            {% else %}
+            <p class="message-error">{{message}}</p>
+            {% endif %}
+            {% endif %}
+
+            <p>Логотип сайта</p>
+            <div class="input-file-row-1">
+                <div class="upload-file-container">
+                    <img id="icon" class="this-is-image visible " src="/static/img/logo.png" alt="">
+                    <input type=file name=icon class="photo" id="iconInput">
+                </div>
+            </div>
+
+            <div class="submit-block">
+                {{ form.submit(type="submit", class="btn btn-primary submit") }}
+            </div>
+        </div>
+    </form>
+
+    <p>Адреса</p>
+    {% for address in special_params["address"] %}
+    <div class="settings-element">
+        <p class="settings-element-title">{{address['name']}}</p>
+        <a class="settings-element-edit" href="/admin-edit-address/{{address['id']}}">Изменить</a>
+    </div>
+    {% endfor %}<br>
+
+    <p>Телефонные номера</p>
+    <div class="settings-add">
+        <a class="settings-element-add" href="/admin-create-phone">Добавить</a>
+    </div>
+    {% for number in special_params["numbers"] %}
+    <div class="settings-element">
+        <p class="settings-element-title">{{number['number']}}</p>
+        <a class="settings-element-edit" href="/admin-edit-phone/{{number['id']}}">Изменить</a>
+        <a class="settings-element-delete" href="/admin-delete-phone/{{number['id']}}">Удалить</a>
+    </div>
+    {% endfor %}<br>
+
+    <p>Электронные почты</p>
+    <div class="settings-add">
+        <a class="settings-element-add" href="/admin-create-email">Добавить</a>
+    </div>
+    {% for email in special_params["emails"] %}
+    <div class="settings-element">
+        <p class="settings-element-title">{{email['email_address']}}</p>
+        <a class="settings-element-edit" href="/admin-edit-email/{{email['id']}}">Изменить</a>
+        <a class="settings-element-delete" href="/admin-delete-email/{{email['id']}}">Удалить</a>
+    </div>
+    {% endfor %}<br>
+
+    <p>Соцсети</p>
+    <div class="settings-add">
+        <a class="settings-element-add" href="/admin-create-socialmedia">Добавить</a>
+    </div>
+    {% for social in special_params["socials"] %}
+    <div class="settings-element">
+        <p class="settings-element-title">{{social['link']}}</p>
+        <a class="settings-element-edit" href="/admin-edit-socialmedia/{{social['id']}}">Изменить</a>
+        <a class="settings-element-delete" href="/admin-delete-socialmedia/{{social['id']}}">Удалить</a>
+    </div>
+    {% endfor %}<br>
+
+</div>
+{% endblock %}
+
+{% block adminend %}
+<script src="/static/js/set-icon.js"></script>
+{% endblock %}

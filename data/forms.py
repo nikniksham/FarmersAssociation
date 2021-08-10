@@ -15,7 +15,7 @@ class NewspageForm(StartForm):
 
 
 class AdminForm(StartForm):
-    stat = 4
+    stat = 0
     name = StringField('Имя', validators=[DataRequired("Пожалуйста введите имя")])
     surname = StringField('Фамилия', validators=[DataRequired("Напишите вашу фамилию")])
     email = StringField('Почта', validators=[DataRequired("Сюда надо написать почту")])
@@ -38,7 +38,7 @@ class FeedbackForm(StartForm):
     fullname = StringField('ФИО', validators=[DataRequired()])
     email = StringField('Почта', validators=[DataRequired()])
     heading = StringField('Заголовок', validators=[DataRequired()])
-    text = StringField('Текст', validators=[DataRequired()])
+    text = TextAreaField('Текст', validators=[DataRequired()])
     code = StringField('Код подверждения')
     getcode = SubmitField("Получить код")
     preview = SubmitField("Предпросмотр")
@@ -56,3 +56,21 @@ class PartnerForm(StartForm):
 
 class DeleteForm(FlaskForm):
     submit = SubmitField("Подтвердить")
+
+
+class AddressForm(StartForm):
+    address = StringField('Адрес', validators=[DataRequired()])
+
+
+class EmailForm(StartForm):
+    email = StringField('Электронная почта', validators=[DataRequired()])
+
+
+class PhoneForm(StartForm):
+    number = StringField('Номер телефона', validators=[DataRequired()])
+
+
+class SocialmediaForm(StartForm):
+    link = StringField('Ссылка на соцсеть', validators=[DataRequired()])
+    icon_type = SelectField('Социальная сеть', choices=[("facebook.png", "Фейсбук"), ("instagram.png", "Инстаграм"), ("vk.png", "ВКонтакте"),
+                                                        ("twitter.png", "Твиттер"), ("telegram.png", "Телеграм")])

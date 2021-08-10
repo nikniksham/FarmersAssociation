@@ -1,11 +1,14 @@
-{% extends "main.html" %}
+{% extends "admin-panel.html" %}
 
-{% block pageblock %}
+{% block adminblock %}
 <div class="container">
     <p class="news-header">{{feedback["heading"]}}</p>
     <div class="render-text">
         {{feedback["text_render"]|safe}}
     </div>
     <span class="date">date: {{feedback["created_date"]}}</span>
+    <div class="submit-block">
+        <button class="element-exit"><a href=/admin-list-feedback>Назад</a></button>
+    </div>
 </div>
 {% endblock %}

@@ -1,0 +1,41 @@
+{% extends "admin-panel.html" %}
+
+{% block adminblock %}
+<p class="settings-title">{{title}}</p>
+<div class="settings">
+    <form action="" method="post" enctype=multipart/form-data>
+        <div class="main">
+            {% if message %}
+            {% if result %}
+            <p class="message-success">{{message}}</p>
+            {% else %}
+            <p class="message-error">{{message}}</p>
+            {% endif %}
+            {% endif %}
+            
+            {{ form.hidden_tag() }}
+            
+            {{ form.link.label }}<br>
+            {{ form.link(class="form-control") }}<br>
+            {% for error in form.link.errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endfor %}
+
+            {{ form.icon_type.label }}<br>
+            {{ form.icon_type(class="form-control") }}<br>
+            {% for error in form.icon_type.errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endfor %}
+            
+            <div class="submit-block">
+                <button class="element-exit"><a href=/admin-website-settings>Назад</a></button>
+                {{ form.submit(type="submit", class="btn btn-primary submit") }}
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

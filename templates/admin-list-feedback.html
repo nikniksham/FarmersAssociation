@@ -7,7 +7,7 @@
     {% for feedback in feedbacks %}
     <div class="settings-element">
         <p class="settings-element-title">{{feedback['heading']}}</p>
-        <a class="settings-element-delete" href="/view-feedback/{{feedback['id']}}">Подробнее</a>
+        <a class="settings-element-edit" href="/view-feedback/{{feedback['id']}}">Подробнее</a>
         <a class="settings-element-delete" href="/admin-delete-feedback/{{feedback['id']}}">Удалить</a>
     </div>
     {% endfor %}
