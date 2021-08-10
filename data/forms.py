@@ -15,7 +15,7 @@ class NewspageForm(StartForm):
 
 
 class AdminForm(StartForm):
-    stat = 4
+    stat = 0
     name = StringField('Имя', validators=[DataRequired("Пожалуйста введите имя")])
     surname = StringField('Фамилия', validators=[DataRequired("Напишите вашу фамилию")])
     email = StringField('Почта', validators=[DataRequired("Сюда надо написать почту")])
@@ -56,3 +56,21 @@ class PartnerForm(StartForm):
 
 class DeleteForm(FlaskForm):
     submit = SubmitField("Подтвердить")
+
+
+class AddressForm(StartForm):
+    address = StringField('Адрес', validators=[DataRequired()])
+
+
+class EmailForm(StartForm):
+    email = StringField('Электронная почта', validators=[DataRequired()])
+
+
+class PhoneForm(StartForm):
+    number = StringField('Номер телефона', validators=[DataRequired()])
+
+
+class SocialmediaForm(StartForm):
+    link = StringField('Ссылка на соцсеть', validators=[DataRequired()])
+    icon_type = SelectField('Социальная сеть', choices=[(1, "Фейсбук"), (2, "Инстаграм"), (3, "ВКонтакте"),
+                                                        (4, "Твиттер"), (5, "Телеграм")])
