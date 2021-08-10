@@ -88,3 +88,29 @@ p {
     border-radius: 15px;
     overflow: hidden;
 }
+
+.teammate {
+    background: #1e2f37;
+    color: white;
+    border-radius: 15px;
+    padding: 15px;
+    width: 100%;
+    margin-bottom: calc(var(--bs-gutter-x));
+}
+
+.teammate-header {
+    display: flex;
+    align-items: center;
+}
+
+.teammate p {
+    margin: 0
+}
+
+.teammate-img {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
