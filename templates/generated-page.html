@@ -5,6 +5,8 @@
 <link href="/static/css/slick-theme.css" rel="stylesheet">
 <link href="/static/css/generated-page.css" rel="stylesheet">
 <link href="/static/css/subpages.css" rel="stylesheet">
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=7bc1f244-7587-4821-bf8b-651962a49286" type="text/javascript"></script>
+<script src="/static/js/map.js"></script>
 {% block headext %}{% endblock %}
 {% endblock %}
 
@@ -42,7 +44,11 @@
 {% block pageblock %}
 <div class="header-carousel">
     {% for src in page['image'].split('//') %}
-    <div class="carousel-head" style="background-image: url(/static/img/{{src}});"></div>
+    <div class="carousel-head">
+        <div>
+            <img src="/static/img/{{src}}" alt="">
+        </div>
+    </div>
     {% endfor %}
 </div>
 <div class="container">
@@ -93,6 +99,10 @@
         </div>
         {% endfor %}
     </div>
+    {% elif block['type'] == "Map" %}
+    <div class="map">
+        <div id="map"></div>
+    </div>
     {% endif %}
     {% endfor %}
     {% block pageblockext %}{% endblock %}
@@ -105,10 +115,8 @@
 <script src="/static/js/news.js"></script>
 <script src="/static/js/partners.js"></script>
 <script src="/static/js/header-carousel.js"></script>
-
 <script>
-    var link_website = special_params["link"]
+    var link_website = "{{special_params["link"]}}"
 </script>
-
 {% block endext %}{% endblock %}
 {% endblock %}
