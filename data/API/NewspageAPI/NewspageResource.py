@@ -76,7 +76,6 @@ class NewspageResource(Resource):
         return jsonify({"success": f"Новостная страница {heading} успешно удалена"})
 
     def put(self, email, password, newspage_id):
-        print(123)
         admin, session = check_admin_status(email, password)
         newspage, session = find_by_id(newspage_id, session)
         args, count_params = parser_newspage.parse_args(), 0
