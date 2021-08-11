@@ -42,7 +42,7 @@ from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, Partn
 from werkzeug.utils import secure_filename
 from PIL import Image
 import config
-from PIL import ImageSequence
+import shutil
 
 link_website = "http://127.0.0.1:8000/"
 link_website_heroku = "https://farmersassociation.herokuapp.com/"
@@ -125,11 +125,15 @@ def create_random_name(name_len):
 
 
 def save_image_multithreading(filename, file):
+    path = "/".join(filename.split("/")[:-1])
+    if not os.path.exists(path):
+        os.makedirs(path)
     file.save(filename)
     image = Image.open(filename)
     if image.size[0] > 720 or image.size[1] > 405:
         image.thumbnail((720, 405))
-    path, format = filename.split(".")
+    split_name = filename.split('.')
+    path, format = '.'.join(split_name[:-1]), split_name[-1]
     if format not in ["png", "gif"]:
         image = image.convert('RGB')
     if format != "gif":
@@ -146,7 +150,40 @@ def save_image(filename, file):
     t1.join()
 
 
-def save_images(cont_name, files, r_img=True, max_image=None):
+def clear_folder(folder_name, path=app.config['UPLOAD_FOLDER']):
+    if os.path.exists(path+folder_name):
+        delete_folder(folder_name, path=path)
+    os.mkdir(path+folder_name)
+
+
+def delete_folder(folder_name, path=app.config['UPLOAD_FOLDER']):
+    if os.path.exists(path+folder_name):
+        for filename in os.listdir(path + folder_name):
+            os.remove(f"{path}{folder_name}/{filename}")
+        print(f"удаляю папку {path}{folder_name}")
+        os.rmdir(path+folder_name)
+
+
+def copy_files(old_folder, new_folder, filenames):
+    path = app.config['UPLOAD_FOLDER']
+    clear_folder(new_folder)
+    for filename in filenames:
+        if os.path.exists(path + filename):
+            shutil.copy(f"{path}{old_folder}/{filename.split('/')[-1]}", f"{path}{new_folder}/{filename.split('/')[-1]}")
+
+
+def transport_images(old_folder, new_folder, filenames):
+    new_filenames, path = [], app.config['UPLOAD_FOLDER']
+    clear_folder(new_folder)
+    for filename in filenames:
+        if os.path.exists(path+filename):
+            os.replace(path+filename, f'{path}{new_folder}/{filename.split("/")[-1]}')
+            new_filenames.append(f'{new_folder}/{filename.split("/")[-1]}')
+    delete_folder(old_folder)
+    return new_filenames
+
+
+def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False):
     filenames, img_list, cont = [], list(files), containerManager.get_container(cont_name)
     for ind, name in enumerate(files):
         if max_image and len(filenames) >= max_image:
@@ -157,18 +194,22 @@ def save_images(cont_name, files, r_img=True, max_image=None):
                 gif = False
                 if file.filename.split(".")[-1] == "gif":
                     gif = True
-                filename = secure_filename(create_new_image_name(gif=gif))
+                filename = f"{cont_name}/" + secure_filename(create_new_image_name(gif=gif))
                 save_image(filename, file)
                 filenames.append(filename)
         else:
             if img_list[ind] in cont:
                 filenames.append(cont[img_list[ind]])
-    if r_img and len(filenames) == 0:
-        filenames = ["standard.png"]
     for key in cont.keys():
         if key not in img_list:
             delete_img(cont[key])
-    containerManager.add_container(cont_name, filenames, True)
+    if r_img and len(filenames) == 0:
+        img = Image.open(f"{app.config['UPLOAD_FOLDER']}standard.png")
+        if not os.path.exists(f"{app.config['UPLOAD_FOLDER']}{cont_name}"):
+            os.makedirs(f"{app.config['UPLOAD_FOLDER']}{cont_name}")
+        img.save(f"{app.config['UPLOAD_FOLDER']}{cont_name}/standard.png")
+        filenames = [f"{cont_name}/standard.png"]
+    containerManager.add_container(cont_name, filenames, auto_delete)
     return filenames
 
 
@@ -190,7 +231,6 @@ def delete_img(filename):
 
 def create_new_image_name(logo=False, gif=False):
     filelist, format = os.listdir(app.config['UPLOAD_FOLDER']), ".gif" if gif else (".png" if logo else ".jpg")
-    print(format, gif)
     filename = create_random_name(50) + format
     while filename in filelist:
         filename = create_random_name(50) + format
@@ -526,6 +566,7 @@ def admin_list_news():
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
+        containerManager.delete_container(f"tmp/news_{current_user.email}")
         newslist = get(f"{link_website}api/newspage").json()
         return render_template('admin-list-news.html', title='Новости', newslist=newslist, params=get_standard_params(),
                                special_params=get_special_params())
@@ -541,15 +582,17 @@ def admin_create_news():
         form = NewspageForm()
         message, result, preview_text = None, False, None
         if request.method == 'POST':
-            filenames = save_images(f"news_{current_user.email}", request.files)
+            filenames = save_images(f"tmp/news_{current_user.email}", request.files, auto_delete=True)
             if form.submit.data:
                 message = post(
                     f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}",
                     json={"heading": form.heading.data, "text": form.text.data, "image": "//".join(filenames)}).json()
                 if "success" in message:
+                    m = put(f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}/{message['id']}",
+                            json={"image": "//".join(transport_images(f"tmp/news_{current_user.email}", f"news/news_{message['id']}", filenames))}).json()
                     result = True
                     containerManager.delete_container(f"news_{current_user.email}")
-                message = " ".join(list(message.values()))
+                message = list(message.values())[-1]
             elif form.preview.data:
                 preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
         else:
@@ -568,28 +611,31 @@ def admin_edit_news(id):
     if current_user.status > 0:
         form = NewspageForm()
         message, result, filenames, filename, preview_text = None, False, [], None, None
-        news = get(
-            f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        news = get(f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
         if "message" not in list(news):
             if request.method == 'POST':
-                filenames = save_images(f"news_{id}", request.files)
+                filenames = save_images(f"tmp/news_{current_user.email}", request.files)
                 if form.submit.data:
                     message = put(
                         f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
                         json={"heading": form.heading.data, "text": form.text.data, "image": "//".join(filenames)}).json()
                     if "success" in message:
                         result = True
+                        m = put(f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
+                                json={"image": "//".join(transport_images(f"tmp/news_{current_user.email}", f"news/news_{id}", filenames))}).json()
+                        containerManager.delete_container(f"tmp/news_{current_user.email}")
                     message = " ".join(list(message.values()))
                 elif form.preview.data:
                     preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
             else:
                 form.heading.data = news["heading"]
                 form.text.data = news["text"]
-                if containerManager.get_container(f"news_{id}") == {}:
-                    filenames = news["image"].split("//")
+                if containerManager.get_container(f"tmp/news_{current_user.email}") != {}:
+                    filenames = containerManager.get_container(f"tmp/news_{current_user.email}").values()
                 else:
-                    filenames = containerManager.get_container(f"news_{id}").values()
-                containerManager.add_container(f"news_{id}", filenames)
+                    filenames = news["image"].split("//")
+                    copy_files(f"news/news_{id}", f"tmp/news_{current_user.email}", filenames)
+                containerManager.add_container(f"tmp/news_{current_user.email}", filenames, auto_delete=True)
         else:
             message = "Новость не найдена"
         return render_template('admin-news-form.html', title='Редактирование новости', message=message, result=result,
@@ -616,10 +662,8 @@ def admin_delete_news(id):
                     f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
                 if "success" in message:
                     result = True
+                    delete_folder(f"news/news_{id}")
                 message = " ".join(list(message.values()))
-                images = news["image"]
-                for image in images.split("//"):
-                    delete_img(image)
                 containerManager.delete_container(f"news_{id}")
         return render_template('admin-delete-form.html', title='Удаление новости', message=message, form=form,
                                result=result, name=name, params=get_standard_params(), link_back="/admin-list-news",
@@ -726,7 +770,6 @@ def admin_edit_admin(id):
                     result = True
                 message = " ".join(list(message.values()))
             else:
-                print(admin)
                 admin_status = admin["status"]
                 form.name.data = admin["name"]
                 form.surname.data = admin["surname"]
@@ -800,7 +843,7 @@ def admin_create_smartpage():
         form = SmartpageForm()
         message, result, filenames = None, False, []
         if request.method == 'POST':
-            filenames = save_images(f"smartpage_{current_user.email}", request.files)
+            filenames = save_images(f"smartpage/smartpage_{current_user.email}", request.files)
             message = post(
                 f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email)}",
                 json={"heading": form.heading.data, "image": "//".join(filenames)}).json()
@@ -825,7 +868,7 @@ def admin_edit_smartpage(id):
         message, result, filenames, filename = None, False, [], None
         if "message" not in smartpage:
             if request.method == 'POST':
-                filenames = save_images(f"smartpage_{id}", request.files)
+                filenames = save_images(f"smartpage/smartpage_{id}", request.files)
                 message = put(
                     f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
                     json={"heading": form.heading.data, "image": "//".join(filenames)}).json()
@@ -1197,7 +1240,6 @@ def view_feedback(id):
     if check_user():
         return redirect("/login")
     feedback = get(f"{link_website}api/feedback/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
-    print(feedback)
     if "message" in feedback:
         return page_not_found()
     return render_template('feedback.html', title=feedback["heading"], params=get_standard_params(), feedback=feedback,

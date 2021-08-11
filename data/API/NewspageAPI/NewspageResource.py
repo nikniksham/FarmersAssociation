@@ -76,6 +76,7 @@ class NewspageResource(Resource):
         return jsonify({"success": f"Новостная страница {heading} успешно удалена"})
 
     def put(self, email, password, newspage_id):
+        print(123)
         admin, session = check_admin_status(email, password)
         newspage, session = find_by_id(newspage_id, session)
         args, count_params = parser_newspage.parse_args(), 0
@@ -85,6 +86,7 @@ class NewspageResource(Resource):
             if args[key] is not None and args[key] != page_dict[key]:
                 count_params += 1
                 if key == 'image':
+                    print(args['image'])
                     newspage.image = args['image']
                 if key == 'heading':
                     newspage.heading = args["heading"]
@@ -194,4 +196,4 @@ class CreateNewspageResource(Resource):
         add_auditlog("Создание",
                      f"{admin.name} {admin.surname} создаёт новостную страницу {new_newspage.heading}: {params_dict}",
                      admin, datetime.datetime.now())
-        return jsonify({'success': f'Новостная страница {new_newspage.heading} создана'})
+        return jsonify({'success': f'Новостная страница {new_newspage.heading} создана', 'id': new_newspage.id})

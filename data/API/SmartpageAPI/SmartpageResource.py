@@ -154,4 +154,4 @@ class CreateSmartpageResource(Resource):
         add_auditlog("Создание",
                      f"{admin.name} {admin.surname} создаёт страницу {new_smartpage.heading}: {params_dict}",
                      admin, datetime.datetime.now())
-        return jsonify({'success': f'Страница {new_smartpage.heading} создана'})
+        return jsonify({'success': f'Страница {new_smartpage.heading} создана', "id": new_smartpage.id})
