@@ -125,4 +125,5 @@ class CreatePartnerResource(Resource):
         add_auditlog("Создание",
                      f"{admin.name} {admin.surname} создаёт партнёра {new_partner.name}: {params_dict}",
                      admin, datetime.datetime.now())
-        return jsonify({'success': f'Партнёр {new_partner.name} создан'})
+        print(new_partner.id)
+        return jsonify({'success': f'Партнёр {new_partner.name} создан', 'id': new_partner.id})
