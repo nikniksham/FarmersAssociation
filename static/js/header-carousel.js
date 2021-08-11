@@ -1,4 +1,4 @@
-var speedHeadCarousel = 5000
+var speedHeadCarousel = 7000
 
 $(document).ready(function(){
     $('.header-carousel').slick({
@@ -12,6 +12,7 @@ $(document).ready(function(){
         draggable: false,
         arrows: false,
         fade: true,
-        cssEase: 'linear'
+        cssEase: 'linear',
+        pauseOnHover: false
     });
 });
