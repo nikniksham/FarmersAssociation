@@ -69,6 +69,24 @@ class FeedbackResource(Resource):
         return jsonify({"success": f"Отзыв {fullname} успешно удален"})
 
 
+class FeedbackTransportImage(Resource):
+    def put(self, feedback_id, code):
+        session = db_session.create_session()
+        feedback, session = find_by_id(feedback_id, session)
+        if not feedback.code:
+            return raise_error("невозмоно менять повторно")
+        if feedback.code != code:
+            return raise_error("неизвестный код")
+        feedback.code = None
+        args = parser_feedback.parse_args()
+        print(args)
+        if args["image"]:
+            feedback.image = args["image"]
+        print(feedback.image)
+        session.commit()
+        return jsonify({"success": "картинки успешно изменены"})
+
+
 class FeedbackListRecourse(Resource):
     def get(self, email, password):
         admin, session = check_admin_status(email, password)
@@ -88,6 +106,7 @@ class CreateFeedbackResource(Resource):
             raise_error('Пропущены некоторые аргументы, необходимые для оставления отзыва')
         ch_code = check_code(session, args["email"], args["code"])
         new_feedback = Feedback()
+        new_feedback.code = args["code"]
         new_feedback.fullname = args["fullname"]
         new_feedback.image = args["image"] if args["image"] else ""
         new_feedback.heading = args["heading"]
@@ -102,4 +121,4 @@ class CreateFeedbackResource(Resource):
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//")) if args["image"] else 0}'
         add_auditlog("Создание",
                      f"{args['fullname']} оставляет отзыв: {params_dict}", None, datetime.datetime.now())
-        return jsonify({'success': f'{new_feedback.fullname} оставил отзыв'})
+        return jsonify({'success': f'{new_feedback.fullname} оставил отзыв', 'id': new_feedback.id})

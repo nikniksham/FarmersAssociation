@@ -12,6 +12,7 @@ class Feedback(SqlAlchemyBase, SerializerMixin):
     email = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     image = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     text = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    code = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.now())
 
     def formatted_date(self):

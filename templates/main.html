@@ -15,10 +15,10 @@
 <body>
     <div class="navigation">
         <div class="navigation-hrefs">
-            {% for smartpage in params["smartpages"] %}
+            {% for smartpage in special_params["smartpages"] %}
             <a href=/page/{{smartpage['link']}}>{{smartpage["heading"]}}</a>
             {% endfor %}
-            {% if params["is_admin"] %}
+            {% if special_params["is_admin"] %}
             <a href=/admin>Панель администратора</a>
             {% endif %}
         </div>

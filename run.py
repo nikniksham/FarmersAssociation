@@ -13,7 +13,8 @@ from data.API.AuditlogAPI.AuditlogResource import AuditlogResource, AuditlogList
 from data.API.ConfirmationCodeAPI.ConfirmationcodeResource import CodeForConfirmation
 from data.API.ContentAPI.ContentResource import CreateContentResource, ContentResource, ContentListRecourse, \
     ContentListRecourseId
-from data.API.FeedbackAPI.FeedbackResource import FeedbackResource, FeedbackListRecourse, CreateFeedbackResource
+from data.API.FeedbackAPI.FeedbackResource import FeedbackResource, FeedbackListRecourse, CreateFeedbackResource, \
+    FeedbackTransportImage
 from data.API.NewspageAPI.NewspageResource import NewspageResource, NewspageListRecourse, CreateNewspageResource, \
     NewspageResourceUsual, NewspageListRecourseId, NewspageResourceLink
 from data.API.PartnerAPI.PartnerResource import PartnerResource, PartnerResourceUsual, PartnerListRecourse, \
@@ -44,6 +45,7 @@ from PIL import Image
 import config
 import shutil
 
+load_new_footer_params, load_new_params = True, True
 link_website = "http://127.0.0.1:8000/"
 link_website_heroku = "https://farmersassociation.herokuapp.com/"
 # link_website = link_website_heroku
@@ -78,6 +80,7 @@ api.add_resource(PartnerResourceUsual, "/api/partner/<int:partner_id>")
 api.add_resource(PartnerListRecourse, "/api/partner")
 api.add_resource(FeedbackResource, "/api/feedback/<string:email>/<string:password>/<int:feedback_id>")
 api.add_resource(FeedbackListRecourse, "/api/feedback/<string:email>/<string:password>")
+api.add_resource(FeedbackTransportImage, "/api/feedback/<int:feedback_id>/<string:code>")
 api.add_resource(CreateFeedbackResource, "/api/feedback")
 api.add_resource(AdminResourceAddress, "/api/address/<string:email>/<string:password>/<int:address_id>")
 api.add_resource(AddressListRecourse, "/api/address")
@@ -102,15 +105,21 @@ formatting_text_instruction = \
      "<h></h> Текст между тэгов будет заголовочным и по середине экрана",
      "<a href></a> Текст между тэгов будет подчёркнутым и содержать в себе ссылку, написанную на месте href",
      "<image id> Вставляет на этом месте картинку из поля загрузки картинок (нумерация изображений идёт с 1)"]
-footer_params = {}
+special_params = {}
 
 
 def set_footer_params():
-    footer_params["numbers"] = get(f"{link_website}api/phone").json()
-    footer_params["socials"] = get(f"{link_website}api/socialmedia").json()
-    footer_params["emails"] = get(f"{link_website}api/email").json()
-    footer_params["address"] = get(f"{link_website}api/address").json()
-    footer_params["link"] = link_website
+    special_params["numbers"] = get(f"{link_website}api/phone").json()
+    special_params["socials"] = get(f"{link_website}api/socialmedia").json()
+    special_params["emails"] = get(f"{link_website}api/email").json()
+    special_params["address"] = get(f"{link_website}api/address").json()
+    special_params["link"] = link_website
+
+
+def set_other_params():
+    special_params["news"] = get(f"{link_website}api/newspage/0/9").json()
+    special_params["partner"] = get(f"{link_website}api/partner").json()
+    special_params["smartpages"] = get(f"{link_website}api/smartpage").json()
 
 
 # Получение пользователя
@@ -191,36 +200,29 @@ def transport_images(old_folder, new_folder, filenames):
     return new_filenames
 
 
-def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False, logo=False, cont_logo=None):
+def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False, logo=False, cont_logo=None, gif=True):
     filenames, filenames2, img_list, cont, cont2 = [], [], list(files), containerManager.get_container(cont_name), containerManager.get_container(cont_logo)
-    print(files)
-    print(img_list)
-    print(cont, "cont_1")
-    print(cont2, "cont_2")
     for ind, name in enumerate(files):
         if max_image and len(filenames) >= max_image:
             break
         file = files[name]
         if file.filename != "":
             if file and allowed_file(file.filename):
-                gif = False
+                gif_i = False
                 if file.filename.split(".")[-1] == "gif":
-                    gif = True
-                print(img_list[ind], file.filename, 123)
+                    gif_i = gif
                 if logo and img_list[ind] in ["icon", "iconInput"]:
-                    filename = f"{cont_logo}/" + secure_filename(create_new_image_name(gif=gif))
+                    filename = f"{cont_logo}/" + secure_filename(create_new_image_name(gif=gif_i))
                     save_image(filename, file)
                     filenames2.append(filename)
                 else:
-                    filename = f"{cont_name}/" + secure_filename(create_new_image_name(gif=gif))
+                    filename = f"{cont_name}/" + secure_filename(create_new_image_name(gif=gif_i))
                     save_image(filename, file)
                     filenames.append(filename)
         else:
             if logo and img_list[ind] in ["icon", "iconInput"] and "image1" in cont2:
-                print("logo", img_list[ind])
                 filenames2.append(cont2["image1"])
             elif img_list[ind] in cont:
-                print("image", img_list[ind])
                 filenames.append(cont[img_list[ind]])
     if r_img:
         img = Image.open(f"{app.config['UPLOAD_FOLDER']}standard.png")
@@ -242,15 +244,18 @@ def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False,
     return filenames
 
 
-def get_standard_params():
-    return {"smartpages": get(f"{link_website}api/smartpage").json(), "is_admin": (not current_user.is_anonymous)}
-
-
 def get_special_params():
-    set_footer_params()
-    footer_params["news"] = get(f"{link_website}api/newspage/0/9").json()
-    footer_params["partner"] = get(f"{link_website}api/partner").json()
-    return footer_params
+    global load_new_footer_params, load_new_params
+    containerManager.clear_container(app.config['UPLOAD_FOLDER'])
+    if load_new_footer_params:
+        load_new_footer_params = False
+        set_footer_params()
+    if load_new_params:
+        load_new_params = False
+        set_other_params()
+    local_special_params = special_params.copy()
+    local_special_params["is_admin"] = not current_user.is_anonymous
+    return local_special_params
 
 
 def delete_img(filename):
@@ -311,7 +316,7 @@ def login():
 def admin():
     if check_user():
         return redirect("/login")
-    return render_template('admin-panel.html', title='админка', params=get_standard_params(), special_params=get_special_params())
+    return render_template('admin-panel.html', title='админка', special_params=get_special_params())
 
 
 @app.route("/admin-website-settings", methods=['GET', 'POST'])
@@ -336,8 +341,8 @@ def admin_website_settings():
                         message = "Файл неподдерживаемемого формата"
                 else:
                     message = "Пустой запрос"
-        return render_template('admin-website-settings.html', params=get_standard_params(), form=form, message=message,
-                               result=result, special_params=get_special_params())
+        return render_template('admin-website-settings.html', form=form, message=message, result=result,
+                               special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -356,9 +361,10 @@ def admin_create_phone():
                     json={"number": form.number.data}).json()
                 if "success" in message:
                     result = True
+                    set_footer_params()
                 message = " ".join(list(message.values()))
         return render_template('admin-phone-form.html', title='Добавление номера телефона', message=message,
-                               form=form, result=result, params=get_standard_params(), special_params=get_special_params())
+                               form=form, result=result, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -379,13 +385,14 @@ def admin_edit_phone(id):
                         json={"number": form.number.data}).json()
                     if "success" in message:
                         result = True
+                        set_footer_params()
                     message = " ".join(list(message.values()))
             else:
                 form.number.data = phone["number"]
         else:
             message = "Телефон не найден"
         return render_template('admin-phone-form.html', title='Редактирование номера телефона', message=message,
-                               result=result, form=form, params=get_standard_params(), special_params=get_special_params())
+                               result=result, form=form, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -406,9 +413,10 @@ def admin_delete_phone(id):
                     f"{link_website}api/phone/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
                 if "success" in message:
                     result = True
+                    set_footer_params()
                 message = " ".join(list(message.values()))
         return render_template('admin-delete-form.html', title='Удаление телефона', message=message, form=form, name=name,
-                               result=result, params=get_standard_params(), link_back="/admin-website-settings",
+                               result=result, link_back="/admin-website-settings",
                                special_params=get_special_params())
     return you_dont_have_permission()
 
@@ -428,9 +436,10 @@ def admin_create_email():
                     json={"email_address": form.email.data}).json()
                 if "success" in message:
                     result = True
+                    set_footer_params()
                 message = " ".join(list(message.values()))
         return render_template('admin-email-form.html', title='Добавление почтового адреса', message=message,
-                               form=form, result=result, params=get_standard_params(), special_params=get_special_params())
+                               form=form, result=result, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -451,13 +460,14 @@ def admin_edit_email(id):
                         json={"email_address": form.email.data}).json()
                     if "success" in message:
                         result = True
+                        set_footer_params()
                     message = " ".join(list(message.values()))
             else:
                 form.email.data = email["email_address"]
         else:
             message = "Почтовый адрес не найден"
         return render_template('admin-email-form.html', title='Редактирование почтового адреса', message=message,
-                               result=result, form=form, params=get_standard_params(), special_params=get_special_params())
+                               result=result, form=form, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -478,10 +488,10 @@ def admin_delete_email(id):
                     f"{link_website}api/email/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
                 if "success" in message:
                     result = True
+                    set_footer_params()
                 message = " ".join(list(message.values()))
         return render_template('admin-delete-form.html', title='Удаление почтового адреса', message=message, form=form,
-                               name=name, result=result, params=get_standard_params(), link_back="/admin-website-settings",
-                               special_params=get_special_params())
+                               name=name, result=result, link_back="/admin-website-settings", special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -500,9 +510,10 @@ def admin_create_socialmedia():
                     json={"icon_type": form.icon_type.data, "link": form.link.data}).json()
                 if "success" in message:
                     result = True
+                    set_footer_params()
                 message = " ".join(list(message.values()))
         return render_template('admin-socialmedia-form.html', title='Добавление ссылки на соцсеть', message=message,
-                               form=form, result=result, params=get_standard_params(), special_params=get_special_params())
+                               form=form, result=result, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -523,6 +534,7 @@ def admin_edit_socialmedia(id):
                         json={"icon_type": form.icon_type.data, "link": form.link.data}).json()
                     if "success" in message:
                         result = True
+                        set_footer_params()
                     message = " ".join(list(message.values()))
             else:
                 form.icon_type.data = socialmedia["icon_type"]
@@ -530,7 +542,7 @@ def admin_edit_socialmedia(id):
         else:
             message = "Ссылка на соцсесть не найдена"
         return render_template('admin-socialmedia-form.html', title='Редактирование ссылки на соцсеть', message=message,
-                               result=result, form=form, params=get_standard_params(), special_params=get_special_params())
+                               result=result, form=form, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -551,10 +563,10 @@ def admin_delete_socialmedia(id):
                     f"{link_website}api/socialmedia/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
                 if "success" in message:
                     result = True
+                    set_footer_params()
                 message = " ".join(list(message.values()))
         return render_template('admin-delete-form.html', title='Удаление ссылки на соцсеть', message=message, form=form,
-                               name=name, result=result, params=get_standard_params(), link_back="/admin-website-settings",
-                               special_params=get_special_params())
+                               name=name, result=result, link_back="/admin-website-settings", special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -575,13 +587,14 @@ def admin_edit_address(id):
                         json={"place": form.address.data}).json()
                     if "success" in message:
                         result = True
+                        set_footer_params()
                     message = " ".join(list(message.values()))
             else:
                 form.address.data = address["place"]
         else:
             message = "Адрес не найден"
         return render_template('admin-address-form.html', title='Редактирование адреса', message=message,
-                               result=result, form=form, params=get_standard_params(), special_params=get_special_params())
+                               result=result, form=form, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -594,8 +607,7 @@ def admin_list_news():
         containerManager.delete_container(f"tmp/news_{current_user.email}")
         delete_folder(f"tmp/news_{current_user.email}")
         newslist = get(f"{link_website}api/newspage").json()
-        return render_template('admin-list-news.html', title='Новости', newslist=newslist, params=get_standard_params(),
-                               special_params=get_special_params())
+        return render_template('admin-list-news.html', title='Новости', newslist=newslist, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -618,13 +630,14 @@ def admin_create_news():
                             json={"image": "//".join(transport_images(f"tmp/news_{current_user.email}", f"news/news_{message['id']}", filenames))}).json()
                     result = True
                     containerManager.delete_container(f"news_{current_user.email}")
+                    set_other_params()
                 message = list(message.values())[-1]
             elif form.preview.data:
                 preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
         else:
             filenames = containerManager.get_container(f"news_{current_user.email}").values()
         return render_template('admin-news-form.html', title='Создание новости', message=message, preview_text=preview_text,
-                               form=form, result=result, filenames=filenames, image_len=len(filenames) + 1, params=get_standard_params(),
+                               form=form, result=result, filenames=filenames, image_len=len(filenames) + 1,
                                formatting_text_instruction=formatting_text_instruction, special_params=get_special_params())
     return you_dont_have_permission()
 
@@ -651,6 +664,7 @@ def admin_edit_news(id):
                         m = put(f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
                                 json={"image": "//".join(filenames)}).json()
                         containerManager.delete_container(f"tmp/news_{current_user.email}")
+                        set_other_params()
                     message = " ".join(list(message.values()))
                 elif form.preview.data:
                     preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
@@ -665,9 +679,8 @@ def admin_edit_news(id):
         else:
             message = "Новость не найдена"
         return render_template('admin-news-form.html', title='Редактирование новости', message=message, result=result,
-                               form=form, filenames=filenames, image_len=len(filenames) + 1, params=get_standard_params(),
-                               preview_text=preview_text,  formatting_text_instruction=formatting_text_instruction,
-                               special_params=get_special_params())
+                               form=form, filenames=filenames, image_len=len(filenames) + 1, preview_text=preview_text,
+                               formatting_text_instruction=formatting_text_instruction, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -689,11 +702,11 @@ def admin_delete_news(id):
                 if "success" in message:
                     result = True
                     delete_folder(f"news/news_{id}")
+                    set_other_params()
                 message = " ".join(list(message.values()))
                 containerManager.delete_container(f"news_{id}")
         return render_template('admin-delete-form.html', title='Удаление новости', message=message, form=form,
-                               result=result, name=name, params=get_standard_params(), link_back="/admin-list-news",
-                               special_params=get_special_params())
+                               result=result, name=name, link_back="/admin-list-news", special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -705,9 +718,8 @@ def admin_list_admin():
     if current_user.status > 0:
         adminlist = get(
             f"{link_website}api/admin/list/{current_user.email}/{password_manager.get_password(current_user.email)}").json()
-        return render_template('admin-list-admin.html', title='Новости', adminlist=adminlist, params=get_standard_params(),
-                               status=current_user.status, current_id=current_user.id, flag=(current_user.status > 0),
-                               special_params=get_special_params())
+        return render_template('admin-list-admin.html', title='Новости', adminlist=adminlist, status=current_user.status,
+                               current_id=current_user.id, flag=(current_user.status > 0), special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -742,7 +754,7 @@ def admin_change_password(id):
         else:
             message = list(admin.values())[0]
         return render_template('admin-change-password.html', title=f'Изменение пароля админу {name}', message=message,
-                               form=form, result=result, params=get_standard_params(), special_params=get_special_params())
+                               form=form, result=result, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -768,7 +780,7 @@ def admin_create_admin():
             else:
                 message = "Пароли не совпадают"
         return render_template('admin-admin-form.html', title='Создание админа', message=message, form=form,
-                               result=result, flag=True, params=get_standard_params(), special_params=get_special_params(),
+                               result=result, flag=True, special_params=get_special_params(),
                                roles=["Без прав", "Модератор", "Админ", "Владелец"][:current_user.status])
     return you_dont_have_permission()
 
@@ -804,9 +816,8 @@ def admin_edit_admin(id):
         else:
             message = list(admin.values())[0]
         return render_template('admin-admin-form.html', title='Редактирование админа', message=message, form=form,
-                               result=result, flag=False, params=get_standard_params(), admin_status=admin_status,
-                               roles=["Без прав", "Модератор", "Админ", "Владелец"][:current_user.status],
-                               special_params=get_special_params())
+                               result=result, flag=False, admin_status=admin_status, special_params=get_special_params(),
+                               roles=["Без прав", "Модератор", "Админ", "Владелец"][:current_user.status])
     return you_dont_have_permission()
 
 
@@ -834,8 +845,7 @@ def admin_delete_admin(id):
         else:
             name = "пользователь не найден"
         return render_template('admin-delete-form.html', title='Удаление админа', message=message, form=form,
-                               result=result, name=name, params=get_standard_params(), link_back="/admin-list-admin",
-                               special_params=get_special_params())
+                               result=result, name=name, link_back="/admin-list-admin", special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -856,7 +866,7 @@ def admin_list_smartpage(page_id):
                         contentdict[page["id"]] = [content]
         return render_template('admin-list-smartpage.html', title='Страницы', smartpagelist=smartpagelist,
                                contentdict=contentdict, types={"News": "Новости", "Image": "Картинки", "Text": "Текст", "Partner": "Партнёры"},
-                               params=get_standard_params(), page_id=page_id, special_params=get_special_params())
+                               page_id=page_id, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -869,19 +879,20 @@ def admin_create_smartpage():
         form = SmartpageForm()
         message, result, filenames = None, False, []
         if request.method == 'POST':
-            filenames = save_images(f"smartpage/smartpage_{current_user.email}", request.files)
+            filenames = save_images(f"tmp/smartpage/smartpage_{current_user.email}", request.files)
             message = post(f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email)}",
                            json={"heading": form.heading.data, "image": "//".join(filenames)}).json()
             if "success" in message:
-                filenames = transport_images(f"smartpage/smartpage_{current_user.email}", f"smartpage/smartpage_{message['id']}", filenames)
+                filenames = transport_images(f"tmp/smartpage/smartpage_{current_user.email}", f"smartpage/smartpage_{message['id']}", filenames)
                 m = put(f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email)}/{message['id']}",
                         json={"image": "//".join(filenames)}).json()
                 result = True
-                containerManager.delete_container(f"smartpage/smartpage_{current_user.email}")
+                delete_folder(f"tmp/smartpage/smartpage_{current_user.email}")
+                containerManager.delete_container(f"tmp/smartpage/smartpage_{current_user.email}")
+                set_other_params()
             message = list(message.values())[-1]
         return render_template('admin-smartpage-form.html', title='Создание страницы', message=message, form=form,
-                               result=result, filenames=filenames, image_len=len(filenames) + 1, params=get_standard_params(),
-                               special_params=get_special_params())
+                               result=result, filenames=filenames, image_len=len(filenames) + 1, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -896,22 +907,26 @@ def admin_edit_smartpage(id):
         message, result, filenames, filename = None, False, [], None
         if "message" not in smartpage:
             if request.method == 'POST':
-                filenames = save_images(f"smartpage/smartpage_{id}", request.files)
+                filenames = save_images(f"tmp/smartpage/smartpage_{id}", request.files, auto_delete=True)
                 message = put(f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
                               json={"heading": form.heading.data, "image": "//".join(filenames)}).json()
                 if "success" in message:
+                    filenames = transport_images(f"tmp/smartpage/smartpage_{id}", f"smartpage/smartpage_{id}", filenames)
+                    m = put(f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
+                            json={"image": "//".join(filenames)}).json()
                     result = True
-                    delete_everything_except(f"smartpage/smartpage_{id}", filenames)
+                    delete_folder(f"tmp/smartpage/smartpage_{id}")
+                    set_other_params()
                 message = " ".join(list(message.values()))
             else:
                 form.heading.data = smartpage["heading"]
-                filenames = smartpage["image"].split("//")
-                containerManager.add_container(f"smartpage/smartpage_{id}", filenames)
+                filenames = copy_files(f"smartpage/smartpage_{id}", f"tmp/smartpage/smartpage_{id}", smartpage["image"].split("//"))
+                containerManager.add_container(f"tmp/smartpage/smartpage_{id}", filenames, auto_delete=True)
         else:
             message = "Страница не найдена"
         return render_template('admin-smartpage-form.html', title='Редактирование страницы', message=message, form=form,
                                result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1,
-                               params=get_standard_params(), special_params=get_special_params())
+                               special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -937,10 +952,10 @@ def admin_delete_smartpage(id):
                     result = True
                     containerManager.delete_container(f"smartpage/smartpage_{id}")
                     delete_folder(f"smartpage/smartpage_{id}")
+                    set_other_params()
                 message = list(message.values())[-1]
         return render_template('admin-delete-form.html', title='Удаление страницы', message=message, form=form,
-                               result=result, name=name, params=get_standard_params(), link_back="/admin-list-smartpage/0",
-                               special_params=get_special_params())
+                               result=result, name=name, link_back="/admin-list-smartpage/0", special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -967,8 +982,8 @@ def admin_create_content(page_id):
                 containerManager.delete_container(f"content/content_{current_user.email}")
             message = list(message.values())[-1]
         return render_template('admin-content-form.html', title='Создание контента', message=message, form=form,
-                               result=result, flag=True, filenames=filenames, image_len=len(filenames) + 1, params=get_standard_params(),
-                               page_id=page_id, special_params=get_special_params())
+                               result=result, flag=True, filenames=filenames, image_len=len(filenames) + 1, page_id=page_id,
+                               special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -1008,8 +1023,7 @@ def admin_edit_content(id):
         return redirect("/login")
     if current_user.status > 0:
         form = ContentForm()
-        content = get(
-            f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        content = get(f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
         message, result, filenames, page_id = None, False, [], 0
         if "message" not in content:
             if request.method == 'POST':
@@ -1029,10 +1043,10 @@ def admin_edit_content(id):
                     filenames = content["image"].split("//")
                 containerManager.add_container(f"content/content_{id}", filenames)
         else:
-            message = "Контент не найден"
+            message = list(content.values())[-1]
         return render_template('admin-content-form.html', title='Редактирование контента', message=message, form=form,
                                result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1,
-                               params=get_standard_params(), page_id=page_id, special_params=get_special_params())
+                               page_id=page_id, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -1058,8 +1072,7 @@ def admin_delete_content(id):
                     containerManager.delete_container(f"content/content_{id}")
                 message = " ".join(list(message.values()))
         return render_template('admin-delete-form.html', title='Удаление контента', message=message, form=form,
-                               result=result, name=name, params=get_standard_params(),
-                               link_back=f"/admin-list-smartpage/{page_id}", special_params=get_special_params())
+                               result=result, name=name, link_back=f"/admin-list-smartpage/{page_id}", special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -1070,8 +1083,7 @@ def admin_list_partner():
         return redirect("/login")
     if current_user.status > 0:
         partnerlist = get(f"{link_website}api/partner").json()
-        return render_template('admin-list-partner.html', title='Партнёры', partnerlist=partnerlist, params=get_standard_params(),
-                               special_params=get_special_params())
+        return render_template('admin-list-partner.html', title='Партнёры', partnerlist=partnerlist, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -1096,12 +1108,13 @@ def admin_create_partner():
                          json={"image": "//".join(filenames2), 'logo': "//".join(filenames1)}).json()
                 containerManager.delete_container(cont_name_image)
                 containerManager.delete_container(cont_name_logo)
-                delete_folder(f"partner/{current_user.email}")
+                delete_folder(f"partner/partner_{current_user.email}")
                 result = True
+                set_other_params()
             message = list(message.values())[-1]
         return render_template('admin-partner-form.html', title='Создание партнёра', message=message, form=form,
                                result=result, flag=True, filenames1=filenames1, filenames2=filenames2, image_len=len(filenames2) + 1,
-                               params=get_standard_params(), special_params=get_special_params())
+                               special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -1129,6 +1142,7 @@ def admin_edit_partner(id):
                     delete_everything_except(f"partner/partner_{id}/logo", filenames1)
                     delete_everything_except(f"partner/partner_{id}/image", filenames2)
                     result = True
+                    set_other_params()
                 message = " ".join(list(message.values()))
             else:
                 form.name.data = partner["name"]
@@ -1144,7 +1158,7 @@ def admin_edit_partner(id):
             message = "Партнёр не найден"
         return render_template('admin-partner-form.html', title='Редактирование партнёра', message=message, form=form,
                                result=result, flag=False, filenames1=filenames1, filenames2=filenames2,
-                               image_len=len(filenames2) + 1, params=get_standard_params(), special_params=get_special_params())
+                               image_len=len(filenames2) + 1, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -1167,11 +1181,12 @@ def admin_delete_partner(id):
                     result = True
                     delete_folder(f"partner/partner_{id}/image")
                     delete_folder(f"partner/partner_{id}/logo")
+                    delete_folder(f"partner/partner_{id}")
+                    set_other_params()
                 message = " ".join(list(message.values()))
                 containerManager.delete_container(f"partner_{id}")
         return render_template('admin-delete-form.html', title='Удаление партнёра', message=message, form=form,
-                               result=result, name=name, params=get_standard_params(), link_back="/admin-list-partner",
-                               special_params=get_special_params())
+                               result=result, name=name, link_back="/admin-list-partner", special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -1182,8 +1197,7 @@ def admin_auditlog():
         return redirect("/login")
     auditlogs = get(
         f"{link_website}api/auditlog/{current_user.email}/{password_manager.get_password(current_user.email)}").json()
-    return render_template('admin-list-auditlog.html', title='Журнал аудита', auditlogs=auditlogs, params=get_standard_params(),
-                           special_params=get_special_params())
+    return render_template('admin-list-auditlog.html', title='Журнал аудита', auditlogs=auditlogs, special_params=get_special_params())
 
 
 @app.route("/admin-list-feedback")
@@ -1193,8 +1207,7 @@ def admin_feedback():
         return redirect("/login")
     feedbacks = get(
         f"{link_website}api/feedback/{current_user.email}/{password_manager.get_password(current_user.email)}").json()
-    return render_template('admin-list-feedback.html', title='Отзывы', feedbacks=feedbacks, params=get_standard_params(),
-                           special_params=get_special_params())
+    return render_template('admin-list-feedback.html', title='Отзывы', feedbacks=feedbacks, special_params=get_special_params())
 
 
 @app.route("/admin-delete-feedback/<int:id>", methods=['GET', 'POST'])
@@ -1213,15 +1226,14 @@ def admin_delete_feedback(id):
                 message = delete(
                     f"{link_website}api/feedback/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
                 if "success" in message:
+                    delete_folder(f"feedback/feedback_{feedback['id']}")
                     result = True
                 message = " ".join(list(message.values()))
                 images = feedback["image"]
                 for image in images.split("//"):
                     delete_img(image)
-                # containerManager.delete_container(f"feedback_{id}")
         return render_template('admin-delete-form.html', title='Удаление отзыва', message=message, form=form,
-                               result=result, name=name, params=get_standard_params(), link_back="/admin-list-feedback",
-                               special_params=get_special_params())
+                               result=result, name=name, link_back="/admin-list-feedback", special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -1233,8 +1245,7 @@ def view_feedback(id):
     feedback = get(f"{link_website}api/feedback/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
     if "message" in feedback:
         return page_not_found()
-    return render_template('feedback.html', title=feedback["heading"], params=get_standard_params(), feedback=feedback,
-                           special_params=get_special_params())
+    return render_template('feedback.html', title=feedback["heading"], feedback=feedback, special_params=get_special_params())
 
 
 @app.route("/write-feedback/<string:code>", methods=['GET', 'POST'])
@@ -1242,15 +1253,18 @@ def write_feedback(code):
     form = FeedbackForm()
     message, result, filenames, preview_text = None, False, [], None
     if request.method == 'POST':
-        filenames = save_images(f"feedback_{code}", request.files, False, 5)
+        filenames = save_images(f"tmp/feedback/feedback_{code}", request.files, r_img=False, max_image=5, auto_delete=True, gif=False)
+        delete_everything_except(f"tmp/feedback/feedback_{code}", filenames)
         if form.submit.data:
             message = post(f"{link_website}api/feedback",
                            json={"email": form.email.data, "fullname": form.fullname.data, "heading": form.heading.data,
                                  "image": "//".join(filenames), "text": form.text.data, "code": form.code.data}).json()
             if "success" in message:
+                filenames = transport_images(f"tmp/feedback/feedback_{code}", f"feedback/feedback_{message['id']}", filenames)
+                m = put(f"{link_website}api/feedback/{message['id']}/{form.code.data}", json={"image": "//".join(filenames)}).json()
                 result = True
                 message = "Спасибо за отзыв"
-                containerManager.delete_container(f"feedback_{code}")
+                containerManager.delete_container(f"feedback/feedback_{code}")
             else:
                 message = " ".join(list(message.values()))
         elif form.getcode.data:
@@ -1262,17 +1276,17 @@ def write_feedback(code):
     page = get(f"{link_website}api/smartpage/6").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
     return render_template('write-feedback.html', title="Отзыв", page=page, content=content,
-                           params=get_standard_params(), result=result, flag=True, message=message, form=form,
-                           preview_text=preview_text, filenames=filenames, image_len=len(filenames) + 1,
-                           special_params=get_special_params(), formatting_text_instruction=formatting_text_instruction)
+                           result=result, flag=True, message=message, form=form, preview_text=preview_text,
+                           filenames=filenames, image_len=len(filenames) + 1, special_params=get_special_params(),
+                           formatting_text_instruction=formatting_text_instruction)
 
 
 @app.route("/contacts")
 def contacts():
     page = get(f"{link_website}api/smartpage/6").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
-    return render_template('contacts.html', title=page["heading"], page=page, content=content,
-                           params=get_standard_params(), code=create_random_name(10), special_params=get_special_params())
+    return render_template('contacts.html', title=page["heading"], page=page, content=content, code=create_random_name(15),
+                           special_params=get_special_params())
 
 
 @app.route("/agro_and_agro-tourism_sector")
@@ -1280,44 +1294,39 @@ def agro_and_agro_tourism_sector():
     page = get(f"{link_website}api/smartpage/2").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
     return render_template('agro_and_agro_tourism_sector.html', title=page["heading"], page=page, content=content,
-                           params=get_standard_params(), special_params=get_special_params())
+                           special_params=get_special_params())
 
 
 @app.route("/partners")
 def partners():
     page = get(f"{link_website}api/smartpage/3").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
-    return render_template('partners.html', title=page["heading"], page=page, content=content,
-                           params=get_standard_params(), special_params=get_special_params())
+    return render_template('partners.html', title=page["heading"], page=page, content=content, special_params=get_special_params())
 
 
 @app.route("/all_news")
 def all_news():
     page = get(f"{link_website}api/smartpage/4").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
-    return render_template('all_news.html', title=page["heading"], page=page, content=content,
-                           params=get_standard_params(), special_params=get_special_params())
+    return render_template('all_news.html', title=page["heading"], page=page, content=content, special_params=get_special_params())
 
 
 @app.route("/team")
 def team():
     page = get(f"{link_website}api/smartpage/5").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
-    return render_template('team.html', title=page["heading"], page=page, content=content, params=get_standard_params(),
-                           special_params=get_special_params())
+    return render_template('team.html', title=page["heading"], page=page, content=content, special_params=get_special_params())
 
 
 @app.route("/")
 def website_main():
     page = get(f"{link_website}api/smartpage/1").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
-    return render_template('main-page.html', title=page["heading"], page=page, content=content, params=get_standard_params(),
-                           special_params=get_special_params())
+    return render_template('main-page.html', title=page["heading"], page=page, content=content, special_params=get_special_params())
 
 
 @app.route("/page/<string:link>")
 def page_by_link(link):
-    containerManager.clear_container(app.config['UPLOAD_FOLDER'])
     smartpages = get(f"{link_website}api/smartpage").json()
     if link == smartpages[0]["link"]:
         return redirect("/")
@@ -1334,7 +1343,7 @@ def page_by_link(link):
     page = get(f"{link_website}api/smartpage/{link}").json()
     content = get(f"{link_website}api/content/{page['id']}").json()
     return render_template('generated-page.html', title=page["heading"], page=page, content=content,
-                           params=get_standard_params(), special_params=get_special_params())
+                           special_params=get_special_params())
 
 
 @app.route("/news-page/<string:link>")
@@ -1342,8 +1351,7 @@ def news_page(link):
     news = get(f"{link_website}api/newspage/{link}").json()
     if "message" in news:
         return page_not_found()
-    return render_template('news.html', title=news["heading"], params=get_standard_params(), news=news,
-                           special_params=get_special_params())
+    return render_template('news.html', title=news["heading"], news=news, special_params=get_special_params())
 
 
 @app.route('/logout')
