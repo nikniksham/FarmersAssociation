@@ -116,6 +116,17 @@ def set_footer_params():
     special_params["link"] = link_website
 
 
+def set_seo_params(filename='seo.txt'):
+    special_params["seo"] = {}
+    with open(filename, 'r', encoding="utf-8") as file:
+        special_params["seo"]["icon"] = file.readline()[:-1]
+        special_params["seo"]["link_icon"] = file.readline()[:-1]
+        special_params["seo"]["title"] = file.readline()[:-1]
+        special_params["seo"]["description"] = file.readline()[:-1]
+        special_params["seo"]["tegs"] = file.readline()[:-1]
+
+set_seo_params()
+
 def set_other_params():
     special_params["news"] = get(f"{link_website}api/newspage/0/9").json()
     special_params["partner"] = get(f"{link_website}api/partner").json()
