@@ -9,7 +9,7 @@
         <textarea name=description rows="3" cols="50"></textarea>
     <p>Тэги</p>
     <textarea name=tags rows="3" cols="50"></textarea>
-    <p>Иконка</p>
+    <p>Иконка сайта</p>
     <div class="input-file-row-1">
         <div class="upload-file-container">
             {% if filenames1 == [] %}
@@ -23,14 +23,15 @@
     <p>Иконка для ссылок</p>
     <div class="input-file-row-1">
         <div class="upload-file-container">
-            {% if filenames1 == [] %}
+            {% if filenames2 == [] %}
             <img id="icon2" class="this-is-image" src="#" alt="">
             {% else %}
-            <img id="icon2" class="this-is-image visible " src="/static/img/{{filenames1[0]}}" alt="">
+            <img id="icon2" class="this-is-image visible " src="/static/img/{{filenames2[0]}}" alt="">
             {% endif %}
             <input type=file name=icon2 class="photo" id="iconInput2">
         </div>
     </div>
+
     <div class="submit-block">
         <button type="submit">Сохранить</button>
     </div>

@@ -1,6 +1,7 @@
 import datetime
 import os
 from PIL import Image
+import requests, json
 
 
 class User:
@@ -92,6 +93,30 @@ class DeleteSuperfluousImage:
                 for image in images:
                     if image not in ["", "standard.png"] and os.path.exists(f"{folder}{image}"):
                         os.remove(f"{folder}{image}")
+
+
+def get_coord(address):
+    geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
+
+    geocoder_params = {
+        "apikey": "7bc1f244-7587-4821-bf8b-651962a49286",
+        "geocode": address,
+        "format": "json"}
+
+    response = requests.get(geocoder_api_server, params=geocoder_params)
+
+    if not response:
+        return {"message": f"Запрос с кодом {response.status_code}"}
+
+    json_response = response.json()
+    if json_response["response"]["GeoObjectCollection"]["metaDataProperty"]["GeocoderResponseMetaData"]["found"] == '0':
+        return {"message": "Адрес не найден"}
+
+    toponym = json_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
+    toponym_coodrinates = toponym["Point"]["pos"]
+    print([elem for elem in toponym["metaDataProperty"]["GeocoderMetaData"]["Address"]["Components"] if elem["kind"] == "province"][0]["name"])
+    print(toponym_coodrinates)
+    return {"success": toponym_coodrinates}
 
 
 def text_transform(text, filenames, path):  # Я не знаю, как это работает, это писал безумный человек

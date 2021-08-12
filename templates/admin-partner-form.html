@@ -29,6 +29,22 @@
             </div>
             {% endfor %}
 
+            {{ form.occupation.label }}<br>
+            {{ form.occupation(class="form-control") }}<br>
+            {% for error in form.occupation.errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endfor %}
+
+            {{ form.address.label }}<br>
+            {{ form.address(class="form-control") }}<br>
+            {% for error in form.address.errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endfor %}
+
             {{ form.link.label }}<br>
             {{ form.link(class="form-control") }}<br>
             {% for error in form.link.errors %}

@@ -37,7 +37,7 @@ from data.address import Address
 from data.email import Email
 from data.phone import Phone
 from data.socialmedia import Socialmedia
-from main import PasswordManager, ManagerContainer, text_transform
+from main import PasswordManager, ManagerContainer, text_transform, get_coord
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm, \
     StartForm, PhoneForm, AddressForm, EmailForm, SocialmediaForm
 from werkzeug.utils import secure_filename
@@ -1110,22 +1110,27 @@ def admin_create_partner():
         form = PartnerForm()
         message, result, filenames1, filenames2 = None, False, [], []
         if request.method == 'POST':
+            coord = get_coord(form.address.data)
             cont_name_logo, cont_name_image = f"tmp/partner/partner_{current_user.email}/logo", f"tmp/partner/partner_{current_user.email}/image"
             filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
-            message = post(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}",
-                           json={"name": form.name.data, "logo": "//".join(filenames1), "image": "//".join(filenames2),
-                                 "text": form.text.data, "link": form.link.data}).json()
-            if "success" in message:
-                filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{message['id']}/logo", filenames1), \
-                                                 transport_images(cont_name_image, f"partner/partner_{message['id']}/image", filenames2)
-                m1 = put(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}/{message['id']}",
-                         json={"image": "//".join(filenames2), 'logo': "//".join(filenames1)}).json()
-                containerManager.delete_container(cont_name_image)
-                containerManager.delete_container(cont_name_logo)
-                delete_folder(f"partner/partner_{current_user.email}")
-                result = True
-                set_other_params()
-            message = list(message.values())[-1]
+            if "success" in coord:
+                message = post(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}",
+                               json={"name": form.name.data, "logo": "//".join(filenames1), "image": "//".join(filenames2),
+                                     "text": form.text.data, "link": form.link.data, "coord": coord['success'],
+                                     "occupation": form.occupation.data, "address": form.address.data}).json()
+                if "success" in message:
+                    filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{message['id']}/logo", filenames1), \
+                                                     transport_images(cont_name_image, f"partner/partner_{message['id']}/image", filenames2)
+                    m1 = put(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}/{message['id']}",
+                             json={"image": "//".join(filenames2), 'logo': "//".join(filenames1)}).json()
+                    containerManager.delete_container(cont_name_image)
+                    containerManager.delete_container(cont_name_logo)
+                    delete_folder(f"partner/partner_{current_user.email}")
+                    result = True
+                    set_other_params()
+                message = list(message.values())[-1]
+            else:
+                message = coord["message"]
         return render_template('admin-partner-form.html', title='Создание партнёра', message=message, form=form,
                                result=result, flag=True, filenames1=filenames1, filenames2=filenames2, image_len=len(filenames2) + 1,
                                special_params=get_special_params())
@@ -1145,23 +1150,30 @@ def admin_edit_partner(id):
         if "message" not in partner:
             if request.method == 'POST':
                 filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo)
-                print(filenames2, filenames1)
-                message = put(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                              json={"name": form.name.data, "image": "//".join(filenames2), "logo": "//".join(filenames1),
-                                    "text": form.text.data, "link": form.link.data}).json()
-                if "success" in message:
-                    print(filenames1, filenames2, 10000)
-                    filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{id}/logo", filenames1), \
-                                             transport_images(cont_name_image, f"partner/partner_{id}/image", filenames2)
-                    m1 = put(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                             json={"image": "//".join(filenames2), 'logo': "//".join(filenames1)}).json()
-                    result = True
-                    set_other_params()
-                message = " ".join(list(message.values()))
+                coord = get_coord(form.address.data) if form.address.data != partner["address"] else {"success": None}
+                if "success" in coord:
+                    if not coord["success"]:
+                        coord["success"] = partner["coord"]
+                    message = put(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
+                                  json={"name": form.name.data, "image": "//".join(filenames2), "logo": "//".join(filenames1),
+                                        "text": form.text.data, "link": form.link.data}).json()
+                    if "success" in message:
+                        print(filenames1, filenames2, 10000)
+                        filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{id}/logo", filenames1), \
+                                                 transport_images(cont_name_image, f"partner/partner_{id}/image", filenames2)
+                        m1 = put(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
+                                 json={"image": "//".join(filenames2), 'logo': "//".join(filenames1)}).json()
+                        result = True
+                        set_other_params()
+                    message = " ".join(list(message.values()))
+                else:
+                    message = coord["message"]
             else:
                 form.name.data = partner["name"]
                 form.text.data = partner["text"]
                 form.link.data = partner["link"]
+                form.address.data = partner["address"]
+                form.occupation.data = partner["occupation"]
                 filenames1 = copy_files(f"partner/partner_{id}/logo", cont_name_logo, partner["logo"].split("//"))
                 filenames2 = copy_files(f"partner/partner_{id}/image", cont_name_image, partner["image"].split("//"))
                 print(filenames1, "split logo")
