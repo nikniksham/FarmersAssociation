@@ -476,7 +476,9 @@ footer p {
 }
 .render-text div {
     text-align: center;
-    margin: 10px 0;
+    max-width: 767px;
+    margin: auto;
+    border-radius: 15px;
 }
 .render-text img {
     width: 70%;
