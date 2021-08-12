@@ -114,9 +114,9 @@ def get_coord(address):
 
     toponym = json_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
     toponym_coodrinates = toponym["Point"]["pos"]
-    print([elem for elem in toponym["metaDataProperty"]["GeocoderMetaData"]["Address"]["Components"] if elem["kind"] == "province"][0]["name"])
-    print(toponym_coodrinates)
-    return {"success": toponym_coodrinates}
+    province = [elem for elem in toponym["metaDataProperty"]["GeocoderMetaData"]["Address"]["Components"] if elem["kind"] == "province"][0]["name"]
+    # print(toponym_coodrinates, province)
+    return {"success": [toponym_coodrinates, province]}
 
 
 def text_transform(text, filenames, path):  # Я не знаю, как это работает, это писал безумный человек

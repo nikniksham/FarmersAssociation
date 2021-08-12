@@ -1127,8 +1127,9 @@ def admin_create_partner():
             if "success" in coord:
                 message = post(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}",
                                json={"name": form.name.data, "logo": "//".join(filenames1), "image": "//".join(filenames2),
-                                     "text": form.text.data, "link": form.link.data, "coord": coord['success'],
-                                     "occupation": form.occupation.data, "address": form.address.data}).json()
+                                     "text": form.text.data, "link": form.link.data, "coord": coord['success'][0],
+                                     "occupation": form.occupation.data, "address": form.address.data,
+                                     "province": coord["success"][1]}).json()
                 if "success" in message:
                     filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{message['id']}/logo", filenames1), \
                                                      transport_images(cont_name_image, f"partner/partner_{message['id']}/image", filenames2)
@@ -1161,15 +1162,15 @@ def admin_edit_partner(id):
         if "message" not in partner:
             if request.method == 'POST':
                 filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo)
-                coord = get_coord(form.address.data) if form.address.data != partner["address"] else {"success": None}
+                coord = get_coord(form.address.data) if form.address.data != partner["address"] else {"success": [None, None]}
                 if "success" in coord:
-                    if not coord["success"]:
-                        coord["success"] = partner["coord"]
+                    if coord["success"] == [None, None]:
+                        coord["success"] = [partner["coord"], partner["province"]]
                     message = put(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
                                   json={"name": form.name.data, "image": "//".join(filenames2), "logo": "//".join(filenames1),
-                                        "text": form.text.data, "link": form.link.data}).json()
+                                        "text": form.text.data, "link": form.link.data, "address": form.address.data,
+                                        "coord": coord["success"][0], "province": coord["success"][1]}).json()
                     if "success" in message:
-                        print(filenames1, filenames2, 10000)
                         filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{id}/logo", filenames1), \
                                                  transport_images(cont_name_image, f"partner/partner_{id}/image", filenames2)
                         m1 = put(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
@@ -1187,8 +1188,6 @@ def admin_edit_partner(id):
                 form.occupation.data = partner["occupation"]
                 filenames1 = copy_files(f"partner/partner_{id}/logo", cont_name_logo, partner["logo"].split("//"))
                 filenames2 = copy_files(f"partner/partner_{id}/image", cont_name_image, partner["image"].split("//"))
-                print(filenames1, "split logo")
-                print(filenames2, "split image")
                 containerManager.add_container(cont_name_image, filenames2)
                 containerManager.add_container(cont_name_logo, filenames1)
         else:

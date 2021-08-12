@@ -15,6 +15,7 @@ class Partner(SqlAlchemyBase, SerializerMixin):
     link = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     address = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     coord = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    province = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     occupation = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.now())
     author_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("user.id"))
