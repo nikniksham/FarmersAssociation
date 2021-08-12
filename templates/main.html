@@ -56,15 +56,15 @@
                 <div class="col-sm-12 col-md-3 col-xl-4">
                     <div class="row">
                         {% for phone in special_params["numbers"] %}
-                        <p class="footer-title">Телефон</p>
-                        <div class="col-md-12 col-xl-6">
+                        <div class="col-md-12 col-xl-5">
+                            <p class="footer-title">Телефон</p>
                             <a href="tel:{{phone['number']}}">{{phone['number']}}</a>
                         </div>
                         {% endfor %}
 
                         {% for email in special_params["emails"] %}
-                        <p class="footer-title">e-mail</p>
-                        <div class="col-md-12 col-xl-6">
+                        <div class="col-md-12 col-xl-7">
+                            <p class="footer-title">e-mail</p>
                             <a href="mailto:{{email['email_address']}}">{{email['email_address']}}</a>
                         </div>
                         {% endfor %}
