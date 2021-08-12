@@ -3,6 +3,11 @@ var speedPartners = 2000
 function openPopUp(name) {
     $('#'+name).toggleClass('visible');
     $('.carousel').slick('refresh');
+    if ($('#'+name).hasClass("visible")) {
+        $("body").addClass("stop-scroll-2");
+    } else if (!$('#'+name).hasClass("visible")) {
+        $("body").removeClass("stop-scroll-2");
+    }
 }
 
 $(document).ready(function(){

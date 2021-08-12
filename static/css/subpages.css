@@ -13,6 +13,7 @@
 }
 
 .partner {
+    overflow-x: auto;
     position: fixed;
     left: 0;
     top: 50px;
@@ -87,7 +88,7 @@
 
 .partner-Pop-up .down {
     position: absolute;
-    bottom: -10000px;
+    bottom: -50px;
     left: 0;
     height: 10000px;
     width: 100%;
@@ -97,7 +98,7 @@
     position: absolute;
     top: 0;
     left: -10000px;
-    height: 10000px;
+    calc(100% + 50px);
     width: 10000px;
 }
 
@@ -105,6 +106,6 @@
     position: absolute;
     top: 0;
     right: -10000px;
-    height: 10000px;
+    calc(100% + 50px);
     width: 10000px;
 }
