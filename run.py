@@ -122,7 +122,17 @@ def set_other_params():
     special_params["smartpages"] = get(f"{link_website}api/smartpage").json()
 
 
-# Получение пользователя
+def get_image_name(link):
+    link = link.split("//")
+    images = {"vk.com": "vk.png", "t.me": "telegram.png", "instagram.com": "instagram.png",
+              "facebook.com": "facebook.png", "twitter.com": "twitter.png"}
+    if len(link) > 1:
+        for key in images.keys():
+            if key in link[1]:
+                return f"socialmedia/{images[key]}"
+    return "socialmedia/socialmedia.png"
+
+
 @login_manager.user_loader
 def load_user(user_id):
     session = db_session.create_session()
@@ -508,7 +518,7 @@ def admin_create_socialmedia():
             if form.submit.data:
                 message = post(
                     f"{link_website}api/socialmedia/{current_user.email}/{password_manager.get_password(current_user.email)}",
-                    json={"icon_type": form.icon_type.data, "link": form.link.data}).json()
+                    json={"icon_type": get_image_name(form.link.data), "link": form.link.data}).json()
                 if "success" in message:
                     result = True
                     set_footer_params()
@@ -532,13 +542,12 @@ def admin_edit_socialmedia(id):
                 if form.submit.data:
                     message = put(
                         f"{link_website}api/socialmedia/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                        json={"icon_type": form.icon_type.data, "link": form.link.data}).json()
+                        json={"icon_type": get_image_name(form.link.data), "link": form.link.data}).json()
                     if "success" in message:
                         result = True
                         set_footer_params()
                     message = " ".join(list(message.values()))
             else:
-                form.icon_type.data = socialmedia["icon_type"]
                 form.link.data = socialmedia["link"]
         else:
             message = "Ссылка на соцсесть не найдена"
