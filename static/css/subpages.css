@@ -97,7 +97,7 @@
     position: absolute;
     top: 0;
     left: -10000px;
-    calc(100% + 50px);
+    height: calc(100% + 50px);
     width: 10000px;
 }
 
@@ -105,6 +105,6 @@
     position: absolute;
     top: 0;
     right: -10000px;
-    calc(100% + 50px);
+    height: calc(100% + 50px);
     width: 10000px;
 }
