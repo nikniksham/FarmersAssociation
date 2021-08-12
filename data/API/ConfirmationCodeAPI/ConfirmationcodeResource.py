@@ -1,11 +1,8 @@
 import mimetypes
 import os
-
-from flask import jsonify
-from flask_restful import Resource, abort
-from email.mime.multipart import MIMEMultipart  # Многокомпонентный объект
-from email.mime.text import MIMEText  # Текст/HTML
-from email.mime.image import MIMEImage  # Изображения
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
 from data import db_session
 from data.confirmationcode import ConfirmationCode
 import random
@@ -21,8 +18,6 @@ regex = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
 class CodeForConfirmation:
     def __init__(self):
         self.smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
-        self.smtpObj.starttls()
-        self.smtpObj.login('farmersassociationmoscowregion@gmail.com', 'x17dfWqpc94')
 
     def create_code(self, email):
         session = db_session.create_session()
@@ -66,7 +61,10 @@ class CodeForConfirmation:
         </html>"""
         msg.attach(MIMEText(html_code, 'html', 'utf-8'))
         if re.search(regex, email):
+            self.smtpObj.starttls()
+            self.smtpObj.login('farmersassociationmoscowregion@gmail.com', 'x17dfWqpc94')
             self.smtpObj.send_message(msg)
+            self.smtpObj.quit()
             return True
         return False
 

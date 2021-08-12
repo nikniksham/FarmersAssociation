@@ -21,7 +21,7 @@ class AdminForm(StartForm):
     email = StringField('Почта', validators=[DataRequired("Сюда надо написать почту")])
     password = PasswordField('Пароль', validators=[DataRequired("Введите пароль")])
     password_again = PasswordField('Повторите пароль', validators=[DataRequired("Введите пароль повторно")])
-    password_current = PasswordField('Текущий пароль', validators=[DataRequired("Введите текущий пароль")])
+    password_current = PasswordField('Ваш пароль', validators=[DataRequired("Введите текущий пароль")])
     status = SelectField("Права доступа",
                          choices=[(i, ["Без прав", "Модератор", "Админ", "Владелец"][i]) for i in range(min(4, stat))])
 
