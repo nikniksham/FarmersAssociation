@@ -22,7 +22,7 @@ body {
 
 }
 
-.stop-scroll {
+.stop-scroll-1, .stop-scroll-2 {
     overflow: hidden;
 }
 
