@@ -72,11 +72,13 @@
         </div>
         {% endfor %}
     </div>
+    {% if special_params["news"].length == 9%}
     <div class="more-news">
         <a onclick="add_news()">
             <button>Больше новостей</button>
         </a>
     </div>
+    {% endif %}
     {% elif block['type'] == "Text" %}
     <div class="text-block">
         <p>{{block['text']}}</p>
