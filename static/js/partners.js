@@ -16,6 +16,8 @@ function openPopUp(name) {
 }
 
 $(document).ready(function(){
+    $(".partner").click(openPopUp($(this).attr('id')));
+
     $('.partners-carousel').slick({
         dots: false,
         infinite: true,
