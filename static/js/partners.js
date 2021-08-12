@@ -2,7 +2,6 @@ var speedPartners = 2000
 var deltaX = 0
 
 function openPopUp(name) {
-    console.log(deltaX, Math.abs(deltaX))
     if (Math.abs(deltaX) <= 10) {
         $('#'+name).toggleClass('visible');
         $('.carousel').slick('refresh');
