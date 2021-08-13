@@ -52,22 +52,31 @@ def find_by_id(id, session):
 
 
 class FeedbackResource(Resource):
-    def get(self, email, password, feedback_id):
-        admin, session = check_admin_status(email, password)
-        feedback, session = find_by_id(feedback_id, session)
-        news_dict = feedback.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
-        news_dict["text_render"] = text_transform(feedback.text, feedback.image.split("//"), path)
-        return jsonify(news_dict)
-
-    def delete(self, email, password, feedback_id):
-        admin, session = check_admin_status(email, password)
-        feedback, session = find_by_id(feedback_id, session)
-        fullname = feedback.fullname
-        session.delete(feedback)
-        session.commit()
-        add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет отзыв {fullname}", admin,
-                     datetime.datetime.now())
-        return jsonify({"success": f"Отзыв {fullname} успешно удален"})
+    def put(self):
+        args = parser_feedback.parse_args()
+        if not all(args[key] is not None for key in ['admin_email', 'action']):
+            raise_error('Пропущены некоторые важные аргументы')
+        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        if args['action'] == "get":
+            feedback, session = find_by_id(args["feedback_id"], session)
+            news_dict = feedback.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
+            news_dict["text_render"] = text_transform(feedback.text, feedback.image.split("//"), path)
+            return jsonify(news_dict)
+        elif args['action'] == "getlist":
+            feedbacks, dict_list = session.query(Feedback).all()[::-1], []
+            for feedback in feedbacks:
+                news_dict = feedback.to_dict(
+                    only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
+                news_dict["text_render"] = text_transform(feedback.text, feedback.image.split("//"), path)
+                dict_list.append(news_dict)
+            return jsonify(dict_list)
+        elif args['action'] == 'delete':
+            feedback, session = find_by_id(args["feedback_id"], session)
+            session.delete(feedback)
+            session.commit()
+            add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет отзыв {feedback.heading} от пользователя {feedback.fullname}",
+                         admin, datetime.datetime.now())
+            return jsonify({"success": f"Отзыв {feedback.heading} от пользователя {feedback.fullname} успешно удален"})
 
 
 class FeedbackTransportImage(Resource):
@@ -86,17 +95,6 @@ class FeedbackTransportImage(Resource):
         print(feedback.image)
         session.commit()
         return jsonify({"success": "картинки успешно изменены"})
-
-
-class FeedbackListRecourse(Resource):
-    def get(self, email, password):
-        admin, session = check_admin_status(email, password)
-        feedbacks, dict_list = session.query(Feedback).all()[::-1], []
-        for feedback in feedbacks:
-            news_dict = feedback.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
-            news_dict["text_render"] = text_transform(feedback.text, feedback.image.split("//"), path)
-            dict_list.append(news_dict)
-        return jsonify(dict_list)
 
 
 class CreateFeedbackResource(Resource):

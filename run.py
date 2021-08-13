@@ -13,8 +13,7 @@ from data.API.AuditlogAPI.AuditlogResource import AuditlogResource
 from data.API.ConfirmationCodeAPI.ConfirmationcodeResource import CodeForConfirmation
 from data.API.ContentAPI.ContentResource import CreateContentResource, ContentResource, ContentListRecourse, \
     ContentListRecourseId
-from data.API.FeedbackAPI.FeedbackResource import FeedbackResource, FeedbackListRecourse, CreateFeedbackResource, \
-    FeedbackTransportImage
+from data.API.FeedbackAPI.FeedbackResource import FeedbackResource, CreateFeedbackResource, FeedbackTransportImage
 from data.API.NewspageAPI.NewspageResource import NewspageResource, NewspageListRecourse, CreateNewspageResource, \
     NewspageResourceUsual, NewspageListRecourseId, NewspageResourceLink
 from data.API.PartnerAPI.PartnerResource import PartnerResource, PartnerResourceUsual, PartnerListRecourse, \
@@ -99,10 +98,11 @@ api.add_resource(PartnerListRecourse, "/api/partner")
 # AuditlogApi
 api.add_resource(AuditlogResource, "/api/auditlog")
 
-api.add_resource(FeedbackResource, "/api/feedback/<string:email>/<string:password>/<int:feedback_id>")
-api.add_resource(FeedbackListRecourse, "/api/feedback/<string:email>/<string:password>")
+# Feedback
+api.add_resource(FeedbackResource, "/api/feedback")
 api.add_resource(FeedbackTransportImage, "/api/feedback/<int:feedback_id>/<string:code>")
 api.add_resource(CreateFeedbackResource, "/api/feedback")
+
 api.add_resource(AdminResourceAddress, "/api/address/<string:email>/<string:password>/<int:address_id>")
 api.add_resource(AddressListRecourse, "/api/address")
 api.add_resource(AdminResourceEmail, "/api/email/<string:email>/<string:password>/<int:email_id>")
@@ -218,7 +218,6 @@ def clear_folder(folder_name, path=app.config['UPLOAD_FOLDER']):
     if os.path.exists(path+folder_name):
         delete_folder(folder_name, path=path)
     os.makedirs(path+folder_name)
-    print(path+folder_name, "!!!create!!!")
 
 
 def delete_everything_except(folder_name, filenames, path=app.config['UPLOAD_FOLDER']):
@@ -233,7 +232,6 @@ def delete_folder(folder_name, path=app.config['UPLOAD_FOLDER']):
         for filename in os.listdir(path + folder_name):
             os.remove(f"{path}{folder_name}/{filename}")
         os.rmdir(path+folder_name)
-        print(path + folder_name, "!!!delete!!!")
 
 
 def copy_files(old_folder, new_folder, filenames):
@@ -255,7 +253,6 @@ def transport_images(old_folder, new_folder, filenames):
             os.replace(path+filename, f'{path}{new_folder}/{filename.split("/")[-1]}')
             new_filenames.append(f'{new_folder}/{filename.split("/")[-1]}')
     delete_folder(old_folder)
-    print("!!!!!!!!!!!!!!!!!!!!!KOASFjoiasjfoanjpofwaoifowfjq0woiqkfojewjfoqwi0f-p")
     return new_filenames
 
 
@@ -1214,11 +1211,11 @@ def admin_edit_worker(id):
                 form.phone.data = worker["phone"]
                 if worker["image"]:
                     filenames = worker["image"].split("//")
+                    clear_folder(f"tmp/worker/worker_{current_user.email}")
                     filenames = copy_files(f"worker/worker_{id}", f"tmp/worker/worker_{current_user.email}", filenames)
                 containerManager.add_container(f"tmp/worker/worker_{current_user.email}", filenames, auto_delete=True)
         else:
             message = list(worker.values())[-1]
-        print(filenames)
         return render_template('form/admin-form-worker.html', title='Редактирование сотрудника', message=message,
                                form=form, result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1,
                                special_params=get_special_params())
@@ -1387,9 +1384,19 @@ def admin_auditlog():
 def admin_feedback():
     if check_user():
         return redirect("/login")
-    feedbacks = get(
-        f"{link_website}api/feedback/{current_user.email}/{password_manager.get_password(current_user.email)}").json()
+    feedbacks = put(f"{link_website}api/feedback", json={"admin_email": current_user.email, "action": "getlist"}).json()
     return render_template('list/admin-list-feedback.html', title='Отзывы', feedbacks=feedbacks, special_params=get_special_params())
+
+
+@app.route("/view-feedback/<int:id>", methods=['GET', 'POST'])
+@login_required
+def view_feedback(id):
+    if check_user():
+        return redirect("/login")
+    feedback = put(f"{link_website}api/feedback", json={"admin_email": current_user.email, "action": "get", "feedback_id": id}).json()
+    if "message" in feedback:
+        return page_not_found()
+    return render_template('feedback.html', title=feedback["heading"], feedback=feedback, special_params=get_special_params())
 
 
 @app.route("/admin-delete-feedback/<int:id>", methods=['GET', 'POST'])
@@ -1400,13 +1407,11 @@ def admin_delete_feedback(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result = "", "отзыв не найден", False
-        feedback = get(
-            f"{link_website}api/feedback/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        feedback = put(f"{link_website}api/feedback", json={"admin_email": current_user.email, "action": "get", "feedback_id": id}).json()
         if "message" not in feedback:
             name = "отзыв " + feedback['heading']
             if request.method == 'POST':
-                message = delete(
-                    f"{link_website}api/feedback/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+                message = put(f"{link_website}api/feedback", json={"feedback_id": id, "admin_email": current_user.email, "action": "delete"}).json()
                 if "success" in message:
                     delete_folder(f"feedback/feedback_{feedback['id']}")
                     result = True
@@ -1417,17 +1422,6 @@ def admin_delete_feedback(id):
         return render_template('form/admin-form-delete.html', title='Удаление отзыва', message=message, form=form,
                                result=result, name=name, link_back="/admin-list-feedback", special_params=get_special_params())
     return you_dont_have_permission()
-
-
-@app.route("/view-feedback/<int:id>", methods=['GET', 'POST'])
-@login_required
-def view_feedback(id):
-    if check_user():
-        return redirect("/login")
-    feedback = get(f"{link_website}api/feedback/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
-    if "message" in feedback:
-        return page_not_found()
-    return render_template('feedback.html', title=feedback["heading"], feedback=feedback, special_params=get_special_params())
 
 
 @app.route("/write-feedback/<string:code>", methods=['GET', 'POST'])
