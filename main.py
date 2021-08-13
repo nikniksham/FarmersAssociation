@@ -14,6 +14,9 @@ class PasswordManager:
         self.data = {}
         self.tmp_data = {}
 
+    def user_is_authed(self, name):
+        return name in self.data
+
     def add_user(self, email, password):
         self.data[email] = User(email, password)
         return "Пользователь успешно добавлен"

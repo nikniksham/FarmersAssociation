@@ -213,7 +213,7 @@ def save_image_multithreading(filename, file):
 
 
 def check_user():
-    return not password_manager.get_password(current_user.email)
+    return not password_manager.user_is_authed(current_user.email)
 
 
 def save_image(filename, file):
@@ -363,7 +363,7 @@ def page_not_found():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if not current_user.is_anonymous:
-        if password_manager.get_password(current_user.email) is False:
+        if password_manager.user_is_authed(current_user.email) is False:
             logout_user()
         else:
             return redirect("/")
