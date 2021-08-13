@@ -9,7 +9,7 @@ from requests import put, delete, get, post
 from werkzeug.utils import redirect
 from data import db_session
 from data.API.AdminAPI.AdminResource import CreateAdminResource, AdminResource, UserResourceAdmin
-from data.API.AuditlogAPI.AuditlogResource import AuditlogResource, AuditlogListRecourse
+from data.API.AuditlogAPI.AuditlogResource import AuditlogResource
 from data.API.ConfirmationCodeAPI.ConfirmationcodeResource import CodeForConfirmation
 from data.API.ContentAPI.ContentResource import CreateContentResource, ContentResource, ContentListRecourse, \
     ContentListRecourseId
@@ -90,8 +90,9 @@ api.add_resource(PartnerResource, "/api/partner/<int:partner_id>")
 api.add_resource(PartnerResourceUsual, "/api/partner/<int:partner_id>")
 api.add_resource(PartnerListRecourse, "/api/partner")
 
-api.add_resource(AuditlogResource, "/api/auditlog/<string:email>/<string:password>/<int:auditlog_id>")
-api.add_resource(AuditlogListRecourse, "/api/auditlog/<string:email>/<string:password>")
+# AuditlogApi
+api.add_resource(AuditlogResource, "/api/auditlog")
+
 api.add_resource(FeedbackResource, "/api/feedback/<string:email>/<string:password>/<int:feedback_id>")
 api.add_resource(FeedbackListRecourse, "/api/feedback/<string:email>/<string:password>")
 api.add_resource(FeedbackTransportImage, "/api/feedback/<int:feedback_id>/<string:code>")
@@ -125,6 +126,19 @@ formatting_text_instruction = \
 special_params = {}
 
 
+def set_map_params():
+    partners, provinces, occupations = special_params["partner"], [], []
+    for partner in partners:
+        if partner['province'] not in provinces:
+            provinces.append(partner['province'])
+        for ocup in partner['occupation'].split(","):
+            ocup = " ".join(ocup.split())
+            if ocup not in occupations:
+                occupations.append(ocup)
+    special_params["provinces"] = provinces
+    special_params["occupations"] = occupations
+
+
 def set_footer_params():
     special_params["numbers"] = get(f"{link_website}api/phone").json()
     special_params["socials"] = get(f"{link_website}api/socialmedia").json()
@@ -148,6 +162,7 @@ def set_other_params():
     special_params["partner"] = get(f"{link_website}api/partner").json()
     special_params["smartpages"] = get(f"{link_website}api/smartpage").json()
     special_params["worker"] = get(f"{link_website}api/worker").json()
+    set_map_params()
 
 
 def get_image_name(link):
@@ -1356,8 +1371,7 @@ def admin_delete_partner(id):
 def admin_auditlog():
     if check_user():
         return redirect("/login")
-    auditlogs = get(
-        f"{link_website}api/auditlog/{current_user.email}/{password_manager.get_password(current_user.email)}").json()
+    auditlogs = put(f"{link_website}api/auditlog", json={current_user}).json()
     return render_template('list/admin-list-auditlog.html', title='Журнал аудита', auditlogs=auditlogs, special_params=get_special_params())
 
 

@@ -52,7 +52,7 @@ class PartnerForm(StartForm):
     name = StringField('Название', validators=[DataRequired()])
     text = StringField('О партнёре', validators=[DataRequired()])
     address = StringField("Адрес", validators=[DataRequired()])
-    occupation = StringField("Роды деятельности (через пробел)", validators=[DataRequired()])
+    occupation = StringField("Роды деятельности (через запятую)", validators=[DataRequired()])
     link = StringField('Ссылка', validators=[DataRequired()])
 
 
