@@ -9,6 +9,7 @@ from data.confirmationcode import ConfirmationCode
 from data.API.FeedbackAPI.parser_feedback import parser_feedback
 from main import text_transform
 from config import UPLOAD_FOLDER as path
+from main import password_manager
 
 
 def raise_error(error):

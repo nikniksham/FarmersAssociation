@@ -6,7 +6,7 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.newspage import Newspage
 from data.API.NewspageAPI.parser_newspage import parser_newspage
-from main import mini_text, text_transform
+from main import mini_text, text_transform, password_manager
 from config import UPLOAD_FOLDER as path
 
 
@@ -57,32 +57,28 @@ def find_by_id(id, session):
 
 
 class NewspageResource(Resource):
-    def get(self, email, password, newspage_id):
-        admin, session = check_admin_status(email, password)
-        newspage, session = find_by_id(newspage_id, session)
-        news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date', 'author_id'))
-        news_dict["mini_text"] = mini_text(newspage.text)
-        news_dict["text_render"] = text_transform(newspage.text, newspage.image.split("//"), path)
-        return jsonify(news_dict)
-
-    def delete(self, email, password, newspage_id):
-        admin, session = check_admin_status(email, password)
-        newspage, session = find_by_id(newspage_id, session)
-        heading = newspage.heading
-        session.delete(newspage)
-        session.commit()
-        add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет новостную страницу: {heading}", admin,
-                     datetime.datetime.now())
-        return jsonify({"success": f"Новостная страница {heading} успешно удалена"})
-
-    def put(self, email, password, newspage_id):
-        admin, session = check_admin_status(email, password)
-        newspage, session = find_by_id(newspage_id, session)
+    def put(self, newspage_id):
         args, count_params = parser_newspage.parse_args(), 0
-        page_dict = newspage.to_dict(only=('heading', 'text', 'image', 'tags'))
-        keys = list(filter(lambda key: args[key] is not None and args[key] != page_dict[key] and key in list(page_dict.keys()), list(args.keys())))
-        for key in list(args.keys()):
-            if args[key] is not None and args[key] != page_dict[key]:
+        if not all(args[key] is not None for key in ['admin_email', 'action']):
+            raise_error('Пропущены некоторые важные аргументы')
+        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        newspage, session = find_by_id(newspage_id, session)
+        if args["action"] == "get":
+            news_dict = newspage.to_dict(
+                only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date', 'author_id'))
+            news_dict["mini_text"] = mini_text(newspage.text)
+            news_dict["text_render"] = text_transform(newspage.text, newspage.image.split("//"), path)
+            return jsonify(news_dict)
+        elif args["action"] == "delete":
+            session.delete(newspage)
+            session.commit()
+            add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет новостную страницу: {newspage.heading}", admin,
+                         datetime.datetime.now())
+            return jsonify({"success": f"Новостная страница {newspage.heading} успешно удалена"})
+        elif args["action"] == "put":
+            page_dict = newspage.to_dict(only=('heading', 'text', 'image', 'tags'))
+            keys = list(filter(lambda key: args[key] is not None and key in page_dict and args[key] != page_dict[key], list(args.keys())))
+            for key in keys:
                 count_params += 1
                 if key == 'image':
                     print(args['image'])
@@ -101,15 +97,16 @@ class NewspageResource(Resource):
                     newspage.text = args["text"]
                 if key == "tags":
                     newspage.tags = args["tags"]
-        if count_params == 0:
-            return raise_error("Пустой запрос")
-        page_dict_2 = newspage.to_dict(only=('heading', 'text', 'image', 'tags'))
-        list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' if key != "image" else "изменяет изображения" for key in keys]
-        session.commit()
-        add_auditlog("Изменение",
-                     f"{admin.name} {admin.surname} изменяет новостную страницу {newspage.heading}: {', '.join(list_chang)}",
-                     admin, datetime.datetime.now())
-        return jsonify({"success": f"Новостная страница {newspage.heading} успешно изменена"})
+            if count_params == 0:
+                return raise_error("Пустой запрос")
+            page_dict_2 = newspage.to_dict(only=('heading', 'text', 'image', 'tags'))
+            list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' if key != "image" else "изменяет изображения" for key in keys]
+            session.commit()
+            add_auditlog("Изменение",
+                         f"{admin.name} {admin.surname} изменяет новостную страницу {newspage.heading}: {', '.join(list_chang)}",
+                         admin, datetime.datetime.now())
+            return jsonify({"success": f"Новостная страница {newspage.heading} успешно изменена"})
+        raise_error("Неизвестный метод")
 
 
 class NewspageResourceUsual(Resource):
@@ -164,11 +161,11 @@ class NewspageListRecourse(Resource):
 
 
 class CreateNewspageResource(Resource):
-    def post(self, email, password):
-        admin, session = check_admin_status(email, password)
+    def post(self):
         args = parser_newspage.parse_args()
-        if not all(args[key] is not None for key in ['heading', 'text']):
+        if not all(args[key] is not None for key in ['heading', 'text', 'admin_email']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания новостной страницы')
+        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
         new_newspage = Newspage()
         new_newspage.heading = args["heading"]
         new_newspage.text = args["text"]

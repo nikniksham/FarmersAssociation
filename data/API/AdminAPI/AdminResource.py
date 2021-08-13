@@ -64,15 +64,11 @@ class AdminResource(Resource):
         elif args["action"] == "delete":
             pass
         elif args["action"] == "put":
-            admin_dict = admin.to_dict(only=('id', 'name', 'surname', 'status', 'email'))
+            admin_dict = admin.to_dict(only=('name', 'surname', 'status', 'email'))
             keys = list(filter(lambda key: args[key] is not None and key in admin_dict and args[key] != admin_dict[key], list(args.keys())))
             for key in list(args.keys()):
                 if args[key] is not None and key in admin_dict and args[key] != admin_dict[key]:
                     count += 1
-                    if key == 'id':
-                        if session.query(User).filter(User.id == args["id"]).first():
-                            raise_error("Этот id уже занят")
-                        admin.id = args['id']
                     if key == 'email':
                         if session.query(User).filter(User.id == args["email"]).first():
                             raise_error("Этот email уже занят")
@@ -89,7 +85,7 @@ class AdminResource(Resource):
                 f, count = True, count + 1
             if count == 0:
                 return raise_error("Пустой запрос")
-            admin_dict_2 = admin.to_dict(only=('id', 'name', 'surname', 'status', 'email'))
+            admin_dict_2 = admin.to_dict(only=('name', 'surname', 'status', 'email'))
             list_chang = [f'изменяет {key} с {admin_dict[key]} на {admin_dict_2[key]}' for key in keys]
             if f:
                 list_chang.append("изменяет пароль")

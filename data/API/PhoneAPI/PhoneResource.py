@@ -6,6 +6,7 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.API.PhoneAPI.parser_phone import parser_phone
 from data.phone import Phone
+from main import password_manager
 
 
 def raise_error(error):
@@ -63,7 +64,7 @@ class AdminResourcePhone(Resource):
         admin, session = check_admin_status(email, password, 2)
         phone, session = find_by_id(phone_id, session)
         args, count = parser_phone.parse_args(), 0
-        phone_dict = phone.to_dict(only=('id', 'number'))
+        phone_dict = phone.to_dict(only=('number'))
         keys = list(filter(lambda key: args[key] is not None and key in phone_dict and args[key] != phone_dict[key], args.keys()))
         for key in args.keys():
             if args[key] is not None and args[key] != phone_dict[key]:
@@ -72,7 +73,7 @@ class AdminResourcePhone(Resource):
                     phone.number = args["number"]
         if count == 0:
             return raise_error("Пустой запрос")
-        phone_dict_2 = phone.to_dict(only=('id', 'number'))
+        phone_dict_2 = phone.to_dict(only=('number'))
         list_chang = [f'изменяет {key} с {phone_dict[key]} на {phone_dict_2[key]}' for key in keys]
         session.commit()
         add_auditlog("Изменение", f"Админ {admin.name} {admin.surname} изменяет номер телефона {phone.number}:"

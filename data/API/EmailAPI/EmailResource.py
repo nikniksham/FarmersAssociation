@@ -6,6 +6,7 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.API.EmailAPI.parser_email import parser_email
 from data.email import Email
+from main import password_manager
 
 
 def raise_error(error):
@@ -63,7 +64,7 @@ class AdminResourceEmail(Resource):
         admin, session = check_admin_status(email, password, 2)
         email, session = find_by_id(email_id, session)
         args, count = parser_email.parse_args(), 0
-        email_dict = email.to_dict(only=('id', 'email_address'))
+        email_dict = email.to_dict(only=('email_address'))
         keys = list(filter(lambda key: args[key] is not None and key in email_dict and args[key] != email_dict[key], args.keys()))
         for key in args.keys():
             if args[key] is not None and args[key] != email_dict[key]:
@@ -72,7 +73,7 @@ class AdminResourceEmail(Resource):
                     email.email_address = args["email_address"]
         if count == 0:
             return raise_error("Пустой запрос")
-        email_dict_2 = email.to_dict(only=('id', 'email_address'))
+        email_dict_2 = email.to_dict(only=('email_address'))
         list_chang = [f'изменяет {key} с {email_dict[key]} на {email_dict_2[key]}' for key in keys]
         session.commit()
         add_auditlog("Изменение", f"Админ {admin.name} {admin.surname} изменяет электронную почту {email.email_address}:"

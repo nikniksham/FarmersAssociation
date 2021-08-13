@@ -8,6 +8,7 @@ from data.smartpage import Smartpage
 from data.content import Content
 from data.API.NewspageAPI.NewspageResource import trans_link
 from data.API.SmartpageAPI.parser_smartpage import parser_smartpage
+from main import password_manager
 
 
 def raise_error(error):
@@ -66,7 +67,7 @@ class SmartpageResource(Resource):
         admin, session = check_admin_status(email, password)
         smartpage, session = find_by_id(smartpage_id, session)
         args, count = parser_smartpage.parse_args(), 0
-        page_dict = smartpage.to_dict(only=('id', 'heading', 'image', 'created_date'))
+        page_dict = smartpage.to_dict(only=('heading', 'image', 'created_date'))
         keys = list(filter(lambda key: args[key] is not None and args[key] != page_dict[key] and key in list(page_dict.keys()), list(args.keys())))
         for key in list(args.keys()):
             if args[key] is not None and args[key] != page_dict[key]:
@@ -87,7 +88,7 @@ class SmartpageResource(Resource):
                     smartpage.link = link
         if count == 0:
             return raise_error("Пустой запрос")
-        page_dict_2 = smartpage.to_dict(only=('id', 'heading', 'image', 'created_date', 'author_id'))
+        page_dict_2 = smartpage.to_dict(only=('heading', 'image', 'created_date', 'author_id'))
         list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' if key != "image" else "изменяет изображения" for key in keys]
         session.commit()
         add_auditlog("Изменение",

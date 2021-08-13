@@ -6,6 +6,7 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.API.AddressAPI.parser_address import parser_address
 from data.address import Address
+from main import password_manager
 
 
 def raise_error(error):
@@ -53,7 +54,7 @@ class AdminResourceAddress(Resource):
         admin, session = check_admin_status(email, password, 2)
         address, session = find_by_id(address_id, session)
         args, count = parser_address.parse_args(), 0
-        address_dict = address.to_dict(only=('id', 'place'))
+        address_dict = address.to_dict(only=('place'))
         keys = list(filter(lambda key: args[key] is not None and key in address_dict and args[key] != address_dict[key], args.keys()))
         for key in args.keys():
             if args[key] is not None and args[key] != address_dict[key]:
@@ -62,7 +63,7 @@ class AdminResourceAddress(Resource):
                     address.place = args["place"]
         if count == 0:
             return raise_error("Пустой запрос")
-        address_dict_2 = address.to_dict(only=('id', 'place'))
+        address_dict_2 = address.to_dict(only=('place'))
         list_chang = [f'изменяет {key} с {address_dict[key]} на {address_dict_2[key]}' for key in keys]
         session.commit()
         add_auditlog("Изменение", f"Админ {admin.name} {admin.surname} изменяет {address.name} адрес: {', '.join(list_chang)}",

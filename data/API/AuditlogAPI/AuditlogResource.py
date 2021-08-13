@@ -3,6 +3,8 @@ from flask_restful import Resource, abort
 from data import db_session
 from data.user import User
 from data.auditlog import AuditLog
+from data.API.AuditlogAPI.parser_auditlog import parser_auditlog
+from main import password_manager
 
 
 def raise_error(error):

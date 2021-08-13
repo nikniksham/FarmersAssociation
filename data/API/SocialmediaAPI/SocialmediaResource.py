@@ -6,6 +6,7 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.API.SocialmediaAPI.parser_socialmedia import parser_socialmedia
 from data.socialmedia import Socialmedia
+from main import password_manager
 
 
 def raise_error(error):
@@ -63,7 +64,7 @@ class AdminResourceSocialmedia(Resource):
         admin, session = check_admin_status(email, password, 2)
         socialmedia, session = find_by_id(socialmedia_id, session)
         args, count = parser_socialmedia.parse_args(), 0
-        socialmedia_dict = socialmedia.to_dict(only=('id', 'icon_type', 'link'))
+        socialmedia_dict = socialmedia.to_dict(only=('icon_type', 'link'))
         keys = list(filter(lambda key: args[key] is not None and key in socialmedia_dict and args[key] != socialmedia_dict[key], args.keys()))
         for key in args.keys():
             if args[key] is not None and args[key] != socialmedia_dict[key]:
@@ -74,7 +75,7 @@ class AdminResourceSocialmedia(Resource):
                     socialmedia.link = args["link"]
         if count == 0:
             return raise_error("Пустой запрос")
-        socialmedia_dict_2 = socialmedia.to_dict(only=('id', 'icon_type', "link"))
+        socialmedia_dict_2 = socialmedia.to_dict(only=('icon_type', "link"))
         list_chang = [f'изменяет {key} с {socialmedia_dict[key]} на {socialmedia_dict_2[key]}' for key in keys]
         session.commit()
         add_auditlog("Изменение", f"Админ {admin.name} {admin.surname} изменяет ссылку на соцсеть {socialmedia.link}:"

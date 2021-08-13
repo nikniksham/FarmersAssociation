@@ -56,26 +56,36 @@ let = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890"
 app = Flask(__name__)
 app.config.from_object(config)
 api = Api(app)
+# Подключаем api
+
+# AdminApi
 api.add_resource(CreateAdminResource, "/api/admin/create")
 api.add_resource(AdminResource, "/api/admin")
 api.add_resource(UserResourceAdmin, "/api/admin/<int:user_id>")
-api.add_resource(CreateSmartpageResource, "/api/smartpage/<string:email>/<string:password>")
-api.add_resource(SmartpageResource, "/api/smartpage/<string:email>/<string:password>/<int:smartpage_id>")
-api.add_resource(SmartpageRecourseUsual, "/api/smartpage/<int:smartpage_id>")
-api.add_resource(SmartpageRecourseLink, "/api/smartpage/<string:link>")
-api.add_resource(SmartpageListRecourse, "/api/smartpage")
-api.add_resource(CreateContentResource, "/api/content/<string:email>/<string:password>")
-api.add_resource(ContentResource, "/api/content/<string:email>/<string:password>/<int:content_id>")
-api.add_resource(ContentListRecourse, "/api/content")
-api.add_resource(ContentListRecourseId, "/api/content/<int:smartpage_id>")
-api.add_resource(AuditlogResource, "/api/auditlog/<string:email>/<string:password>/<int:auditlog_id>")
-api.add_resource(AuditlogListRecourse, "/api/auditlog/<string:email>/<string:password>")
-api.add_resource(CreateNewspageResource, "/api/newspage/<string:email>/<string:password>")
-api.add_resource(NewspageResource, "/api/newspage/<string:email>/<string:password>/<int:newspage_id>")
+
+# NewsApi
+api.add_resource(CreateNewspageResource, "/api/newspage")
+api.add_resource(NewspageResource, "/api/newspage/<int:newspage_id>")
 api.add_resource(NewspageResourceUsual, "/api/newspage/<int:newspage_id>")
 api.add_resource(NewspageListRecourseId, "/api/newspage/<int:start_id>/<int:end_id>")
 api.add_resource(NewspageListRecourse, "/api/newspage")
 api.add_resource(NewspageResourceLink, "/api/newspage/<string:link>")
+
+# SmartpageApi
+api.add_resource(CreateSmartpageResource, "/api/smartpage")
+api.add_resource(SmartpageResource, "/api/smartpage/<int:smartpage_id>")
+api.add_resource(SmartpageRecourseUsual, "/api/smartpage/<int:smartpage_id>")
+api.add_resource(SmartpageRecourseLink, "/api/smartpage/<string:link>")
+api.add_resource(SmartpageListRecourse, "/api/smartpage")
+
+# ContentApi
+api.add_resource(CreateContentResource, "/api/content")
+api.add_resource(ContentResource, "/api/content/<int:content_id>")
+api.add_resource(ContentListRecourse, "/api/content")
+api.add_resource(ContentListRecourseId, "/api/content/<int:smartpage_id>")
+
+api.add_resource(AuditlogResource, "/api/auditlog/<string:email>/<string:password>/<int:auditlog_id>")
+api.add_resource(AuditlogListRecourse, "/api/auditlog/<string:email>/<string:password>")
 api.add_resource(CreatePartnerResource, "/api/partner/<string:email>/<string:password>")
 api.add_resource(PartnerResource, "/api/partner/<string:email>/<string:password>/<int:partner_id>")
 api.add_resource(PartnerResourceUsual, "/api/partner/<int:partner_id>")
@@ -651,15 +661,14 @@ def admin_create_news():
         if request.method == 'POST':
             filenames = save_images(f"tmp/news/news_{current_user.email}", request.files, auto_delete=True, r_img=False)
             if form.submit.data:
-                message = post(
-                    f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}",
-                    json={"heading": form.heading.data, "text": form.text.data, "image": "//".join(filenames)}).json()
+                message = post(f"{link_website}api/newspage", json={"heading": form.heading.data, "text": form.text.data,
+                               "image": "//".join(filenames), "admin_email": current_user.email}).json()
                 if "success" in message:
                     filenames = transport_images(f"tmp/news/news_{current_user.email}", f"news/news_{message['id']}", filenames)
-                    m = put(f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}/{message['id']}",
-                            json={"image": "//".join(filenames)}).json()
+                    m = put(f"{link_website}api/newspage/{message['id']}", json={"image": "//".join(filenames),
+                            'admin_email': current_user.email, "action": "put"}).json()
                     result = True
-                    containerManager.delete_container(f"news_{current_user.email}")
+                    containerManager.delete_container(f"tmp/news/news_{current_user.email}")
                     set_other_params()
                 message = list(message.values())[-1]
             elif form.preview.data:
@@ -680,19 +689,18 @@ def admin_edit_news(id):
     if current_user.status > 0:
         form = NewspageForm()
         message, result, filenames, preview_text = None, False, [], None
-        news = get(f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        news = put(f"{link_website}api/newspage/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         if "message" not in list(news):
             if request.method == 'POST':
                 filenames = save_images(f"tmp/news/news_{current_user.email}", request.files, r_img=False)
                 if form.submit.data:
-                    message = put(
-                        f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                        json={"heading": form.heading.data, "text": form.text.data, "image": "//".join(filenames)}).json()
+                    message = put(f"{link_website}api/newspage/{id}", json={"heading": form.heading.data, "text": form.text.data,
+                                  "image": "//".join(filenames), "admin_email": current_user.email, "action": "put"}).json()
                     if "success" in message:
                         result = True
                         filenames = transport_images(f"tmp/news/news_{current_user.email}", f"news/news_{id}", filenames)
-                        m = put(f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                                json={"image": "//".join(filenames)}).json()
+                        m = put(f"{link_website}api/newspage/{id}", json={"image": "//".join(filenames),
+                                "action": "put", "admin_email": current_user.email}).json()
                         containerManager.delete_container(f"tmp/news/news_{current_user.email}")
                         set_other_params()
                     message = " ".join(list(message.values()))
@@ -707,7 +715,7 @@ def admin_edit_news(id):
                     filenames = copy_files(f"news/news_{id}", f"tmp/news/news_{current_user.email}", news["image"].split("//"))
                 containerManager.add_container(f"tmp/news/news_{current_user.email}", filenames, auto_delete=True)
         else:
-            message = "Новость не найдена"
+            message = news.values()[0]
         return render_template('form/admin-form-news.html', title='Редактирование новости', message=message, result=result,
                                form=form, filenames=filenames, image_len=len(filenames) + 1, preview_text=preview_text,
                                formatting_text_instruction=formatting_text_instruction, special_params=get_special_params())
@@ -722,13 +730,12 @@ def admin_delete_news(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, result, name = None, False, "новость не найдена"
-        news = get(
-            f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        news = put(f"{link_website}api/newspage/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         if "message" not in news:
             name = "новость " + news["heading"]
             if request.method == 'POST':
-                message = delete(
-                    f"{link_website}api/newspage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+                message = put(f"{link_website}api/newspage/{id}", json={"admin_email": current_user.email,
+                                                                        "action": "delete"}).json()
                 if "success" in message:
                     result = True
                     delete_folder(f"news/news_{id}")
@@ -875,7 +882,6 @@ def admin_delete_admin(id):
                 if request.method == 'POST':
                     message = put(f"{link_website}api/admin/{id}", json={"admin_email": current_user.email,
                                                                          "action": "delete"}).json()
-                    print(message)
                     if "success" in message:
                         result = True
                     message = " ".join(list(message.values()))
@@ -1009,14 +1015,13 @@ def admin_create_content(page_id):
         if request.method == 'POST':
             filenames = save_images(f"tmp/content/content_{current_user.email}", request.files, auto_delete=True, r_img=False)
             image = "" if len(filenames) == 0 else "//".join(filenames)
-            message = post(
-                f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email)}",
-                json={"type": form.type.data, "text": form.text.data, "page_id": page_id,
-                      "heading": form.heading.data, "image": image}).json()
+            message = post(f"{link_website}api/content", json={"type": form.type.data, "text": form.text.data, "page_id": page_id,
+                           "heading": form.heading.data, "image": image, 'admin_email': current_user.email}).json()
             if "success" in message:
                 filenames = transport_images(f"tmp/content/content_{current_user.email}", f"content/content_{message['id']}", filenames)
-                m = put(f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email)}/{message['id']}",
-                        json={"image": "//".join(filenames)}).json()
+                m = put(f"{link_website}api/content/{message['id']}", json={"image": "//".join(filenames), "action": "put",
+                                                                            "admin_email": current_user.email}).json()
+                print(m)
                 result = True
                 containerManager.delete_container(f"tmp/content/content_{current_user.email}")
             message = list(message.values())[-1]
@@ -1032,12 +1037,12 @@ def admin_content_move_up(id):
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
-        content = get(
-            f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
-        put(
-            f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-            json={"position": content["position"] - 1})
-        return redirect(f"/admin-list-smartpage/{content['smartpage_id']}")
+        content, page_id = put(f"{link_website}api/content/{id}", json={"admin_email": current_user.email, "action": "get"}).json(), 0
+        if "message" not in content:
+            put(f"{link_website}api/content/{id}", json={"position": content["position"] - 1, "action": "put",
+                                                         "admin_email": current_user.email})
+            page_id = content['smartpage_id']
+        return redirect(f"/admin-list-smartpage/{page_id}")
     return you_dont_have_permission()
 
 
@@ -1047,11 +1052,12 @@ def admin_content_move_down(id):
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
-        content = get(
-            f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
-        put(f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-            json={"position": content["position"] + 1}).json()
-        return redirect(f"/admin-list-smartpage/{content['smartpage_id']}")
+        content, page_id = put(f"{link_website}api/content/{id}", json={"admin_email": current_user.email, "action": "get"}).json(), 0
+        if "message" not in content:
+            put(f"{link_website}api/content/{id}", json={"position": content["position"] + 1, "action": "put",
+                                                         "admin_email": current_user.email})
+            page_id = content["smartpage_id"]
+        return redirect(f"/admin-list-smartpage/{page_id}")
     return you_dont_have_permission()
 
 
@@ -1062,17 +1068,19 @@ def admin_edit_content(id):
         return redirect("/login")
     if current_user.status > 0:
         form = ContentForm()
-        content = get(f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        content = put(f"{link_website}api/content/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         message, result, filenames, page_id = None, False, [], 0
         if "message" not in content:
             if request.method == 'POST':
                 filenames = save_images(f"tmp/content/content_{current_user.email}", request.files, auto_delete=True, r_img=False)
-                message = put(f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                              json={"type": form.type.data, "text": form.text.data, "heading": form.heading.data, "image": '//'.join(filenames)}).json()
+                message = put(f"{link_website}api/content/{id}", json={"type": form.type.data, "text": form.text.data,
+                              "heading": form.heading.data, "image": '//'.join(filenames), "action": "put",
+                                                                       "admin_email": current_user.email}).json()
                 if "success" in message:
                     filenames = transport_images(f"tmp/content/content_{current_user.email}", f"content/content_{id}", filenames)
-                    m = put(f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                            json={"image": '//'.join(filenames)}).json()
+                    m = put(f"{link_website}api/content/{id}", json={"image": '//'.join(filenames), "action": "put",
+                                                                     "admin_email": current_user.email}).json()
+                    print(m)
                     result = True
                 message = list(message.values())[-1]
             else:
@@ -1100,14 +1108,13 @@ def admin_delete_content(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result, page_id = "", "контент не найден", False, 0
-        content = get(
-            f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        content = put(f"{link_website}api/content/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         if "message" not in content:
             page_id = content["smartpage_id"]
             name = "контент " + content['heading']
             if request.method == 'POST':
-                message = delete(
-                    f"{link_website}api/content/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+                message = put(f"{link_website}api/content/{id}", json={"action": "delete",
+                                                                       "admin_email": current_user.email}).json()
                 if "success" in message:
                     result = True
                     delete_folder(f"content/content_{id}")

@@ -6,6 +6,7 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.partner import Partner
 from data.API.PartnerAPI.parser_partner import parser_partner
+from main import password_manager
 
 
 def raise_error(error):
@@ -55,16 +56,12 @@ class PartnerResource(Resource):
         admin, session = check_admin_status(email, password)
         partner, session = find_by_id(partner_id, session)
         args, count = parser_partner.parse_args(), 0
-        part_dict = partner.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
+        part_dict = partner.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
         keys = list(filter(lambda key: args[key] is not None and args[key] != part_dict[key] and key in list(part_dict.keys()), list(args.keys())))
         name = partner.name
         for key in list(args.keys()):
             if args[key] is not None and args[key] != part_dict[key]:
                 count += 1
-                if key == 'id':
-                    if session.query(Partner).filter(Partner.id == args["id"]).first():
-                        raise_error("Этот id уже занят")
-                    partner.id = args['id']
                 if key == "name":
                     partner.name = args["name"]
                 if key == "logo":
@@ -85,7 +82,7 @@ class PartnerResource(Resource):
                     partner.province = args["province"]
         if count == 0:
             return raise_error("Пустой запрос")
-        part_dict_2 = partner.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
+        part_dict_2 = partner.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
         list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key not in ["image", "logo"] else "изменяет изображения/аватарку" for key in keys]
         session.commit()
         add_auditlog("Изменение",

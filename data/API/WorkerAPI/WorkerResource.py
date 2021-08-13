@@ -6,6 +6,7 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.worker import Worker
 from data.API.WorkerAPI.parser_worker import parser_worker
+from main import password_manager
 
 
 def raise_error(error):
@@ -55,16 +56,12 @@ class WorkerResource(Resource):
         admin, session = check_admin_status(email, password)
         worker, session = find_by_id(worker_id, session)
         args, count = parser_worker.parse_args(), 0
-        work_dict = worker.to_dict(only=('id', 'image', 'name', 'profession', 'phone', 'email'))
+        work_dict = worker.to_dict(only=('image', 'name', 'profession', 'phone', 'email'))
         keys = list(filter(lambda key: args[key] is not None and args[key] != work_dict[key] and key in list(work_dict.keys()), list(args.keys())))
         name = worker.name
         for key in list(args.keys()):
             if args[key] is not None and args[key] != work_dict[key]:
                 count += 1
-                if key == 'id':
-                    if session.query(Worker).filter(Worker.id == args["id"]).first():
-                        raise_error("Этот id уже занят")
-                    worker.id = args['id']
                 if key == 'image':
                     worker.image = args['image']
                 if key == "name":
@@ -77,7 +74,7 @@ class WorkerResource(Resource):
                     worker.email = args["email"]
         if count == 0:
             return raise_error("Пустой запрос")
-        work_dict_2 = worker.to_dict(only=('id', 'image', 'name', 'profession', 'phone', 'email'))
+        work_dict_2 = worker.to_dict(only=('image', 'name', 'profession', 'phone', 'email'))
         list_chang = [f'изменяет {key} с {work_dict[key]} на {work_dict_2[key]}' if key not in ["image"] else "изменяет изображения" for key in keys]
         session.commit()
         add_auditlog("Изменение",
