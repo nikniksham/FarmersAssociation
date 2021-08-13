@@ -51,11 +51,11 @@
             <div class="input-file-row-1">
                 <div class="upload-file-container">
                     {% if filenames == [] %}
-                    <img id="icon" class="this-is-image" src="#" alt="">
+                    <img id="icon1" class="this-is-image" src="#" alt="">
                     {% else %}
-                    <img id="icon" class="this-is-image visible " src="/static/img/{{filenames[0]}}" alt="">
+                    <img id="icon1" class="visible" src="/static/img/{{filenames[0]}}" alt="">
                     {% endif %}
-                    <input type=file name=icon class="photo" id="iconInput">
+                    <input type=file name=icon1 class="photo" id="iconInput1">
                 </div>
             </div>
             <div class="submit-block">
@@ -65,4 +65,8 @@
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block adminend %}
+<script src="/static/js/set-icon.js"></script>
 {% endblock %}
