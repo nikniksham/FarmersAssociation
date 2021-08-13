@@ -105,12 +105,7 @@ p {
     border-radius: 15px;
     padding: 15px;
     width: 100%;
-    margin-bottom: calc(var(--bs-gutter-x));
-}
-
-.teammate-header {
-    display: flex;
-    align-items: center;
+    margin: calc(var(--bs-gutter-x) / 2) 0;
 }
 
 .teammate p {
@@ -118,10 +113,17 @@ p {
 }
 
 .teammate-img {
-    width: 75px;
-    height: 75px;
-    border-radius: 50%;
-    margin-right: 10px;
+    background-size: cover;
+    background-position: center;
+    width: 100%;
+    padding-bottom: 88.949%;
+    border-radius: 15px;
+    margin-bottom: 5px;
+}
+
+.teammate-contact {
+    display: inline-block;
+    padding-right: 5px;
 }
 
 .map {

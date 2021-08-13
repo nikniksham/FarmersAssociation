@@ -8,15 +8,11 @@
     {% for worker in special_params["worker"] %}
     <div class="col-xl-4 col-md-6 col-sm-12">
         <div class="teammate">
-            <div class="teammate-header">
-                <img class="teammate-img" src="/static/img/{{worker['image']}}" alt="teammate">
-                <div>
-                    <p class="teammate-name">{{worker['name']}}</p>
-                    <p class="teammate-profession">{{worker['profession']}}</p>
-                </div>
-            </div>
-            <a href="tel:+{{worker['phone']}}">{{worker['phone']}}</a>
-            <a href="mailto:{{worker['email']}}">{{worker['email']}}</a>
+            <div class="teammate-img" style="background-image: url(/static/img/{{worker['image']}})"></div>
+            <p class="teammate-name">{{worker['name']}}</p>
+            <p class="teammate-profession">{{worker['profession']}}</p>
+            <p class="teammate-contact">tel: </p><a href="tel:+{{worker['phone']}}">{{worker['phone']}}</a><br>
+            <p class="teammate-contact">email: </p><a href="mailto:{{worker['email']}}">{{worker['email']}}</a>
         </div>
     </div>
     {% endfor %}
