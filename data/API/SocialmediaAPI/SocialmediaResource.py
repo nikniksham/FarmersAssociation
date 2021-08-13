@@ -45,49 +45,47 @@ class SocialmediaListRecourse(Resource):
 
 
 class AdminResourceSocialmedia(Resource):
-    def get(self, email, password, socialmedia_id):
-        admin, session = check_admin_status(email, password)
-        socialmedia, session = find_by_id(socialmedia_id, session)
-        return jsonify(socialmedia.to_dict(only=('id', 'icon_type', 'link')))
-
-    def delete(self, email, password, socialmedia_id):
-        admin, session = check_admin_status(email, password, 2)
-        socialmedia, session = find_by_id(socialmedia_id, session)
-        link = socialmedia.link
-        session.delete(socialmedia)
-        session.commit()
-        add_auditlog("Удаление", f"Админ {admin.name} {admin.surname} удаляет ссылку на соцсеть {link}", admin,
-                     datetime.datetime.now())
-        return jsonify({"success": f"Ссылка на соцсеть {link} успешно удалена"})
-
-    def put(self, email, password, socialmedia_id):
-        admin, session = check_admin_status(email, password, 2)
-        socialmedia, session = find_by_id(socialmedia_id, session)
+    def put(self, socialmedia_id):
         args, count = parser_socialmedia.parse_args(), 0
-        socialmedia_dict = socialmedia.to_dict(only=('icon_type', 'link'))
-        keys = list(filter(lambda key: args[key] is not None and key in socialmedia_dict and args[key] != socialmedia_dict[key], args.keys()))
-        for key in keys:
-            count += 1
-            if key == 'icon_type':
-                socialmedia.icon_type = args["icon_type"]
-            if key == 'link':
-                socialmedia.link = args["link"]
-        if count == 0:
-            return raise_error("Пустой запрос")
-        socialmedia_dict_2 = socialmedia.to_dict(only=('icon_type', "link"))
-        list_chang = [f'изменяет {key} с {socialmedia_dict[key]} на {socialmedia_dict_2[key]}' for key in keys]
-        session.commit()
-        add_auditlog("Изменение", f"Админ {admin.name} {admin.surname} изменяет ссылку на соцсеть {socialmedia.link}:"
-                                  f" {', '.join(list_chang)}", admin, datetime.datetime.now())
-        return jsonify({"success": f"Ссылка на соцсеть {socialmedia.link} успешно изменена"})
+        if not all(args[key] is not None for key in ['admin_email', 'action']):
+            raise_error('Пропущены некоторые важные аргументы')
+        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        socialmedia, session = find_by_id(socialmedia_id, session)
+        if args['action'] == "get":
+            return jsonify(socialmedia.to_dict(only=('id', 'icon_type', 'link')))
+        elif args['action'] == 'delete':
+            session.delete(socialmedia)
+            session.commit()
+            add_auditlog("Удаление", f"Админ {admin.name} {admin.surname} удаляет ссылку на соцсеть {socialmedia.link}",
+                         admin, datetime.datetime.now())
+            return jsonify({"success": f"Ссылка на соцсеть {socialmedia.link} успешно удалена"})
+        elif args['action'] == 'put':
+            args, count = parser_socialmedia.parse_args(), 0
+            socialmedia_dict = socialmedia.to_dict(only=('icon_type', 'link'))
+            keys = list(filter(lambda key: args[key] is not None and key in socialmedia_dict and args[key] != socialmedia_dict[key], args.keys()))
+            for key in keys:
+                count += 1
+                if key == 'icon_type':
+                    socialmedia.icon_type = args["icon_type"]
+                if key == 'link':
+                    socialmedia.link = args["link"]
+            if count == 0:
+                return raise_error("Пустой запрос")
+            socialmedia_dict_2 = socialmedia.to_dict(only=('icon_type', "link"))
+            list_chang = [f'изменяет {key} с {socialmedia_dict[key]} на {socialmedia_dict_2[key]}' for key in keys]
+            session.commit()
+            add_auditlog("Изменение", f"Админ {admin.name} {admin.surname} изменяет ссылку на соцсеть {socialmedia.link}:"
+                                      f" {', '.join(list_chang)}", admin, datetime.datetime.now())
+            return jsonify({"success": f"Ссылка на соцсеть {socialmedia.link} успешно изменена"})
+        raise_error("Неизвестный метод")
 
 
 class CreateSocialmediaResource(Resource):
-    def post(self, email, password):
-        admin, session = check_admin_status(email, password)
+    def post(self):
         args = parser_socialmedia.parse_args()
-        if not all(args[key] is not None for key in ['icon_type', "link"]):
+        if not all(args[key] is not None for key in ['icon_type', "link", "admin_email"]):
             raise_error('Пропущены некоторые аргументы, необходимые для добавления новой ссылки на соцсеть')
+        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
         if session.query(Socialmedia).filter(Socialmedia.link == args['link']).first():
             raise_error("Эта ссылка уже существует")
         new_socialmedia = Socialmedia()

@@ -5,7 +5,7 @@ from markupsafe import Markup
 from flask import Flask, render_template, request
 from flask_login import LoginManager, login_required, logout_user, current_user, login_user
 from flask_restful import Api
-from requests import put, delete, get, post
+from requests import put, get, post
 from werkzeug.utils import redirect
 from data import db_session
 from data.API.AdminAPI.AdminResource import CreateAdminResource, AdminResource, UserResourceAdmin
@@ -98,23 +98,31 @@ api.add_resource(PartnerListRecourse, "/api/partner")
 # AuditlogApi
 api.add_resource(AuditlogResource, "/api/auditlog")
 
-# Feedback
+# FeedbackApi
 api.add_resource(FeedbackResource, "/api/feedback")
 api.add_resource(FeedbackTransportImage, "/api/feedback/<int:feedback_id>/<string:code>")
 api.add_resource(CreateFeedbackResource, "/api/feedback")
 
-api.add_resource(AdminResourceAddress, "/api/address/<string:email>/<string:password>/<int:address_id>")
+# AddressApi
+api.add_resource(AdminResourceAddress, "/api/address/<int:address_id>")
 api.add_resource(AddressListRecourse, "/api/address")
-api.add_resource(AdminResourceEmail, "/api/email/<string:email>/<string:password>/<int:email_id>")
-api.add_resource(CreateEmailResource, "/api/email/<string:email>/<string:password>")
+
+# EmailApi
+api.add_resource(AdminResourceEmail, "/api/email/<int:email_id>")
+api.add_resource(CreateEmailResource, "/api/email")
 api.add_resource(EmailListRecourse, "/api/email")
-api.add_resource(AdminResourcePhone, "/api/phone/<string:email>/<string:password>/<int:phone_id>")
-api.add_resource(CreatePhoneResource, "/api/phone/<string:email>/<string:password>")
+
+# PhoneApi
+api.add_resource(AdminResourcePhone, "/api/phone/<int:phone_id>")
+api.add_resource(CreatePhoneResource, "/api/phone")
 api.add_resource(PhoneListRecourse, "/api/phone")
-api.add_resource(AdminResourceSocialmedia, "/api/socialmedia/<string:email>/<string:password>/<int:socialmedia_id>")
-api.add_resource(CreateSocialmediaResource, "/api/socialmedia/<string:email>/<string:password>")
+
+# SocialmediaApi
+api.add_resource(AdminResourceSocialmedia, "/api/socialmedia/<int:socialmedia_id>")
+api.add_resource(CreateSocialmediaResource, "/api/socialmedia")
 api.add_resource(SocialmediaListRecourse, "/api/socialmedia")
 db_session.global_init("db/FarmersAssociation.sqlite")
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 code_helper = CodeForConfirmation()
@@ -417,13 +425,11 @@ def admin_create_phone():
         message, result = None, False
         if request.method == 'POST':
             if form.submit.data:
-                message = post(
-                    f"{link_website}api/phone/{current_user.email}/{password_manager.get_password(current_user.email)}",
-                    json={"number": form.number.data}).json()
+                message = post(f"{link_website}api/phone", json={"number": form.number.data, "admin_email": current_user.email}).json()
                 if "success" in message:
                     result = True
                     set_footer_params()
-                message = " ".join(list(message.values()))
+                message = list(message.values())[0]
         return render_template('form/admin-form-phone.html', title='Добавление номера телефона', message=message,
                                form=form, result=result, special_params=get_special_params())
     return you_dont_have_permission()
@@ -437,17 +443,15 @@ def admin_edit_phone(id):
     if current_user.status > 0:
         form = PhoneForm()
         message, result = None, False
-        phone = get(f"{link_website}api/phone/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        phone = put(f"{link_website}api/phone/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         if "message" not in phone:
             if request.method == 'POST':
                 if form.submit.data:
-                    message = put(
-                        f"{link_website}api/phone/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                        json={"number": form.number.data}).json()
+                    message = put(f"{link_website}api/phone/{id}", json={"number": form.number.data, "admin_email": current_user.email, "action": "put"}).json()
                     if "success" in message:
                         result = True
                         set_footer_params()
-                    message = " ".join(list(message.values()))
+                    message = list(message.values())[0]
             else:
                 form.number.data = phone["number"]
         else:
@@ -465,17 +469,15 @@ def admin_delete_phone(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, result, name = None, False, "телефон не найден"
-        phone = get(
-            f"{link_website}api/phone/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        phone = put(f"{link_website}api/phone/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         if "message" not in phone:
             name = "телефон " + phone["number"]
             if request.method == 'POST':
-                message = delete(
-                    f"{link_website}api/phone/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+                message = put(f"{link_website}api/phone/{id}", json={"admin_email": current_user.email, "action": "delete"}).json()
                 if "success" in message:
                     result = True
                     set_footer_params()
-                message = " ".join(list(message.values()))
+                message = list(message.values())[0]
         return render_template('form/admin-form-delete.html', title='Удаление телефона', message=message, form=form, name=name,
                                result=result, link_back="/admin-website-settings",
                                special_params=get_special_params())
@@ -492,13 +494,11 @@ def admin_create_email():
         message, result = None, False
         if request.method == 'POST':
             if form.submit.data:
-                message = post(
-                    f"{link_website}api/email/{current_user.email}/{password_manager.get_password(current_user.email)}",
-                    json={"email_address": form.email.data}).json()
+                message = post(f"{link_website}api/email", json={"email_address": form.email.data, "admin_email": current_user.email}).json()
                 if "success" in message:
                     result = True
                     set_footer_params()
-                message = " ".join(list(message.values()))
+                message = list(message.values())[0]
         return render_template('form/admin-form-email.html', title='Добавление почтового адреса', message=message,
                                form=form, result=result, special_params=get_special_params())
     return you_dont_have_permission()
@@ -512,17 +512,15 @@ def admin_edit_email(id):
     if current_user.status > 0:
         form = EmailForm()
         message, result = None, False
-        email = get(f"{link_website}api/email/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        email = put(f"{link_website}api/email/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         if "message" not in email:
             if request.method == 'POST':
                 if form.submit.data:
-                    message = put(
-                        f"{link_website}api/email/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                        json={"email_address": form.email.data}).json()
+                    message = put(f"{link_website}api/email/{id}", json={"email_address": form.email.data, "admin_email": current_user.email, "action": "put"}).json()
                     if "success" in message:
                         result = True
                         set_footer_params()
-                    message = " ".join(list(message.values()))
+                    message = list(message.values())[0]
             else:
                 form.email.data = email["email_address"]
         else:
@@ -540,17 +538,15 @@ def admin_delete_email(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, result, name = None, False, "почтовый адрес не найден"
-        email = get(
-            f"{link_website}api/email/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        email = put(f"{link_website}api/email/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         if "message" not in email:
             name = "почтовый адрес " + email["email_address"]
             if request.method == 'POST':
-                message = delete(
-                    f"{link_website}api/email/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+                message = put(f"{link_website}api/email/{id}", json={"admin_email": current_user.email, "action": "delete"}).json()
                 if "success" in message:
                     result = True
                     set_footer_params()
-                message = " ".join(list(message.values()))
+                message = list(message.values())[0]
         return render_template('form/admin-form-delete.html', title='Удаление почтового адреса', message=message, form=form,
                                name=name, result=result, link_back="/admin-website-settings", special_params=get_special_params())
     return you_dont_have_permission()
@@ -566,13 +562,12 @@ def admin_create_socialmedia():
         message, result = None, False
         if request.method == 'POST':
             if form.submit.data:
-                message = post(
-                    f"{link_website}api/socialmedia/{current_user.email}/{password_manager.get_password(current_user.email)}",
-                    json={"icon_type": get_image_name(form.link.data), "link": form.link.data}).json()
+                message = post(f"{link_website}api/socialmedia", json={"icon_type": get_image_name(form.link.data), "link": form.link.data,
+                                                                       "admin_email": current_user.email}).json()
                 if "success" in message:
                     result = True
                     set_footer_params()
-                message = " ".join(list(message.values()))
+                message = list(message.values())[0]
         return render_template('form/admin-form-socialmedia.html', title='Добавление ссылки на соцсеть', message=message,
                                form=form, result=result, special_params=get_special_params())
     return you_dont_have_permission()
@@ -586,17 +581,16 @@ def admin_edit_socialmedia(id):
     if current_user.status > 0:
         form = SocialmediaForm()
         message, result = None, False
-        socialmedia = get(f"{link_website}api/socialmedia/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        socialmedia = put(f"{link_website}api/socialmedia/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         if "message" not in socialmedia:
             if request.method == 'POST':
                 if form.submit.data:
-                    message = put(
-                        f"{link_website}api/socialmedia/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                        json={"icon_type": get_image_name(form.link.data), "link": form.link.data}).json()
+                    message = put(f"{link_website}api/socialmedia/{id}", json={"admin_email": current_user.email, "action": "put",
+                                                                               "icon_type": get_image_name(form.link.data), "link": form.link.data}).json()
                     if "success" in message:
                         result = True
                         set_footer_params()
-                    message = " ".join(list(message.values()))
+                    message = list(message.values())[0]
             else:
                 form.link.data = socialmedia["link"]
         else:
@@ -614,17 +608,15 @@ def admin_delete_socialmedia(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, result, name = None, False, "ссылка на соцсеть на найдена"
-        socialmedia = get(
-            f"{link_website}api/socialmedia/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        socialmedia = put(f"{link_website}api/socialmedia/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         if "message" not in socialmedia:
             name = "почтовый адрес " + socialmedia["link"]
             if request.method == 'POST':
-                message = delete(
-                    f"{link_website}api/socialmedia/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+                message = put(f"{link_website}api/socialmedia/{id}", json={"admin_email": current_user.email, "action": "delete"}).json()
                 if "success" in message:
                     result = True
                     set_footer_params()
-                message = " ".join(list(message.values()))
+                message = list(message.values())[0]
         return render_template('form/admin-form-delete.html', title='Удаление ссылки на соцсеть', message=message, form=form,
                                name=name, result=result, link_back="/admin-website-settings", special_params=get_special_params())
     return you_dont_have_permission()
@@ -638,13 +630,12 @@ def admin_edit_address(id):
     if current_user.status > 0:
         form = AddressForm()
         message, result = None, False
-        address = get(f"{link_website}api/address/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        address = put(f"{link_website}api/address/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         if "message" not in address:
             if request.method == 'POST':
                 if form.submit.data:
-                    message = put(
-                        f"{link_website}api/address/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                        json={"place": form.address.data}).json()
+                    message = put(f"{link_website}api/address/{id}", json={"place": form.address.data, "admin_email": current_user.email,
+                                                                           "action": "put"}).json()
                     if "success" in message:
                         result = True
                         set_footer_params()
@@ -833,8 +824,10 @@ def admin_create_admin():
                 password_manager.add_tmp_password(current_user.email, form.password.data)
                 message = post(f"{link_website}api/admin/create", json={"name": form.name.data, "surname": form.surname.data,
                                "email": form.email.data, "status": form.status.data, "admin_email": current_user.email}).json()
+                password_manager.delete_tmp_password(current_user.email)
                 form.status.data = str(form.status.data)
                 if "success" in message:
+                    password_manager.add_user(form.email.data, form.password)
                     result = True
                 message = " ".join(list(message.values()))
             else:

@@ -45,26 +45,27 @@ class AddressListRecourse(Resource):
 
 
 class AdminResourceAddress(Resource):
-    def get(self, email, password, address_id):
-        admin, session = check_admin_status(email, password)
-        address, session = find_by_id(address_id, session)
-        return jsonify(address.to_dict(only=('id', 'name', 'place')))
-
-    def put(self, email, password, address_id):
-        admin, session = check_admin_status(email, password, 2)
-        address, session = find_by_id(address_id, session)
+    def put(self, address_id):
         args, count = parser_address.parse_args(), 0
-        address_dict = address.to_dict(only=('place'))
-        keys = list(filter(lambda key: args[key] is not None and key in address_dict and args[key] != address_dict[key], args.keys()))
-        for key in keys:
-            count += 1
-            if key == 'place':
-                address.place = args["place"]
-        if count == 0:
-            return raise_error("Пустой запрос")
-        address_dict_2 = address.to_dict(only=('place'))
-        list_chang = [f'изменяет {key} с {address_dict[key]} на {address_dict_2[key]}' for key in keys]
-        session.commit()
-        add_auditlog("Изменение", f"Админ {admin.name} {admin.surname} изменяет {address.name} адрес: {', '.join(list_chang)}",
-                     admin, datetime.datetime.now())
-        return jsonify({"success": f"Адрес {address.name} успешно изменён"})
+        if not all(args[key] is not None for key in ['admin_email', 'action']):
+            raise_error('Пропущены некоторые важные аргументы')
+        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        address, session = find_by_id(address_id, session)
+        if args['action'] == "get":
+            return jsonify(address.to_dict(only=('id', 'name', 'place')))
+        elif args['action'] == 'put':
+            address_dict = address.to_dict(only=('place',))
+            keys = list(filter(lambda key: args[key] is not None and key in address_dict and args[key] != address_dict[key], args.keys()))
+            for key in keys:
+                count += 1
+                if key == 'place':
+                    address.place = args["place"]
+            if count == 0:
+                return raise_error("Пустой запрос")
+            address_dict_2 = address.to_dict(only=('place',))
+            list_chang = [f'изменяет {key} с {address_dict[key]} на {address_dict_2[key]}' for key in keys]
+            session.commit()
+            add_auditlog("Изменение",
+                         f"Админ {admin.name} {admin.surname} изменяет {address.name} адрес: {', '.join(list_chang)}",
+                         admin, datetime.datetime.now())
+            return jsonify({"success": f"Адрес {address.name} успешно изменён"})

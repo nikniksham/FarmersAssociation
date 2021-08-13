@@ -45,47 +45,45 @@ class PhoneListRecourse(Resource):
 
 
 class AdminResourcePhone(Resource):
-    def get(self, email, password, phone_id):
-        admin, session = check_admin_status(email, password)
-        phone, session = find_by_id(phone_id, session)
-        return jsonify(phone.to_dict(only=('id', 'number')))
-
-    def delete(self, email, password, phone_id):
-        admin, session = check_admin_status(email, password, 2)
-        phone, session = find_by_id(phone_id, session)
-        number = phone.number
-        session.delete(phone)
-        session.commit()
-        add_auditlog("Удаление", f"Админ {admin.name} {admin.surname} удаляет номер телефона {number}", admin,
-                     datetime.datetime.now())
-        return jsonify({"success": f"Номер телефона {number} успешно удалён"})
-
-    def put(self, email, password, phone_id):
-        admin, session = check_admin_status(email, password, 2)
-        phone, session = find_by_id(phone_id, session)
+    def put(self, phone_id):
         args, count = parser_phone.parse_args(), 0
-        phone_dict = phone.to_dict(only=('number'))
-        keys = list(filter(lambda key: args[key] is not None and key in phone_dict and args[key] != phone_dict[key], args.keys()))
-        for key in keys:
-            count += 1
-            if key == 'number':
-                phone.number = args["number"]
-        if count == 0:
-            return raise_error("Пустой запрос")
-        phone_dict_2 = phone.to_dict(only=('number'))
-        list_chang = [f'изменяет {key} с {phone_dict[key]} на {phone_dict_2[key]}' for key in keys]
-        session.commit()
-        add_auditlog("Изменение", f"Админ {admin.name} {admin.surname} изменяет номер телефона {phone.number}:"
-                                  f" {', '.join(list_chang)}", admin, datetime.datetime.now())
-        return jsonify({"success": f"Номер телефона {phone.number} успешно изменён"})
+        if not all(args[key] is not None for key in ['admin_email', 'action']):
+            raise_error('Пропущены некоторые важные аргументы')
+        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        phone, session = find_by_id(phone_id, session)
+        if args['action'] == "get":
+            return jsonify(phone.to_dict(only=('id', 'number')))
+        elif args['action'] == 'delete':
+            session.delete(phone)
+            session.commit()
+            add_auditlog("Удаление", f"Админ {admin.name} {admin.surname} удаляет номер телефона {phone.number}", admin,
+                         datetime.datetime.now())
+            return jsonify({"success": f"Номер телефона {phone.number} успешно удалён"})
+        elif args['action'] == 'put':
+            args, count = parser_phone.parse_args(), 0
+            phone_dict = phone.to_dict(only=('number',))
+            keys = list(filter(lambda key: args[key] is not None and key in phone_dict and args[key] != phone_dict[key], args.keys()))
+            for key in keys:
+                count += 1
+                if key == 'number':
+                    phone.number = args["number"]
+            if count == 0:
+                return raise_error("Пустой запрос")
+            phone_dict_2 = phone.to_dict(only=('number',))
+            list_chang = [f'изменяет {key} с {phone_dict[key]} на {phone_dict_2[key]}' for key in keys]
+            session.commit()
+            add_auditlog("Изменение", f"Админ {admin.name} {admin.surname} изменяет номер телефона {phone.number}:"
+                                      f" {', '.join(list_chang)}", admin, datetime.datetime.now())
+            return jsonify({"success": f"Номер телефона {phone.number} успешно изменён"})
+        raise_error("Неизвестный метод")
 
 
 class CreatePhoneResource(Resource):
-    def post(self, email, password):
-        admin, session = check_admin_status(email, password)
+    def post(self):
         args = parser_phone.parse_args()
-        if not all(args[key] is not None for key in ['number']):
+        if not all(args[key] is not None for key in ['number', 'admin_email']):
             raise_error('Пропущены некоторые аргументы, необходимые для добавления нового номера телефона')
+        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
         if session.query(Phone).filter(Phone.number == args['number']).first():
             raise_error("Этот номер телефона уже существует")
         new_phone = Phone()

@@ -77,6 +77,7 @@ class FeedbackResource(Resource):
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет отзыв {feedback.heading} от пользователя {feedback.fullname}",
                          admin, datetime.datetime.now())
             return jsonify({"success": f"Отзыв {feedback.heading} от пользователя {feedback.fullname} успешно удален"})
+        raise_error("Неизвестный метод")
 
 
 class FeedbackTransportImage(Resource):
