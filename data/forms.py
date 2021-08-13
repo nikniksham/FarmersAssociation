@@ -74,5 +74,10 @@ class PhoneForm(StartForm):
 
 class SocialmediaForm(StartForm):
     link = StringField('Ссылка на соцсеть', validators=[DataRequired()])
-    # icon_type = SelectField('Социальная сеть', choices=[("facebook.png", "Фейсбук"), ("instagram.png", "Инстаграм"),
-    # ("vk.png", "ВКонтакте"), ("twitter.png", "Твиттер"), ("telegram.png", "Телеграм")])
+
+
+class WorkerForm(StartForm):
+    name = StringField('ФИО', validators=[DataRequired()])
+    profession = StringField('Должность', validators=[DataRequired()])
+    phone = StringField("Телефон", validators=[DataRequired()])
+    email = StringField("Почта", validators=[DataRequired()])

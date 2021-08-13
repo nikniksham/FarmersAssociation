@@ -1,7 +1,6 @@
 import datetime
 import os
-from PIL import Image
-import requests, json
+import requests
 
 
 class User:

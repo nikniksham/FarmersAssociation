@@ -5,58 +5,21 @@
 
 {% block pageblockext %}
 <div class="row">
+    {% for worker in special_params["worker"] %}
     <div class="col-xl-4 col-md-6 col-sm-12">
         <div class="teammate">
             <div class="teammate-header">
-                <img class="teammate-img" src="/static/img/8LS4iuJfahKs0HkQfhOOA2f0TT8L0YCwwMzbuw8iTaSAjQbWdd.jpg" alt="teammate">
+                <img class="teammate-img" src="/static/img/{{worker['image']}}" alt="teammate">
                 <div>
-                    <p class="teammate-name">Rimsky People</p>
-                    <p class="teammate-profession">fuzick men</p>
+                    <p class="teammate-name">{{worker['name']}}</p>
+                    <p class="teammate-profession">{{worker['profession']}}</p>
                 </div>
             </div>
-            <a href="tel:+81112223344">+8 (111) 222-33-44</a>
-            <p>veryverylongmail@maill.com</p>
+            <a href="tel:+{{worker['phone']}}">{{worker['phone']}}</a>
+            <a href="mailto:{{worker['email']}}">{{worker['email']}}</a>
         </div>
     </div>
-    <div class="col-xl-4 col-md-6 col-sm-12">
-        <div class="teammate">
-            <div class="teammate-header">
-                <img class="teammate-img" src="/static/img/8LS4iuJfahKs0HkQfhOOA2f0TT8L0YCwwMzbuw8iTaSAjQbWdd.jpg" alt="teammate">
-                <div>
-                    <p class="teammate-name">Rimsky People</p>
-                    <p class="teammate-profession">fuzick men</p>
-                </div>
-            </div>
-            <a href="tel:+81112223344">+8 (111) 222-33-44</a>
-            <p>veryverylongmail@maill.com</p>
-        </div>
-    </div>
-    <div class="col-xl-4 col-md-6 col-sm-12">
-        <div class="teammate">
-            <div class="teammate-header">
-                <img class="teammate-img" src="/static/img/8LS4iuJfahKs0HkQfhOOA2f0TT8L0YCwwMzbuw8iTaSAjQbWdd.jpg" alt="teammate">
-                <div>
-                    <p class="teammate-name">Rimsky People</p>
-                    <p class="teammate-profession">fuzick men</p>
-                </div>
-            </div>
-            <a href="tel:+81112223344">+8 (111) 222-33-44</a>
-            <p>veryverylongmail@maill.com</p>
-        </div>
-    </div>
-    <div class="col-xl-4 col-md-6 col-sm-12">
-        <div class="teammate">
-            <div class="teammate-header">
-                <img class="teammate-img" src="/static/img/8LS4iuJfahKs0HkQfhOOA2f0TT8L0YCwwMzbuw8iTaSAjQbWdd.jpg" alt="teammate">
-                <div>
-                    <p class="teammate-name">Rimsky People</p>
-                    <p class="teammate-profession">fuzick men</p>
-                </div>
-            </div>
-            <a href="tel:+81112223344">+8 (111) 222-33-44</a>
-            <p>veryverylongmail@maill.com</p>
-        </div>
-    </div>
+    {% endfor %}
 </div>
 {% endblock %}
 

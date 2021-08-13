@@ -1,0 +1,18 @@
+{% extends "admin-panel.html" %}
+
+{% block adminblock %}
+<p class="settings-title">{{title}}</p>
+<div class="settings">
+    <p>Список сотрудников</p>
+    <div class="settings-add">
+        <a class="settings-element-add" href="/admin-create-worker">Добавить</a>
+    </div>
+    {% for worker in workerlist %}
+    <div class="settings-element">
+        <p class="settings-element-title">{{worker['name']}}</p>
+        <a class="settings-element-edit" href="/admin-edit-worker/{{worker['id']}}">Изменить</a>
+        <a class="settings-element-delete" href="/admin-delete-worker/{{worker['id']}}">Удалить</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
