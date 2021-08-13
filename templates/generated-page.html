@@ -103,6 +103,20 @@
         {% endfor %}
     </div>
     {% elif block['type'] == "Map" %}
+    <div>
+        <select name="provinces[]" id="provinces">
+            <option selected value="all">Все области</option>
+            {% for province in special_params["provinces"] %}
+            <option value="{{province}}">{{province}}</option>
+            {% endfor%}
+        </select>
+        <select name="occupations[]" id="occupations">
+            <option selected value="all">Все направления</option>
+            {% for occupation in special_params["occupations"] %}
+            <option value="{{occupation}}">{{occupation}}</option>
+            {% endfor%}
+        </select>
+    </div>
     <div class="map">
         <div id="map"></div>
     </div>
@@ -118,8 +132,55 @@
 <script src="/static/js/news.js"></script>
 <script src="/static/js/partners.js"></script>
 <script src="/static/js/header-carousel.js"></script>
-<script>
+<script type="text/javascript">
     var link_website = "{{special_params["link"]}}"
 </script>
+{% if flag_map %}
+<script type="text/javascript">
+    var partners = []
+    {% for partner in special_params["partner"] %}
+    partners.push(["{{partner["name"]}}", "{{partner["logo"]}}", [{{', '.join(partner["coord"].split()[::-1])}}], "{{partner["province"]}}", "{{partner["occupation"]}}", "{{partner["link"]}}"])
+    {% endfor %}
+    console.log(partners);
+
+    $( document ).ready( function() {
+        $('select').change(function(){update_map()});
+    })
+
+    function update_map() {
+        // console.log(myMap.geoobjects)
+        myMap.geoObjects.removeAll()
+        var occupations = $('#occupations').val();
+        var provinces = $('#provinces').val();
+        console.log(occupations, provinces);
+        for (var i=0; i < partners.length; i++) {
+            if ((partners[i][3] == provinces || provinces === 'all') && (partners[i][4] == occupations || occupations === 'all')) {
+                console.log(partners[i][2]);
+                myPlacemark = new ymaps.Placemark(partners[i][2], {
+                    hintContent: partners[i][0],
+                    balloonContent: partners[i][0]+'<br>'+partners[i][4]+'<br><a href="/'+partners[i][5]+'">сайт</a>'
+                }, {
+                    // Опции.
+                    // Необходимо указать данный тип макета.
+                    iconLayout: 'default#image',
+                    // Своё изображение иконки метки.
+                    iconImageHref: '/static/img/'+partners[i][1],
+                    // Размеры метки.
+                    iconImageSize: [50, 50],
+                    // Смещение левого верхнего угла иконки относительно
+                    // её "ножки" (точки привязки).
+                    iconImageOffset: [-25, -25]
+                })
+
+                myPlacemark.events.add('click', function () {
+                    console.log('О, событие!');
+                });
+
+                myMap.geoObjects.add(myPlacemark);
+            }
+        }
+    }
+</script>
+{% endif %}
 {% block endext %}{% endblock %}
 {% endblock %}
