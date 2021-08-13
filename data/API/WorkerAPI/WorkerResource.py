@@ -38,48 +38,45 @@ def find_by_id(id, session):
 
 
 class WorkerResource(Resource):
-    def get(self, email, password, worker_id):
-        admin, session = check_admin_status(email, password)
-        worker, session = find_by_id(worker_id, session)
-        return jsonify(worker.to_dict(only=('id', 'image', 'name', 'profession', 'phone', 'email', 'created_date')))
-
-    def delete(self, email, password, worker_id):
-        admin, session = check_admin_status(email, password)
-        worker, session = find_by_id(worker_id, session)
-        name = worker.name
-        session.delete(worker)
-        session.commit()
-        add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет сотрудника: {name}", admin, datetime.datetime.now())
-        return jsonify({"success": f"Сотрудник {name} успешно удален"})
-
-    def put(self, email, password, worker_id):
-        admin, session = check_admin_status(email, password)
-        worker, session = find_by_id(worker_id, session)
+    def put(self, worker_id):
         args, count = parser_worker.parse_args(), 0
-        work_dict = worker.to_dict(only=('image', 'name', 'profession', 'phone', 'email'))
-        keys = list(filter(lambda key: args[key] is not None and key in work_dict.keys() and args[key] != work_dict[key], list(args.keys())))
-        name = worker.name
-        for key in keys:
-            count += 1
-            if key == 'image':
-                worker.image = args['image']
-            if key == "name":
-                worker.name = args["name"]
-            if key == "profession":
-                worker.profession = args["profession"]
-            if key == "phone":
-                worker.phone = args["phone"]
-            if key == "email":
-                worker.email = args["email"]
-        if count == 0:
-            return raise_error("Пустой запрос")
-        work_dict_2 = worker.to_dict(only=('image', 'name', 'profession', 'phone', 'email'))
-        list_chang = [f'изменяет {key} с {work_dict[key]} на {work_dict_2[key]}' if key not in ["image"] else "изменяет изображения" for key in keys]
-        session.commit()
-        add_auditlog("Изменение",
-                     f"{admin.name} {admin.surname} изменяет сотрудника {name}: {', '.join(list_chang)}", admin,
-                     datetime.datetime.now())
-        return jsonify({"success": f"Сотрудник {name} успешно изменен"})
+        if not all(args[key] is not None for key in ['admin_email', 'action']):
+            raise_error('Пропущены некоторые важные аргументы')
+        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        worker, session = find_by_id(worker_id, session)
+        if args['action'] == "get":
+            return jsonify(worker.to_dict(only=('id', 'image', 'name', 'profession', 'phone', 'email', 'created_date')))
+        elif args['action'] == 'delete':
+            session.delete(worker)
+            session.commit()
+            add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет сотрудника: {worker.name}", admin, datetime.datetime.now())
+            return jsonify({"success": f"Сотрудник {worker.name} успешно удален"})
+        elif args['action'] == 'put':
+            work_dict = worker.to_dict(only=('image', 'name', 'profession', 'phone', 'email'))
+            keys = list(filter(lambda key: args[key] is not None and key in work_dict.keys() and args[key] != work_dict[key], list(args.keys())))
+            name = worker.name
+            for key in keys:
+                count += 1
+                if key == 'image':
+                    worker.image = args['image']
+                if key == "name":
+                    worker.name = args["name"]
+                if key == "profession":
+                    worker.profession = args["profession"]
+                if key == "phone":
+                    worker.phone = args["phone"]
+                if key == "email":
+                    worker.email = args["email"]
+            if count == 0:
+                return raise_error("Пустой запрос")
+            work_dict_2 = worker.to_dict(only=('image', 'name', 'profession', 'phone', 'email'))
+            list_chang = [f'изменяет {key} с {work_dict[key]} на {work_dict_2[key]}' if key not in ["image"] else "изменяет изображения" for key in keys]
+            session.commit()
+            add_auditlog("Изменение",
+                         f"{admin.name} {admin.surname} изменяет сотрудника {name}: {', '.join(list_chang)}", admin,
+                         datetime.datetime.now())
+            return jsonify({"success": f"Сотрудник {name} успешно изменен"})
+        raise_error("Неизвестный метод")
 
 
 class WorkerResourceUsual(Resource):
@@ -97,11 +94,11 @@ class WorkerListRecourse(Resource):
 
 
 class CreateWorkerResource(Resource):
-    def post(self, email, password):
-        admin, session = check_admin_status(email, password)
+    def post(self):
         args = parser_worker.parse_args()
-        if not all(args[key] is not None for key in ['image', 'name', 'profession', 'phone', 'email']):
+        if not all(args[key] is not None for key in ['image', 'name', 'profession', 'phone', 'email', 'admin_email']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания партнёра')
+        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
         new_worker = Worker()
         new_worker.image = args["image"]
         new_worker.name = args["name"]

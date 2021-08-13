@@ -84,6 +84,12 @@ api.add_resource(ContentResource, "/api/content/<int:content_id>")
 api.add_resource(ContentListRecourse, "/api/content")
 api.add_resource(ContentListRecourseId, "/api/content/<int:smartpage_id>")
 
+# WorkerApi
+api.add_resource(WorkerResource, "/api/worker/<int:worker_id>")
+api.add_resource(WorkerResourceUsual, "/api/worker/<int:worker_id>")
+api.add_resource(WorkerListRecourse, "/api/worker")
+api.add_resource(CreateWorkerResource, "/api/worker")
+
 # PartnerApi
 api.add_resource(CreatePartnerResource, "/api/partner")
 api.add_resource(PartnerResource, "/api/partner/<int:partner_id>")
@@ -108,10 +114,6 @@ api.add_resource(PhoneListRecourse, "/api/phone")
 api.add_resource(AdminResourceSocialmedia, "/api/socialmedia/<string:email>/<string:password>/<int:socialmedia_id>")
 api.add_resource(CreateSocialmediaResource, "/api/socialmedia/<string:email>/<string:password>")
 api.add_resource(SocialmediaListRecourse, "/api/socialmedia")
-api.add_resource(CreateWorkerResource, "/api/worker/<string:email>/<string:password>")
-api.add_resource(WorkerResource, "/api/worker/<string:email>/<string:password>/<int:worker_id>")
-api.add_resource(WorkerResourceUsual, "/api/worker/<int:worker_id>")
-api.add_resource(WorkerListRecourse, "/api/worker")
 db_session.global_init("db/FarmersAssociation.sqlite")
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -216,6 +218,7 @@ def clear_folder(folder_name, path=app.config['UPLOAD_FOLDER']):
     if os.path.exists(path+folder_name):
         delete_folder(folder_name, path=path)
     os.makedirs(path+folder_name)
+    print(path+folder_name, "!!!create!!!")
 
 
 def delete_everything_except(folder_name, filenames, path=app.config['UPLOAD_FOLDER']):
@@ -230,6 +233,7 @@ def delete_folder(folder_name, path=app.config['UPLOAD_FOLDER']):
         for filename in os.listdir(path + folder_name):
             os.remove(f"{path}{folder_name}/{filename}")
         os.rmdir(path+folder_name)
+        print(path + folder_name, "!!!delete!!!")
 
 
 def copy_files(old_folder, new_folder, filenames):
@@ -251,10 +255,11 @@ def transport_images(old_folder, new_folder, filenames):
             os.replace(path+filename, f'{path}{new_folder}/{filename.split("/")[-1]}')
             new_filenames.append(f'{new_folder}/{filename.split("/")[-1]}')
     delete_folder(old_folder)
+    print("!!!!!!!!!!!!!!!!!!!!!KOASFjoiasjfoanjpofwaoifowfjq0woiqkfojewjfoqwi0f-p")
     return new_filenames
 
 
-def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False, logo=False, cont_logo=None, gif=True):
+def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False, logo=False, cont_logo=None, gif=True, icon=False):
     filenames, filenames2, img_list, cont, cont2 = [], [], list(files), containerManager.get_container(cont_name), containerManager.get_container(cont_logo)
     for ind, name in enumerate(files):
         if max_image and len(filenames) >= max_image:
@@ -274,8 +279,10 @@ def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False,
                     save_image(filename, file)
                     filenames.append(filename)
         else:
-            if logo and img_list[ind] in ["icon", "iconInput"] and "image1" in cont2:
+            if logo and img_list[ind] in ["icon1", "iconInput1"] and "image1" in cont2:
                 filenames2.append(cont2["image1"])
+            elif icon and img_list[ind] in ["icon1", "iconInput1"] and "image1" in cont:
+                filenames.append(cont["image1"])
             elif img_list[ind] in cont:
                 filenames.append(cont[img_list[ind]])
     if r_img:
@@ -1037,7 +1044,6 @@ def admin_create_content(page_id):
                 filenames = transport_images(f"tmp/content/content_{current_user.email}", f"content/content_{message['id']}", filenames)
                 m = put(f"{link_website}api/content/{message['id']}", json={"image": "//".join(filenames), "action": "put",
                                                                             "admin_email": current_user.email}).json()
-                print(m)
                 result = True
                 containerManager.delete_container(f"tmp/content/content_{current_user.email}")
             message = list(message.values())[-1]
@@ -1088,7 +1094,7 @@ def admin_edit_content(id):
         message, result, filenames, page_id = None, False, [], 0
         if "message" not in content:
             if request.method == 'POST':
-                filenames = save_images(f"tmp/content/content_{current_user.email}", request.files, auto_delete=True, r_img=False)
+                filenames = save_images(f"tmp/content/content_{current_user.email}", request.files, auto_delete=True)
                 message = put(f"{link_website}api/content/{id}", json={"type": form.type.data, "text": form.text.data,
                               "heading": form.heading.data, "image": '//'.join(filenames), "action": "put",
                                                                        "admin_email": current_user.email}).json()
@@ -1096,7 +1102,6 @@ def admin_edit_content(id):
                     filenames = transport_images(f"tmp/content/content_{current_user.email}", f"content/content_{id}", filenames)
                     m = put(f"{link_website}api/content/{id}", json={"image": '//'.join(filenames), "action": "put",
                                                                      "admin_email": current_user.email}).json()
-                    print(m)
                     result = True
                 message = list(message.values())[-1]
             else:
@@ -1106,7 +1111,7 @@ def admin_edit_content(id):
                 page_id = content["smartpage_id"]
                 if content["image"]:
                     filenames = content["image"].split("//")
-                    filenames = copy_files(f"content/content_{id}", f"tmp/content/content{current_user.email}", filenames)
+                    filenames = copy_files(f"content/content_{id}", f"tmp/content/content_{current_user.email}", filenames)
                 containerManager.add_container(f"tmp/content/content_{current_user.email}", filenames, auto_delete=True)
         else:
             message = list(content.values())[-1]
@@ -1163,21 +1168,18 @@ def admin_create_worker():
         message, result, filenames = None, False, []
         if request.method == 'POST':
             filenames = save_images(f"tmp/worker/worker_{current_user.email}", request.files, auto_delete=True)
-            message = post(f"{link_website}api/worker/{current_user.email}/{password_manager.get_password(current_user.email)}",
-                           json={"name": form.name.data, "image": "//".join(filenames), "profession": form.profession.data,
-                                 "phone": form.phone.data, "email": form.email.data}).json()
+            message = post(f"{link_website}api/worker", json={"name": form.name.data, "image": "//".join(filenames), "profession": form.profession.data,
+                           "phone": form.phone.data, "email": form.email.data, "admin_email": current_user.email}).json()
             if "success" in message:
                 filenames = transport_images(f"tmp/worker/worker_{current_user.email}", f"worker/worker_{message['id']}", filenames)
-                m = put(f"{link_website}api/worker/{current_user.email}/{password_manager.get_password(current_user.email)}/{message['id']}",
-                        json={"image": "//".join(filenames)}).json()
+                m = put(f"{link_website}api/worker/{message['id']}", json={"image": "//".join(filenames), "admin_email": current_user.email, "action": "put"}).json()
                 result = True
                 delete_folder(f"tmp/worker/worker_{current_user.email}")
                 containerManager.delete_container(f"tmp/worker/worker_{current_user.email}")
                 set_other_params()
             message = list(message.values())[-1]
-        print(filenames)
         return render_template('form/admin-form-worker.html', title='Добавление сотрудника', message=message, form=form,
-                               result=result, filenames=filenames, special_params=get_special_params())
+                               result=result, filenames=filenames, special_params=get_special_params(), image_len=1)
     return you_dont_have_permission()
 
 
@@ -1188,33 +1190,38 @@ def admin_edit_worker(id):
         return redirect("/login")
     if current_user.status > 0:
         form = WorkerForm()
-        worker = get(f"{link_website}api/worker/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        worker = put(f"{link_website}api/worker/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         message, result, filenames = None, False, []
         if "message" not in worker:
             if request.method == 'POST':
                 filenames = save_images(f"tmp/worker/worker_{current_user.email}", request.files, auto_delete=True)
-                message = put(f"{link_website}api/worker/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                              json={"name": form.name.data, "image": "//".join(filenames), "profession": form.profession.data,
-                                    "phone": form.phone.data, "email": form.email.data}).json()
+                message = put(f"{link_website}api/worker/{id}", json={"profession": form.profession.data, "name": form.name.data,
+                                                                      "email": form.email.data, "phone": form.phone.data,
+                                                                      "image": '//'.join(filenames), "action": "put",
+                                                                      "admin_email": current_user.email}).json()
                 if "success" in message:
-                    filenames = transport_images(f"tmp/worker/worker_{current_user.email}", f"worker/worker_{id}", filenames)
-                    m = put(f"{link_website}api/worker/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                            json={"image": "//".join(filenames)}).json()
+                    filenames = copy_files(f"tmp/worker/worker_{current_user.email}", f"worker/worker_{id}",
+                                                 filenames)
+                    m = put(f"{link_website}api/worker/{id}", json={"image": '//'.join(filenames), "action": "put",
+                                                                    "admin_email": current_user.email}).json()
                     result = True
-                    delete_folder(f"tmp/worker/worker_{current_user.email}")
                     set_other_params()
-                message = " ".join(list(message.values()))
+                message = list(message.values())[-1]
             else:
-                form.name.data = worker["name"]
                 form.profession.data = worker["profession"]
+                form.name.data = worker["name"]
                 form.email.data = worker["email"]
                 form.phone.data = worker["phone"]
-                filenames = copy_files(f"worker/worker_{id}", f"tmp/worker/worker_{current_user.email}", worker["image"].split("//"))
+                if worker["image"]:
+                    filenames = worker["image"].split("//")
+                    filenames = copy_files(f"worker/worker_{id}", f"tmp/worker/worker_{current_user.email}", filenames)
                 containerManager.add_container(f"tmp/worker/worker_{current_user.email}", filenames, auto_delete=True)
         else:
             message = list(worker.values())[-1]
-        return render_template('form/admin-form-worker.html', title='Редактирование сотрудника', message=message, form=form,
-                               result=result, flag=False, filenames=filenames, special_params=get_special_params())
+        print(filenames)
+        return render_template('form/admin-form-worker.html', title='Редактирование сотрудника', message=message,
+                               form=form, result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1,
+                               special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -1226,11 +1233,11 @@ def admin_delete_worker(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result = "", "сотрудник не найден", False
-        worker = get(f"{link_website}api/worker/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        worker = put(f"{link_website}api/worker/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         if "message" not in worker:
             name = "сотрудник " + worker['name']
             if request.method == 'POST':
-                message = delete(f"{link_website}api/worker/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+                message = put(f"{link_website}api/worker/{id}", json={"admin_email": current_user.email, "action": "delete"}).json()
                 if "success" in message:
                     result = True
                     containerManager.delete_container(f"worker/worker_{id}")
@@ -1371,7 +1378,7 @@ def admin_delete_partner(id):
 def admin_auditlog():
     if check_user():
         return redirect("/login")
-    auditlogs = put(f"{link_website}api/auditlog", json={current_user}).json()
+    auditlogs = put(f"{link_website}api/auditlog", json={"admin_email": current_user.email, "action": "getlist"}).json()
     return render_template('list/admin-list-auditlog.html', title='Журнал аудита', auditlogs=auditlogs, special_params=get_special_params())
 
 
