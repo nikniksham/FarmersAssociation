@@ -38,56 +38,52 @@ def find_by_id(id, session):
 
 
 class PartnerResource(Resource):
-    def get(self, email, password, partner_id):
-        admin, session = check_admin_status(email, password)
-        partner, session = find_by_id(partner_id, session)
-        return jsonify(partner.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', 'created_date', 'author_id')))
-
-    def delete(self, email, password, partner_id):
-        admin, session = check_admin_status(email, password)
-        partner, session = find_by_id(partner_id, session)
-        name = partner.name
-        session.delete(partner)
-        session.commit()
-        add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет партнёра: {name}", admin, datetime.datetime.now())
-        return jsonify({"success": f"Партнёр {name} успешно удален"})
-
-    def put(self, email, password, partner_id):
-        admin, session = check_admin_status(email, password)
-        partner, session = find_by_id(partner_id, session)
+    def put(self, partner_id):
         args, count = parser_partner.parse_args(), 0
-        part_dict = partner.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
-        keys = list(filter(lambda key: args[key] is not None and key in part_dict.keys() and args[key] != part_dict[key], list(args.keys())))
-        name = partner.name
-        for key in keys:
-            count += 1
-            if key == "name":
-                partner.name = args["name"]
-            if key == "logo":
-                partner.logo = args["logo"]
-            if key == 'image':
-                partner.image = args['image']
-            if key == "text":
-                partner.text = args["text"]
-            if key == "link":
-                partner.tags = args["link"]
-            if key == "occupation":
-                partner.occupation = args["occupation"]
-            if key == "address":
-                partner.address = args["address"]
-            if key == "coord":
-                partner.coord = args["coord"]
-            if key == "province":
-                partner.province = args["province"]
-        if count == 0:
-            return raise_error("Пустой запрос")
-        part_dict_2 = partner.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
-        list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key not in ["image", "logo"] else "изменяет изображения/аватарку" for key in keys]
-        session.commit()
-        add_auditlog("Изменение",
-                     f"{admin.name} {admin.surname} изменяет партнёра {name}: {', '.join(list_chang)}", admin,
-                     datetime.datetime.now())
-        return jsonify({"success": f"Партнёр {name} успешно изменен"})
+        if not all(args[key] is not None for key in ['admin_email', 'action']):
+            raise_error('Пропущены некоторые важные аргументы')
+        admin, session = check_admin_status(args['admin_email'], password_manager.get_password(args["admin_email"]))
+        partner, session = find_by_id(partner_id, session)
+        if args['action'] == "get":
+            return jsonify(partner.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', 'created_date', 'author_id')))
+        elif args['action'] == 'delete':
+            session.delete(partner)
+            session.commit()
+            add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет партнёра: {partner.name}", admin, datetime.datetime.now())
+            return jsonify({"success": f"Партнёр {partner.name} успешно удален"})
+        elif args['action'] == 'put':
+            part_dict = partner.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
+            keys = list(filter(lambda key: args[key] is not None and key in part_dict.keys() and args[key] != part_dict[key], list(args.keys())))
+            name = partner.name
+            for key in keys:
+                count += 1
+                if key == "name":
+                    partner.name = args["name"]
+                if key == "logo":
+                    partner.logo = args["logo"]
+                if key == 'image':
+                    partner.image = args['image']
+                if key == "text":
+                    partner.text = args["text"]
+                if key == "link":
+                    partner.tags = args["link"]
+                if key == "occupation":
+                    partner.occupation = args["occupation"]
+                if key == "address":
+                    partner.address = args["address"]
+                if key == "coord":
+                    partner.coord = args["coord"]
+                if key == "province":
+                    partner.province = args["province"]
+            if count == 0:
+                return raise_error("Пустой запрос")
+            part_dict_2 = partner.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
+            list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key not in ["image", "logo"] else "изменяет изображения/аватарку" for key in keys]
+            session.commit()
+            add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет партнёра {name}: {', '.join(list_chang)}",
+                         admin, datetime.datetime.now())
+            return jsonify({"success": f"Партнёр {name} успешно изменен"})
+        raise_error("Неизвестный метод")
 
 
 class PartnerResourceUsual(Resource):
@@ -105,11 +101,11 @@ class PartnerListRecourse(Resource):
 
 
 class CreatePartnerResource(Resource):
-    def post(self, email, password):
-        admin, session = check_admin_status(email, password)
+    def post(self):
         args = parser_partner.parse_args()
-        if not all(args[key] is not None for key in ['name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link']):
+        if not all(args[key] is not None for key in ['name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', 'admin_email']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания партнёра')
+        admin, session = check_admin_status(args['admin_email'], password_manager.get_password(args['admin_email']))
         new_partner = Partner()
         new_partner.name = args["name"]
         new_partner.logo = args["logo"]
@@ -133,5 +129,4 @@ class CreatePartnerResource(Resource):
         add_auditlog("Создание",
                      f"{admin.name} {admin.surname} создаёт партнёра {new_partner.name}: {params_dict}",
                      admin, datetime.datetime.now())
-        print(new_partner.id)
         return jsonify({'success': f'Партнёр {new_partner.name} создан', 'id': new_partner.id})

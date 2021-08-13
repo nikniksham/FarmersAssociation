@@ -84,12 +84,14 @@ api.add_resource(ContentResource, "/api/content/<int:content_id>")
 api.add_resource(ContentListRecourse, "/api/content")
 api.add_resource(ContentListRecourseId, "/api/content/<int:smartpage_id>")
 
-api.add_resource(AuditlogResource, "/api/auditlog/<string:email>/<string:password>/<int:auditlog_id>")
-api.add_resource(AuditlogListRecourse, "/api/auditlog/<string:email>/<string:password>")
-api.add_resource(CreatePartnerResource, "/api/partner/<string:email>/<string:password>")
-api.add_resource(PartnerResource, "/api/partner/<string:email>/<string:password>/<int:partner_id>")
+# PartnerApi
+api.add_resource(CreatePartnerResource, "/api/partner")
+api.add_resource(PartnerResource, "/api/partner/<int:partner_id>")
 api.add_resource(PartnerResourceUsual, "/api/partner/<int:partner_id>")
 api.add_resource(PartnerListRecourse, "/api/partner")
+
+api.add_resource(AuditlogResource, "/api/auditlog/<string:email>/<string:password>/<int:auditlog_id>")
+api.add_resource(AuditlogListRecourse, "/api/auditlog/<string:email>/<string:password>")
 api.add_resource(FeedbackResource, "/api/feedback/<string:email>/<string:password>/<int:feedback_id>")
 api.add_resource(FeedbackListRecourse, "/api/feedback/<string:email>/<string:password>")
 api.add_resource(FeedbackTransportImage, "/api/feedback/<int:feedback_id>/<string:code>")
@@ -910,7 +912,7 @@ def admin_list_smartpage(page_id):
                     else:
                         contentdict[page["id"]] = [content]
         return render_template('list/admin-list-smartpage.html', title='Страницы', smartpagelist=smartpagelist,
-                               contentdict=contentdict, types={"News": "Новости", "Image": "Картинки", "Text": "Текст", "Partner": "Партнёры"},
+                               contentdict=contentdict, types={"News": "Новости", "Image": "Картинки", "Text": "Текст", "Partner": "Партнёры", "Map": "Карта"},
                                page_id=page_id, special_params=get_special_params())
     return you_dont_have_permission()
 
@@ -1249,16 +1251,15 @@ def admin_create_partner():
             cont_name_logo, cont_name_image = f"tmp/partner/partner_{current_user.email}/logo", f"tmp/partner/partner_{current_user.email}/image"
             filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
             if "success" in coord:
-                message = post(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}",
-                               json={"name": form.name.data, "logo": "//".join(filenames1), "image": "//".join(filenames2),
-                                     "text": form.text.data, "link": form.link.data, "coord": coord['success'][0],
-                                     "occupation": form.occupation.data, "address": form.address.data,
-                                     "province": coord["success"][1]}).json()
+                message = post(f"{link_website}api/partner", json={"name": form.name.data, "logo": "//".join(filenames1),
+                               "image": "//".join(filenames2), "text": form.text.data, "link": form.link.data,
+                               "coord": coord['success'][0], "occupation": form.occupation.data, "address": form.address.data,
+                               "province": coord["success"][1], "admin_email": current_user.email}).json()
                 if "success" in message:
                     filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{message['id']}/logo", filenames1), \
                                                      transport_images(cont_name_image, f"partner/partner_{message['id']}/image", filenames2)
-                    m1 = put(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}/{message['id']}",
-                             json={"image": "//".join(filenames2), 'logo': "//".join(filenames1)}).json()
+                    m = put(f"{link_website}api/partner/{message['id']}", json={"image": "//".join(filenames2),
+                            'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put"}).json()
                     containerManager.delete_container(cont_name_image)
                     containerManager.delete_container(cont_name_logo)
                     delete_folder(f"partner/partner_{current_user.email}")
@@ -1281,7 +1282,7 @@ def admin_edit_partner(id):
     if current_user.status > 0:
         form = PartnerForm()
         cont_name_logo, cont_name_image = f"tmp/partner/partner_{current_user.email}/logo", f"tmp/partner/partner_{current_user.email}/image"
-        partner = get(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        partner = put(f"{link_website}api/partner/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         message, result, filenames1, filenames2 = None, False, [], []
         if "message" not in partner:
             if request.method == 'POST':
@@ -1290,15 +1291,15 @@ def admin_edit_partner(id):
                 if "success" in coord:
                     if coord["success"] == [None, None]:
                         coord["success"] = [partner["coord"], partner["province"]]
-                    message = put(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                                  json={"name": form.name.data, "image": "//".join(filenames2), "logo": "//".join(filenames1),
-                                        "text": form.text.data, "link": form.link.data, "address": form.address.data,
-                                        "coord": coord["success"][0], "province": coord["success"][1]}).json()
+                    message = put(f"{link_website}api/partner/{id}", json={"name": form.name.data, "image": "//".join(filenames2),
+                                  "logo": "//".join(filenames1), "text": form.text.data, "link": form.link.data, "address": form.address.data,
+                                  "coord": coord["success"][0], "province": coord["success"][1], "admin_email": current_user.email,
+                                                                           "action": "put"}).json()
                     if "success" in message:
                         filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{id}/logo", filenames1), \
                                                  transport_images(cont_name_image, f"partner/partner_{id}/image", filenames2)
-                        m1 = put(f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                                 json={"image": "//".join(filenames2), 'logo': "//".join(filenames1)}).json()
+                        m = put(f"{link_website}api/partner/{id}", json={"image": "//".join(filenames2),
+                                'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put"}).json()
                         result = True
                         set_other_params()
                     message = " ".join(list(message.values()))
@@ -1315,7 +1316,7 @@ def admin_edit_partner(id):
                 containerManager.add_container(cont_name_image, filenames2)
                 containerManager.add_container(cont_name_logo, filenames1)
         else:
-            message = "Партнёр не найден"
+            message = list(partner.values())[0]
         return render_template('form/admin-form-partner.html', title='Редактирование партнёра', message=message, form=form,
                                result=result, flag=False, filenames1=filenames1, filenames2=filenames2,
                                image_len=len(filenames2) + 1, special_params=get_special_params())
@@ -1330,13 +1331,11 @@ def admin_delete_partner(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result = "", "партнёр не найден", False
-        partner = get(
-            f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        partner = put(f"{link_website}api/partner/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         if "message" not in partner:
             name = "страница " + partner['name']
             if request.method == 'POST':
-                message = delete(
-                    f"{link_website}api/partner/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+                message = put(f"{link_website}api/partner/{id}", json={"admin_email": current_user.email, "action": "delete"}).json()
                 if "success" in message:
                     result = True
                     delete_folder(f"partner/partner_{id}/image")
@@ -1345,6 +1344,8 @@ def admin_delete_partner(id):
                     set_other_params()
                 message = " ".join(list(message.values()))
                 containerManager.delete_container(f"partner_{id}")
+        else:
+            message = list(partner.values())[0]
         return render_template('form/admin-form-delete.html', title='Удаление партнёра', message=message, form=form,
                                result=result, name=name, link_back="/admin-list-partner", special_params=get_special_params())
     return you_dont_have_permission()
