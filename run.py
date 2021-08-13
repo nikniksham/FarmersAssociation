@@ -925,12 +925,12 @@ def admin_create_smartpage():
         message, result, filenames = None, False, []
         if request.method == 'POST':
             filenames = save_images(f"tmp/smartpage/smartpage_{current_user.email}", request.files, auto_delete=True)
-            message = post(f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email)}",
-                           json={"heading": form.heading.data, "image": "//".join(filenames)}).json()
+            message = post(f"{link_website}api/smartpage", json={"heading": form.heading.data, "image": "//".join(filenames),
+                                                                 "admin_email": current_user.email}).json()
             if "success" in message:
                 filenames = transport_images(f"tmp/smartpage/smartpage_{current_user.email}", f"smartpage/smartpage_{message['id']}", filenames)
-                m = put(f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email)}/{message['id']}",
-                        json={"image": "//".join(filenames)}).json()
+                m = put(f"{link_website}api/smartpage/{message['id']}", json={"image": "//".join(filenames),
+                        "admin_email": current_user.email, "action": "put"}).json()
                 result = True
                 delete_folder(f"tmp/smartpage/smartpage_{current_user.email}")
                 containerManager.delete_container(f"tmp/smartpage/smartpage_{current_user.email}")
@@ -948,17 +948,17 @@ def admin_edit_smartpage(id):
         return redirect("/login")
     if current_user.status > 0:
         form = SmartpageForm()
-        smartpage = get(f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
-        message, result, filenames, filename = None, False, [], None
+        smartpage = put(f"{link_website}api/smartpage/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
+        message, result, filenames = None, False, []
         if "message" not in smartpage:
             if request.method == 'POST':
                 filenames = save_images(f"tmp/smartpage/smartpage_{current_user.email}", request.files, auto_delete=True)
-                message = put(f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                              json={"heading": form.heading.data, "image": "//".join(filenames)}).json()
+                message = put(f"{link_website}api/smartpage/{id}", json={"heading": form.heading.data, "image": "//".join(filenames),
+                              "admin_email": current_user.email, "action": "put"}).json()
                 if "success" in message:
                     filenames = transport_images(f"tmp/smartpage/smartpage_{current_user.email}", f"smartpage/smartpage_{id}", filenames)
-                    m = put(f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                            json={"image": "//".join(filenames)}).json()
+                    m = put(f"{link_website}api/smartpage/{id}", json={"image": "//".join(filenames),
+                            "admin_email": current_user.email, "action": "put"}).json()
                     result = True
                     delete_folder(f"tmp/smartpage/smartpage_{current_user.email}")
                     set_other_params()
@@ -983,8 +983,7 @@ def admin_delete_smartpage(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result = "", "страница не найдена", False
-        smartpage = get(
-            f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        smartpage = put(f"{link_website}api/smartpage/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         if "message" not in smartpage:
             name = "страница " + smartpage['heading']
             if request.method == 'POST':
@@ -992,7 +991,7 @@ def admin_delete_smartpage(id):
                 for content in content_list:
                     delete_folder(f"content/content_{content['id']}")
                     containerManager.delete_container(f"content/content_{content['id']}")
-                message = delete(f"{link_website}api/smartpage/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+                message = put(f"{link_website}api/smartpage/{id}", json={"admin_email": current_user.email, "action": "delete"}).json()
                 if "success" in message:
                     result = True
                     containerManager.delete_container(f"smartpage/smartpage_{id}")

@@ -66,13 +66,12 @@ class AdminResourceSocialmedia(Resource):
         args, count = parser_socialmedia.parse_args(), 0
         socialmedia_dict = socialmedia.to_dict(only=('icon_type', 'link'))
         keys = list(filter(lambda key: args[key] is not None and key in socialmedia_dict and args[key] != socialmedia_dict[key], args.keys()))
-        for key in args.keys():
-            if args[key] is not None and args[key] != socialmedia_dict[key]:
-                count += 1
-                if key == 'icon_type':
-                    socialmedia.icon_type = args["icon_type"]
-                if key == 'link':
-                    socialmedia.link = args["link"]
+        for key in keys:
+            count += 1
+            if key == 'icon_type':
+                socialmedia.icon_type = args["icon_type"]
+            if key == 'link':
+                socialmedia.link = args["link"]
         if count == 0:
             return raise_error("Пустой запрос")
         socialmedia_dict_2 = socialmedia.to_dict(only=('icon_type', "link"))

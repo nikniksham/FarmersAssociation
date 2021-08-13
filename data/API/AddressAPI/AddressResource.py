@@ -56,11 +56,10 @@ class AdminResourceAddress(Resource):
         args, count = parser_address.parse_args(), 0
         address_dict = address.to_dict(only=('place'))
         keys = list(filter(lambda key: args[key] is not None and key in address_dict and args[key] != address_dict[key], args.keys()))
-        for key in args.keys():
-            if args[key] is not None and args[key] != address_dict[key]:
-                count += 1
-                if key == 'place':
-                    address.place = args["place"]
+        for key in keys:
+            count += 1
+            if key == 'place':
+                address.place = args["place"]
         if count == 0:
             return raise_error("Пустой запрос")
         address_dict_2 = address.to_dict(only=('place'))

@@ -66,11 +66,10 @@ class AdminResourcePhone(Resource):
         args, count = parser_phone.parse_args(), 0
         phone_dict = phone.to_dict(only=('number'))
         keys = list(filter(lambda key: args[key] is not None and key in phone_dict and args[key] != phone_dict[key], args.keys()))
-        for key in args.keys():
-            if args[key] is not None and args[key] != phone_dict[key]:
-                count += 1
-                if key == 'number':
-                    phone.number = args["number"]
+        for key in keys:
+            count += 1
+            if key == 'number':
+                phone.number = args["number"]
         if count == 0:
             return raise_error("Пустой запрос")
         phone_dict_2 = phone.to_dict(only=('number'))

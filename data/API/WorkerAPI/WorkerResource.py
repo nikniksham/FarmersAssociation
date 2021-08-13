@@ -57,21 +57,20 @@ class WorkerResource(Resource):
         worker, session = find_by_id(worker_id, session)
         args, count = parser_worker.parse_args(), 0
         work_dict = worker.to_dict(only=('image', 'name', 'profession', 'phone', 'email'))
-        keys = list(filter(lambda key: args[key] is not None and args[key] != work_dict[key] and key in list(work_dict.keys()), list(args.keys())))
+        keys = list(filter(lambda key: args[key] is not None and key in work_dict.keys() and args[key] != work_dict[key], list(args.keys())))
         name = worker.name
-        for key in list(args.keys()):
-            if args[key] is not None and args[key] != work_dict[key]:
-                count += 1
-                if key == 'image':
-                    worker.image = args['image']
-                if key == "name":
-                    worker.name = args["name"]
-                if key == "profession":
-                    worker.profession = args["profession"]
-                if key == "phone":
-                    worker.phone = args["phone"]
-                if key == "email":
-                    worker.email = args["email"]
+        for key in keys:
+            count += 1
+            if key == 'image':
+                worker.image = args['image']
+            if key == "name":
+                worker.name = args["name"]
+            if key == "profession":
+                worker.profession = args["profession"]
+            if key == "phone":
+                worker.phone = args["phone"]
+            if key == "email":
+                worker.email = args["email"]
         if count == 0:
             return raise_error("Пустой запрос")
         work_dict_2 = worker.to_dict(only=('image', 'name', 'profession', 'phone', 'email'))

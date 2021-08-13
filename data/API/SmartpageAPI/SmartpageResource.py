@@ -40,37 +40,31 @@ def find_by_id(id, session):
 
 
 class SmartpageResource(Resource):
-    def get(self, email, password, smartpage_id):
-        admin, session = check_admin_status(email, password)
-        smartpage, session = find_by_id(smartpage_id, session)
-        return jsonify(smartpage.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id')))
-
-    def delete(self, email, password, smartpage_id):
-        admin, session = check_admin_status(email, password)
-        smartpage, session = find_by_id(smartpage_id, session)
-        if smartpage.id < 7:
-            raise_error("У вас недостаточно прав для этого")
-        contentlist = session.query(Content).filter(Content.smartpage_id == smartpage.id).all()
-        for content in contentlist:
-            add_auditlog("Удаление",
-                         f"{admin.name} {admin.surname} удаляет блок контента на позиции: {content.position}, с типом данных: {content.type}",
-                         admin, datetime.datetime.now())
-            session.delete(content)
-        heading = smartpage.heading
-        session.delete(smartpage)
-        session.commit()
-        add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет страницу: {heading}", admin,
-                     datetime.datetime.now())
-        return jsonify({"success": f"Страница {heading} успешно удалена"})
-
-    def put(self, email, password, smartpage_id):
-        admin, session = check_admin_status(email, password)
-        smartpage, session = find_by_id(smartpage_id, session)
+    def put(self, smartpage_id):
         args, count = parser_smartpage.parse_args(), 0
-        page_dict = smartpage.to_dict(only=('heading', 'image', 'created_date'))
-        keys = list(filter(lambda key: args[key] is not None and args[key] != page_dict[key] and key in list(page_dict.keys()), list(args.keys())))
-        for key in list(args.keys()):
-            if args[key] is not None and args[key] != page_dict[key]:
+        if not all(args[key] is not None for key in ['admin_email', 'action']):
+            raise_error('Пропущены некоторые важные аргументы')
+        admin, session = check_admin_status(args['admin_email'], password_manager.get_password(args['admin_email']))
+        smartpage, session = find_by_id(smartpage_id, session)
+        if args['action'] == "get":
+            return jsonify(smartpage.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id')))
+        elif args['action'] == 'delete':
+            if smartpage.id < 7:
+                raise_error("У вас недостаточно прав для этого")
+            contentlist = session.query(Content).filter(Content.smartpage_id == smartpage.id).all()
+            for content in contentlist:
+                add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет блок контента на позиции: {content.position}, с типом данных: {content.type}",
+                             admin, datetime.datetime.now())
+                session.delete(content)
+            heading = smartpage.heading
+            session.delete(smartpage)
+            session.commit()
+            add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет страницу: {heading}", admin, datetime.datetime.now())
+            return jsonify({"success": f"Страница {heading} успешно удалена"})
+        elif args['action'] == 'put':
+            page_dict = smartpage.to_dict(only=('heading', 'image', 'created_date'))
+            keys = list(filter(lambda key: args[key] is not None and key in page_dict.keys() and args[key] != page_dict[key], list(args.keys())))
+            for key in keys:
                 count += 1
                 if key == 'image':
                     smartpage.image = args['image']
@@ -86,16 +80,15 @@ class SmartpageResource(Resource):
                         else:
                             link += str(count)
                     smartpage.link = link
-        if count == 0:
-            return raise_error("Пустой запрос")
-        page_dict_2 = smartpage.to_dict(only=('heading', 'image', 'created_date', 'author_id'))
-        list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' if key != "image" else "изменяет изображения" for key in keys]
-        session.commit()
-        add_auditlog("Изменение",
-                     f"{admin.name} {admin.surname} изменяет страницу {smartpage.heading}: {', '.join(list_chang)}",
-                     admin,
-                     datetime.datetime.now())
-        return jsonify({"success": f"Страница {smartpage.heading} успешно изменена"})
+            if count == 0:
+                return raise_error("Пустой запрос")
+            page_dict_2 = smartpage.to_dict(only=('heading', 'image', 'created_date', 'author_id'))
+            list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' if key != "image" else "изменяет изображения" for key in keys]
+            session.commit()
+            add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет страницу {smartpage.heading}: {', '.join(list_chang)}",
+                         admin, datetime.datetime.now())
+            return jsonify({"success": f"Страница {smartpage.heading} успешно изменена"})
+        raise_error("Неизвестный метод")
 
 
 class SmartpageRecourseUsual(Resource):
@@ -123,16 +116,15 @@ class SmartpageListRecourse(Resource):
 
 
 class CreateSmartpageResource(Resource):
-    def post(self, email, password):
-        admin, session = check_admin_status(email, password)
+    def post(self):
         args = parser_smartpage.parse_args()
-        if not all(args[key] is not None for key in ['heading']):
+        if not all(args[key] is not None for key in ['heading', 'admin_email']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания страницы')
+        admin, session = check_admin_status(args['admin_email'], password_manager.get_password(args['admin_email']))
         if session.query(Smartpage).filter(Smartpage.heading == args["heading"]).first() is not None:
             raise_error("Этот заголовок уже занят")
         new_smartpage = Smartpage()
         new_smartpage.heading = args["heading"]
-        new_link = trans_link(args["heading"])
         link, count = trans_link(args["heading"]), 0
         while session.query(Smartpage).filter(Smartpage.link == link).first() is not None:
             if link[-len(str(count)):] == str(count):

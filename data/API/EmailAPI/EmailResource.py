@@ -66,11 +66,10 @@ class AdminResourceEmail(Resource):
         args, count = parser_email.parse_args(), 0
         email_dict = email.to_dict(only=('email_address'))
         keys = list(filter(lambda key: args[key] is not None and key in email_dict and args[key] != email_dict[key], args.keys()))
-        for key in args.keys():
-            if args[key] is not None and args[key] != email_dict[key]:
-                count += 1
-                if key == 'email_address':
-                    email.email_address = args["email_address"]
+        for key in keys:
+            count += 1
+            if key == 'email_address':
+                email.email_address = args["email_address"]
         if count == 0:
             return raise_error("Пустой запрос")
         email_dict_2 = email.to_dict(only=('email_address'))

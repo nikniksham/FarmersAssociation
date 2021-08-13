@@ -66,17 +66,16 @@ class AdminResource(Resource):
         elif args["action"] == "put":
             admin_dict = admin.to_dict(only=('name', 'surname', 'status', 'email'))
             keys = list(filter(lambda key: args[key] is not None and key in admin_dict and args[key] != admin_dict[key], list(args.keys())))
-            for key in list(args.keys()):
-                if args[key] is not None and key in admin_dict and args[key] != admin_dict[key]:
-                    count += 1
-                    if key == 'email':
-                        if session.query(User).filter(User.id == args["email"]).first():
-                            raise_error("Этот email уже занят")
-                        admin.email = args['email']
-                    if key == 'name':
-                        admin.name = args["name"]
-                    if key == 'surname':
-                        admin.surname = args["surname"]
+            for key in keys:
+                count += 1
+                if key == 'email':
+                    if session.query(User).filter(User.id == args["email"]).first():
+                        raise_error("Этот email уже занят")
+                    admin.email = args['email']
+                if key == 'name':
+                    admin.name = args["name"]
+                if key == 'surname':
+                    admin.surname = args["surname"]
             if args["change_password"]:
                 if not admin.check_password(password_manager.get_tmp_password(args["admin_email"])):
                     raise_error("Пароль не совпадает с текущим паролем")

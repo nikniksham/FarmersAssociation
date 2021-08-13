@@ -57,29 +57,28 @@ class PartnerResource(Resource):
         partner, session = find_by_id(partner_id, session)
         args, count = parser_partner.parse_args(), 0
         part_dict = partner.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
-        keys = list(filter(lambda key: args[key] is not None and args[key] != part_dict[key] and key in list(part_dict.keys()), list(args.keys())))
+        keys = list(filter(lambda key: args[key] is not None and key in part_dict.keys() and args[key] != part_dict[key], list(args.keys())))
         name = partner.name
-        for key in list(args.keys()):
-            if args[key] is not None and args[key] != part_dict[key]:
-                count += 1
-                if key == "name":
-                    partner.name = args["name"]
-                if key == "logo":
-                    partner.logo = args["logo"]
-                if key == 'image':
-                    partner.image = args['image']
-                if key == "text":
-                    partner.text = args["text"]
-                if key == "link":
-                    partner.tags = args["link"]
-                if key == "occupation":
-                    partner.occupation = args["occupation"]
-                if key == "address":
-                    partner.address = args["address"]
-                if key == "coord":
-                    partner.coord = args["coord"]
-                if key == "province":
-                    partner.province = args["province"]
+        for key in keys:
+            count += 1
+            if key == "name":
+                partner.name = args["name"]
+            if key == "logo":
+                partner.logo = args["logo"]
+            if key == 'image':
+                partner.image = args['image']
+            if key == "text":
+                partner.text = args["text"]
+            if key == "link":
+                partner.tags = args["link"]
+            if key == "occupation":
+                partner.occupation = args["occupation"]
+            if key == "address":
+                partner.address = args["address"]
+            if key == "coord":
+                partner.coord = args["coord"]
+            if key == "province":
+                partner.province = args["province"]
         if count == 0:
             return raise_error("Пустой запрос")
         part_dict_2 = partner.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
