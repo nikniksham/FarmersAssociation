@@ -1445,45 +1445,51 @@ def write_feedback(code):
 @app.route("/contacts")
 def contacts():
     page = get(f"{link_website}api/smartpage/6").json()
-    content = get(f"{link_website}api/content/{page['id']}").json()
+    content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
+    flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('contacts.html', title=page["heading"], page=page, content=content, code=create_random_name(15),
-                           special_params=get_special_params())
+                           special_params=get_special_params(), flag_map=flag_map)
 
 
 @app.route("/agro_and_agro-tourism_sector")
 def agro_and_agro_tourism_sector():
     page = get(f"{link_website}api/smartpage/2").json()
-    content = get(f"{link_website}api/content/{page['id']}").json()
+    content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
+    flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('agro_and_agro_tourism_sector.html', title=page["heading"], page=page, content=content,
-                           special_params=get_special_params())
+                           special_params=get_special_params(), flag_map=flag_map)
 
 
 @app.route("/partners")
 def partners():
     page = get(f"{link_website}api/smartpage/3").json()
-    content = get(f"{link_website}api/content/{page['id']}").json()
-    return render_template('partners.html', title=page["heading"], page=page, content=content, special_params=get_special_params())
+    content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
+    flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
+    return render_template('partners.html', title=page["heading"], page=page, content=content, special_params=get_special_params(), flag_map=flag_map)
 
 
 @app.route("/all_news")
 def all_news():
     page = get(f"{link_website}api/smartpage/4").json()
-    content = get(f"{link_website}api/content/{page['id']}").json()
-    return render_template('all_news.html', title=page["heading"], page=page, content=content, special_params=get_special_params())
+    content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
+    flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
+    return render_template('all_news.html', title=page["heading"], page=page, content=content, special_params=get_special_params(), flag_map=flag_map)
 
 
 @app.route("/team")
 def team():
     page = get(f"{link_website}api/smartpage/5").json()
-    content = get(f"{link_website}api/content/{page['id']}").json()
-    return render_template('team.html', title=page["heading"], page=page, content=content, special_params=get_special_params())
+    content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
+    flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
+    return render_template('team.html', title=page["heading"], page=page, content=content, special_params=get_special_params(), flag_map=flag_map)
 
 
 @app.route("/")
 def website_main():
     page = get(f"{link_website}api/smartpage/1").json()
-    content = get(f"{link_website}api/content/{page['id']}").json()
-    return render_template('main-page.html', title=page["heading"], page=page, content=content, special_params=get_special_params())
+    content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
+    flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
+    return render_template('main-page.html', title=page["heading"], page=page, content=content, special_params=get_special_params(), flag_map=flag_map)
 
 
 @app.route("/page/<string:link>")
@@ -1502,9 +1508,10 @@ def page_by_link(link):
     if link == smartpages[5]["link"]:
         return redirect("/contacts")
     page = get(f"{link_website}api/smartpage/{link}").json()
-    content = get(f"{link_website}api/content/{page['id']}").json()
+    content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
+    flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('generated-page.html', title=page["heading"], page=page, content=content,
-                           special_params=get_special_params())
+                           special_params=get_special_params(), flag_map=flag_map)
 
 
 @app.route("/news-page/<string:link>")
