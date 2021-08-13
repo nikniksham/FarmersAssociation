@@ -1,5 +1,6 @@
 from requests import get, post, put, delete
 
+# Переписать в связи с усиленной защитой апи!
 link_website = 'http://127.0.0.1:8000/'
 test_admin = {"email": "admin@gmail.com", "password": "adminsk1"}
 test_admin_without_status = {"email": "admin2@gmail.com", "password": "adminsk1"}

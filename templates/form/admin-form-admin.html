@@ -37,6 +37,7 @@
             </div>
             {% endfor %}
 
+            {% if f %}
             <label>Права доступа</label>
             <select name="status" class="form-control" id="status">
                 {% for role in roles %}
@@ -47,6 +48,7 @@
                 {% endif %}
                 {% endfor %}
             </select><br>
+            {% endif %}
 
             {% if flag %}
                 {{ form.password.label }}<br>

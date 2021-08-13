@@ -8,7 +8,7 @@ from flask_restful import Api
 from requests import put, delete, get, post
 from werkzeug.utils import redirect
 from data import db_session
-from data.API.AdminAPI.AdminResource import CreateAdminResource, AdminResource, AdminListRecourse, UserResourceAdmin
+from data.API.AdminAPI.AdminResource import CreateAdminResource, AdminResource, UserResourceAdmin
 from data.API.AuditlogAPI.AuditlogResource import AuditlogResource, AuditlogListRecourse
 from data.API.ConfirmationCodeAPI.ConfirmationcodeResource import CodeForConfirmation
 from data.API.ContentAPI.ContentResource import CreateContentResource, ContentResource, ContentListRecourse, \
@@ -40,7 +40,7 @@ from data.email import Email
 from data.phone import Phone
 from data.socialmedia import Socialmedia
 from data.worker import Worker
-from main import PasswordManager, ManagerContainer, text_transform, get_coord
+from main import ManagerContainer, text_transform, get_coord, password_manager
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm, \
     StartForm, PhoneForm, AddressForm, EmailForm, SocialmediaForm, WorkerForm
 from werkzeug.utils import secure_filename
@@ -56,10 +56,9 @@ let = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890"
 app = Flask(__name__)
 app.config.from_object(config)
 api = Api(app)
-api.add_resource(CreateAdminResource, "/api/admin/<string:email>/<string:password>")
-api.add_resource(AdminResource, "/api/admin/<string:email>/<string:password>")
-api.add_resource(UserResourceAdmin, "/api/admin/<string:email>/<string:password>/<int:user_id>")
-api.add_resource(AdminListRecourse, "/api/admin/list/<string:email>/<string:password>")
+api.add_resource(CreateAdminResource, "/api/admin/create")
+api.add_resource(AdminResource, "/api/admin")
+api.add_resource(UserResourceAdmin, "/api/admin/<int:user_id>")
 api.add_resource(CreateSmartpageResource, "/api/smartpage/<string:email>/<string:password>")
 api.add_resource(SmartpageResource, "/api/smartpage/<string:email>/<string:password>/<int:smartpage_id>")
 api.add_resource(SmartpageRecourseUsual, "/api/smartpage/<int:smartpage_id>")
@@ -104,7 +103,6 @@ db_session.global_init("db/FarmersAssociation.sqlite")
 login_manager = LoginManager()
 login_manager.init_app(app)
 code_helper = CodeForConfirmation()
-password_manager = PasswordManager()
 containerManager = ManagerContainer()
 formatting_text_instruction = \
     ["<br> новая строка - Указывается в месте переноса на новую строку",
@@ -748,8 +746,7 @@ def admin_list_admin():
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
-        adminlist = get(
-            f"{link_website}api/admin/list/{current_user.email}/{password_manager.get_password(current_user.email)}").json()
+        adminlist = put(f"{link_website}api/admin", json={"admin_email": current_user.email, "action": "get_list"}).json()
         return render_template('list/admin-list-admin.html', title='Новости', adminlist=adminlist, status=current_user.status,
                                current_id=current_user.id, flag=(current_user.status > 0), special_params=get_special_params())
     return you_dont_have_permission()
@@ -763,20 +760,24 @@ def admin_change_password(id):
     if current_user.status > 1:
         form = AdminForm()
         if current_user.id == id:
-            admin = get(f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email)}").json()
+            admin = put(f"{link_website}api/admin", json={"admin_email": current_user.email, "action": "get"}).json()
         else:
-            admin = get(f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+            admin = put(f"{link_website}api/admin/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         message, result, name = None, False, ""
         if "message" not in admin:
             name = f'{admin["name"]} {admin["surname"]}'
             if request.method == 'POST':
                 if form.password.data == form.password_again.data:
+                    password_manager.add_tmp_password(current_user.email, form.password_current.data)
+                    password_manager.add_tmp_password(f"new_password_{current_user.email}", form.password.data)
                     if id == current_user.id:
-                        message = put(f"{link_website}api/admin/{current_user.email}/{form.password_current.data}",
-                                      json={"password": form.password.data}).json()
+                        message = put(f"{link_website}api/admin", json={"admin_email": current_user.email,
+                                      "action": "put", "change_password": True}).json()
                     else:
-                        message = put(f"{link_website}api/admin/{current_user.email}/{form.password_current.data}/{id}",
-                                      json={"password": form.password.data}).json()
+                        message = put(f"{link_website}api/admin/{id}", json={"admin_email": current_user.email,
+                                      "action": "put", "change_password": True}).json()
+                    password_manager.delete_tmp_password(current_user.email)
+                    password_manager.delete_tmp_password(f"new_password_{current_user.email}")
                     if "success" in message:
                         password_manager.add_user(admin["email"], form.password.data)
                         result = True
@@ -801,10 +802,9 @@ def admin_create_admin():
         if request.method == 'POST':
             if form.password.data == form.password_again.data:
                 form.status.data = int(form.status.data)
-                message = post(
-                    f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email)}",
-                    json={"name": form.name.data, "surname": form.surname.data, "email": form.email.data,
-                          "password": form.password.data, "status": form.status.data}).json()
+                password_manager.add_tmp_password(current_user.email, form.password.data)
+                message = post(f"{link_website}api/admin/create", json={"name": form.name.data, "surname": form.surname.data,
+                               "email": form.email.data, "status": form.status.data, "admin_email": current_user.email}).json()
                 form.status.data = str(form.status.data)
                 if "success" in message:
                     result = True
@@ -812,7 +812,7 @@ def admin_create_admin():
             else:
                 message = "Пароли не совпадают"
         return render_template('form/admin-form-admin.html', title='Создание админа', message=message, form=form,
-                               result=result, flag=True, special_params=get_special_params(),
+                               result=result, flag=True, special_params=get_special_params(), f=True,
                                roles=["Без прав", "Модератор", "Админ", "Владелец"][:current_user.status])
     return you_dont_have_permission()
 
@@ -824,19 +824,26 @@ def admin_edit_admin(id):
         return redirect("/login")
     if current_user.status > 1:
         form = AdminForm()
-        admin = get(
-            f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        if current_user.id == id:
+            f = False
+            admin = put(f"{link_website}api/admin", json={"admin_email": current_user.email, "action": "get"}).json()
+        else:
+            f = True
+            admin = put(f"{link_website}api/admin/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         form.stat = current_user.status
         message, result, admin_status = None, False, 0
         if "message" not in admin:
             admin_status = admin["status"]
             if request.method == 'POST':
-                message = put(
-                    f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}",
-                    json={"name": form.name.data, "surname": form.surname.data, "email": form.email.data,
-                          "status": int(form.status.data)}).json()
+                if current_user.id == id:
+                    message = put(f"{link_website}api/admin", json={"name": form.name.data, "surname": form.surname.data, "email": form.email.data,
+                                  "admin_email": current_user.email, "action": "put"}).json()
+                else:
+                    message = put(f"{link_website}api/admin/{id}", json={"name": form.name.data, "surname": form.surname.data, "email": form.email.data,
+                                  "status": int(form.status.data), "admin_email": current_user.email, "action": "put"}).json()
                 if "success" in message:
-                    admin_status = int(form.status.data)
+                    if f:
+                        admin_status = int(form.status.data)
                     result = True
                 message = " ".join(list(message.values()))
             else:
@@ -849,7 +856,7 @@ def admin_edit_admin(id):
             message = list(admin.values())[0]
         return render_template('form/admin-form-admin.html', title='Редактирование админа', message=message, form=form,
                                result=result, flag=False, admin_status=admin_status, special_params=get_special_params(),
-                               roles=["Без прав", "Модератор", "Админ", "Владелец"][:current_user.status])
+                               roles=["Без прав", "Модератор", "Админ", "Владелец"][:current_user.status], f=f)
     return you_dont_have_permission()
 
 
@@ -861,14 +868,14 @@ def admin_delete_admin(id):
     if current_user.status > 1:
         form = DeleteForm()
         message, name, result = None, "пользователь не найден", False
-        admin = get(
-            f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+        admin = put(f"{link_website}api/admin/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
         if "message" not in admin:
             name = "админа " + f"{admin['name']} {admin['surname']}"
             if admin["status"] < current_user.status:
                 if request.method == 'POST':
-                    message = delete(
-                        f"{link_website}api/admin/{current_user.email}/{password_manager.get_password(current_user.email)}/{id}").json()
+                    message = put(f"{link_website}api/admin/{id}", json={"admin_email": current_user.email,
+                                                                         "action": "delete"}).json()
+                    print(message)
                     if "success" in message:
                         result = True
                     message = " ".join(list(message.values()))
