@@ -9,6 +9,7 @@ import random
 import datetime
 import re
 import smtplib
+from data.bot import Bot
 
 # x17dfWqpc94 farmersassociationmoscowregion
 symbols = "QWERTYUIOPASDFGHJKLZXCVBNM1234567890"
@@ -36,8 +37,11 @@ class CodeForConfirmation:
         return "Проверьте правильность написания почты"
 
     def send_message(self, email, code):
+        session = db_session.create_session()
+        bot = session.query(Bot).get(1)
+        self.smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
         msg = MIMEMultipart()  # Создаем сообщение
-        msg['From'] = "farmersassociationmoscowregion@gmail.com"  # Адресат
+        msg['From'] = bot.email  # Адресат
         msg['To'] = email  # Получатель
         msg['Subject'] = 'Код подтверждения'  # Тема сообщения
         html_code = f"""
@@ -62,7 +66,7 @@ class CodeForConfirmation:
         msg.attach(MIMEText(html_code, 'html', 'utf-8'))
         if re.search(regex, email):
             self.smtpObj.starttls()
-            self.smtpObj.login('farmersassociationmoscowregion@gmail.com', 'x17dfWqpc94')
+            self.smtpObj.login(bot.email, bot.password)
             self.smtpObj.send_message(msg)
             self.smtpObj.quit()
             return True
