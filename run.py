@@ -27,18 +27,8 @@ from data.API.SocialmediaAPI.SocialmediaResource import SocialmediaListRecourse,
     CreateSocialmediaResource
 from data.API.WorkerAPI.WorkerResource import WorkerResourceUsual, WorkerResource, WorkerListRecourse, \
     CreateWorkerResource
+from data.API.SeoAPI.SeoResource import SeoListRecourse, AdminResourceSeo
 from data.user import User
-from data.auditlog import AuditLog
-from data.content import Content
-from data.feedback import Feedback
-from data.newspage import Newspage
-from data.partner import Partner
-from data.smartpage import Smartpage
-from data.address import Address
-from data.email import Email
-from data.phone import Phone
-from data.socialmedia import Socialmedia
-from data.worker import Worker
 from main import ManagerContainer, text_transform, get_coord, password_manager
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm, \
     StartForm, PhoneForm, AddressForm, EmailForm, SocialmediaForm, WorkerForm
@@ -123,6 +113,10 @@ api.add_resource(CreateSocialmediaResource, "/api/socialmedia")
 api.add_resource(SocialmediaListRecourse, "/api/socialmedia")
 db_session.global_init("db/FarmersAssociation.sqlite")
 
+# SeoApi
+api.add_resource(AdminResourceAddress, "/api/seo/<int:address_id>")
+api.add_resource(AddressListRecourse, "/api/seo")
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 code_helper = CodeForConfirmation()
@@ -157,14 +151,8 @@ def set_footer_params():
     special_params["link"] = link_website
 
 
-def set_seo_params(filename='seo.txt'):
-    special_params["seo"] = {}
-    with open(filename, 'r', encoding="utf-8") as file:
-        special_params["seo"]["icon"] = file.readline()[:-1]
-        special_params["seo"]["link_icon"] = file.readline()[:-1]
-        special_params["seo"]["title"] = file.readline()[:-1]
-        special_params["seo"]["description"] = file.readline()[:-1]
-        special_params["seo"]["tegs"] = file.readline()[:-1]
+def set_seo_params():
+    special_params["seo"] = {"icon": "logo.png", "link_icon": "logo-sm.png", "title": None, "description": None, "tags": None}
 
 
 def set_other_params():
@@ -1542,27 +1530,3 @@ if __name__ == '__main__':
     print("http://127.0.0.1:8000/admin")
     print("http://127.0.0.1:8000/login")
     main()
-    test_db = False
-    if test_db:
-        db_session.global_init("db/FarmersAssociation.sqlite")
-        session = db_session.create_session()
-        admin = User()
-        session.add(admin)
-        session.add(AuditLog())
-        session.add(Feedback())
-        session.commit()
-        session = db_session.create_session()
-        session.add(Newspage())
-        session.add(Partner())
-        session.add(Smartpage())
-        session.commit()
-        session = db_session.create_session()
-        session.add(Content())
-        session.add(Address)
-        session.add(Email)
-        session.add(Phone)
-        session.add(Socialmedia)
-        session.add(Worker)
-        session.commit()
-        print('Успех!')
-
