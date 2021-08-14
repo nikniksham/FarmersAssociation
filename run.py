@@ -1226,7 +1226,7 @@ def admin_create_worker():
                 set_other_params()
             message = list(message.values())[-1]
         return render_template('form/admin-form-worker.html', title='Добавление сотрудника', message=message, form=form,
-                               result=result, filenames=filenames, special_params=get_special_params(), image_len=1)
+                               result=result, filenames=filenames, special_params=get_special_params(), image_len=len(filenames) + 1)
     return you_dont_have_permission()
 
 
