@@ -477,7 +477,7 @@ footer p {
 .render-text div {
     text-align: center;
     max-width: 767px;
-    margin: auto;
+    margin: 15px auto;
     border-radius: 15px;
 }
 .render-text img {
