@@ -154,7 +154,8 @@
         var provinces = $('#provinces').val();
         console.log(occupations, provinces);
         for (var i=0; i < partners.length; i++) {
-            if ((partners[i][3] == provinces || provinces === 'all') && (partners[i][4] == occupations || occupations === 'all')) {
+            console.log(partners[i][4].split(", "))
+            if ((partners[i][3] === provinces || provinces === 'all') && (partners[i][4] === occupations || occupations === 'all')) {
                 console.log(partners[i][2]);
                 myPlacemark = new ymaps.Placemark(partners[i][2], {
                     hintContent: partners[i][0],

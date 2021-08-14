@@ -135,8 +135,8 @@ def set_map_params():
     for partner in partners:
         if partner['province'] not in provinces:
             provinces.append(partner['province'])
-        for ocup in partner['occupation'].split(","):
-            ocup = " ".join(ocup.split())
+        for ocup in partner['occupation'].split("//"):
+            ocup = ocup.strip().capitalize()
             if ocup not in occupations:
                 occupations.append(ocup)
     special_params["provinces"] = provinces
@@ -159,10 +159,20 @@ def set_seo_params():
 
 def set_other_params():
     special_params["news"] = get(f"{link_website}api/newspage/0/9").json()
-    special_params["partner"] = get(f"{link_website}api/partner").json()
+    partners = get(f"{link_website}api/partner").json()
+    for ind, partner in enumerate(partners):
+        partners[ind]["ratio"] = get_ratio(partner['logo'].split("//")[0])
+    print(partners)
+    special_params['partner'] = partners
     special_params["smartpages"] = get(f"{link_website}api/smartpage").json()
     special_params["worker"] = get(f"{link_website}api/worker").json()
     set_map_params()
+
+
+def crop_center(img):
+    img_width, img_height, min_size = img.size[0], img.size[1], min(img.size)
+    return img.crop(((img_width - min_size) // 2, (img_height - min_size) // 2,
+                     (img_width + min_size) // 2, (img_height + min_size) // 2))
 
 
 def get_image_name(link):
@@ -202,14 +212,22 @@ def save_image_multithreading(filename, file):
         image.save(filename)
 
 
-def check_user():
-    return not password_manager.user_is_authed(current_user.email)
-
-
 def save_image(filename, file):
     t1 = threading.Thread(target=save_image_multithreading, args=(os.path.join(app.config["UPLOAD_FOLDER"], filename), file))
     t1.start()
     t1.join()
+
+
+def get_ratio(filename, path=app.config['UPLOAD_FOLDER']):
+    ratio = 1
+    if os.path.exists(path+filename):
+        img = Image.open(path+filename)
+        ratio = img.size[0] / img.size[1]
+    return ratio
+
+
+def check_user():
+    return not password_manager.user_is_authed(current_user.email)
 
 
 def clear_folder(folder_name, path=app.config['UPLOAD_FOLDER']):
@@ -266,7 +284,10 @@ def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False,
                 if file.filename.split(".")[-1] == "gif":
                     gif_i = gif
                 if logo and img_list[ind] in ["icon", "iconInput"]:
-                    filename = f"{cont_logo}/" + secure_filename(create_new_image_name(gif=gif_i))
+                    if gif_i:
+                        filename = f"{cont_logo}/" + secure_filename(create_new_image_name(gif=gif_i))
+                    else:
+                        filename = f"{cont_logo}/" + secure_filename(create_new_image_name(logo=True))
                     save_image(filename, file)
                     filenames2.append(filename)
                 else:
@@ -274,7 +295,7 @@ def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False,
                     save_image(filename, file)
                     filenames.append(filename)
         else:
-            if logo and img_list[ind] in ["icon1", "iconInput1"] and "image1" in cont2:
+            if logo and img_list[ind] in ["icon", "iconInput"] and "image1" in cont2:
                 filenames2.append(cont2["image1"])
             elif icon and img_list[ind] in ["icon1", "iconInput1"] and "image1" in cont:
                 filenames.append(cont["image1"])
@@ -690,23 +711,28 @@ def admin_create_news():
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
+        containerManager.delete_container(f"tmp/news/news_{current_user.email}")
         form = NewspageForm()
         message, result, preview_text = None, False, None
         if request.method == 'POST':
             filenames = save_images(f"tmp/news/news_{current_user.email}", request.files, auto_delete=True, r_img=False)
+            text_trans = text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"])
             if form.submit.data:
-                message = post(f"{link_website}api/newspage", json={"heading": form.heading.data, "text": form.text.data,
-                               "image": "//".join(filenames), "admin_email": current_user.email}).json()
-                if "success" in message:
-                    filenames = transport_images(f"tmp/news/news_{current_user.email}", f"news/news_{message['id']}", filenames)
-                    m = put(f"{link_website}api/newspage/{message['id']}", json={"image": "//".join(filenames),
-                            'admin_email': current_user.email, "action": "put"}).json()
-                    result = True
-                    containerManager.delete_container(f"tmp/news/news_{current_user.email}")
-                    set_other_params()
-                message = list(message.values())[-1]
+                if text_trans[:5] != "Error":
+                    message = post(f"{link_website}api/newspage", json={"heading": form.heading.data, "text": form.text.data,
+                                   "image": "//".join(filenames), "admin_email": current_user.email}).json()
+                    if "success" in message:
+                        filenames = transport_images(f"tmp/news/news_{current_user.email}", f"news/news_{message['id']}", filenames)
+                        m = put(f"{link_website}api/newspage/{message['id']}", json={"image": "//".join(filenames),
+                                'admin_email': current_user.email, "action": "put"}).json()
+                        result = True
+                        containerManager.delete_container(f"tmp/news/news_{current_user.email}")
+                        set_other_params()
+                    message = list(message.values())[-1]
+                else:
+                    message = text_trans[7:].capitalize()
             elif form.preview.data:
-                preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
+                preview_text = Markup(text_trans)
         else:
             filenames = containerManager.get_container(f"news_{current_user.email}").values()
         return render_template('form/admin-form-news.html', title='Создание новости', message=message, preview_text=preview_text,
@@ -727,17 +753,21 @@ def admin_edit_news(id):
         if "message" not in list(news):
             if request.method == 'POST':
                 filenames = save_images(f"tmp/news/news_{current_user.email}", request.files, r_img=False)
+                text_trans = text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"])
                 if form.submit.data:
-                    message = put(f"{link_website}api/newspage/{id}", json={"heading": form.heading.data, "text": form.text.data,
-                                  "image": "//".join(filenames), "admin_email": current_user.email, "action": "put"}).json()
-                    if "success" in message:
-                        result = True
-                        filenames = transport_images(f"tmp/news/news_{current_user.email}", f"news/news_{id}", filenames)
-                        m = put(f"{link_website}api/newspage/{id}", json={"image": "//".join(filenames),
-                                "action": "put", "admin_email": current_user.email}).json()
-                        containerManager.delete_container(f"tmp/news/news_{current_user.email}")
-                        set_other_params()
-                    message = list(message.values())[0]
+                    if text_trans[:5] != "Error":
+                        message = put(f"{link_website}api/newspage/{id}", json={"heading": form.heading.data, "text": form.text.data,
+                                      "image": "//".join(filenames), "admin_email": current_user.email, "action": "put"}).json()
+                        if "success" in message:
+                            result = True
+                            filenames = transport_images(f"tmp/news/news_{current_user.email}", f"news/news_{id}", filenames)
+                            m = put(f"{link_website}api/newspage/{id}", json={"image": "//".join(filenames),
+                                    "action": "put", "admin_email": current_user.email}).json()
+                            containerManager.delete_container(f"tmp/news/news_{current_user.email}")
+                            set_other_params()
+                        message = list(message.values())[0]
+                    else:
+                        message = text_trans[7:].capitalize()
                 elif form.preview.data:
                     preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
             else:
@@ -887,6 +917,8 @@ def admin_edit_admin(id):
                 if "success" in message:
                     if f:
                         admin_status = int(form.status.data)
+                    if admin["email"] != form.email.data:
+                        password_manager.update_email(admin["email"], form.email.data)
                     result = True
                 message = list(message.values())[0]
             else:
@@ -958,6 +990,7 @@ def admin_create_smartpage():
         return redirect("/login")
     if current_user.status > 0:
         form = SmartpageForm()
+        containerManager.delete_container(f"tmp/smartpage/smartpage_{current_user.email}")
         message, result, filenames = None, False, []
         if request.method == 'POST':
             filenames = save_images(f"tmp/smartpage/smartpage_{current_user.email}", request.files, auto_delete=True)
@@ -1046,6 +1079,7 @@ def admin_create_content(page_id):
         return redirect("/login")
     if current_user.status > 0:
         form = ContentForm()
+        containerManager.delete_container(f"tmp/content/content_{current_user.email}")
         message, result, filenames, filename = None, False, [], None
         if request.method == 'POST':
             filenames = save_images(f"tmp/content/content_{current_user.email}", request.files, auto_delete=True, r_img=False)
@@ -1176,6 +1210,7 @@ def admin_create_worker():
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
+        containerManager.delete_container(f"tmp/worker/worker_{current_user.email}")
         form = WorkerForm()
         message, result, filenames = None, False, []
         if request.method == 'POST':
@@ -1279,16 +1314,19 @@ def admin_create_partner():
         return redirect("/login")
     if current_user.status > 0:
         form = PartnerForm()
+        cont_name_logo, cont_name_image = f"tmp/partner/partner_{current_user.email}/logo", f"tmp/partner/partner_{current_user.email}/image"
+        containerManager.delete_container(cont_name_image)
+        containerManager.delete_container(cont_name_logo)
         message, result, filenames1, filenames2 = None, False, [], []
         if request.method == 'POST':
             coord = get_coord(form.address.data)
-            cont_name_logo, cont_name_image = f"tmp/partner/partner_{current_user.email}/logo", f"tmp/partner/partner_{current_user.email}/image"
             filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
             if "success" in coord:
+                print([oc.strip().capitalize() for oc in form.occupation.data.split(',')])
                 message = post(f"{link_website}api/partner", json={"name": form.name.data, "logo": "//".join(filenames1),
                                "image": "//".join(filenames2), "text": form.text.data, "link": form.link.data,
-                               "coord": coord['success'][0], "occupation": form.occupation.data, "address": form.address.data,
-                               "province": coord["success"][1], "admin_email": current_user.email}).json()
+                               "coord": coord['success'][0], "occupation": "//".join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]),
+                               "address": form.address.data, "province": coord["success"][1], "admin_email": current_user.email}).json()
                 if "success" in message:
                     filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{message['id']}/logo", filenames1), \
                                                      transport_images(cont_name_image, f"partner/partner_{message['id']}/image", filenames2)
@@ -1328,7 +1366,7 @@ def admin_edit_partner(id):
                     message = put(f"{link_website}api/partner/{id}", json={"name": form.name.data, "image": "//".join(filenames2),
                                   "logo": "//".join(filenames1), "text": form.text.data, "link": form.link.data, "address": form.address.data,
                                   "coord": coord["success"][0], "province": coord["success"][1], "admin_email": current_user.email,
-                                                                           "action": "put"}).json()
+                                  "occupation": '//'.join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]), "action": "put"}).json()
                     if "success" in message:
                         filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{id}/logo", filenames1), \
                                                  transport_images(cont_name_image, f"partner/partner_{id}/image", filenames2)
@@ -1344,7 +1382,7 @@ def admin_edit_partner(id):
                 form.text.data = partner["text"]
                 form.link.data = partner["link"]
                 form.address.data = partner["address"]
-                form.occupation.data = partner["occupation"]
+                form.occupation.data = ", ".join(partner["occupation"].split("//"))
                 filenames1 = copy_files(f"partner/partner_{id}/logo", cont_name_logo, partner["logo"].split("//"))
                 filenames2 = copy_files(f"partner/partner_{id}/image", cont_name_image, partner["image"].split("//"))
                 containerManager.add_container(cont_name_image, filenames2)
@@ -1446,22 +1484,27 @@ def write_feedback(code):
     if request.method == 'POST':
         filenames = save_images(f"tmp/feedback/feedback_{code}", request.files, r_img=False, max_image=5, auto_delete=True, gif=False)
         delete_everything_except(f"tmp/feedback/feedback_{code}", filenames)
+        text_trans = text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"])
+
         if form.submit.data:
-            message = post(f"{link_website}api/feedback",
-                           json={"email": form.email.data, "fullname": form.fullname.data, "heading": form.heading.data,
-                                 "image": "//".join(filenames), "text": form.text.data, "code": form.code.data}).json()
-            if "success" in message:
-                filenames = transport_images(f"tmp/feedback/feedback_{code}", f"feedback/feedback_{message['id']}", filenames)
-                m = put(f"{link_website}api/feedback/{message['id']}/{form.code.data}", json={"image": "//".join(filenames)}).json()
-                result = True
-                message = "Спасибо за отзыв"
-                containerManager.delete_container(f"feedback/feedback_{code}")
+            if text_trans[:5] != "Error":
+                message = post(f"{link_website}api/feedback",
+                               json={"email": form.email.data, "fullname": form.fullname.data, "heading": form.heading.data,
+                                     "image": "//".join(filenames), "text": form.text.data, "code": form.code.data}).json()
+                if "success" in message:
+                    filenames = transport_images(f"tmp/feedback/feedback_{code}", f"feedback/feedback_{message['id']}", filenames)
+                    m = put(f"{link_website}api/feedback/{message['id']}/{form.code.data}", json={"image": "//".join(filenames)}).json()
+                    result = True
+                    message = "Спасибо за отзыв"
+                    containerManager.delete_container(f"feedback/feedback_{code}")
+                else:
+                    message = list(message.values())[0]
             else:
-                message = list(message.values())[0]
+                message = text_trans[7:].capitalize()
         elif form.getcode.data:
             code_helper.create_code(form.email.data)
         elif form.preview.data:
-            preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
+            preview_text = Markup(text_trans)
     else:
         filenames = containerManager.get_container(f"feedback_{code}").values()
     page = get(f"{link_website}api/smartpage/6").json()

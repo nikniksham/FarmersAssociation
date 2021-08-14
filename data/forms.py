@@ -85,7 +85,7 @@ class WorkerForm(StartForm):
 
 class SeoForm(StartForm):
     title = StringField("Название сайта", validators=[DataRequired()])
-    description = StringField("Краткое описание сайта", validators=[DataRequired()])
+    description = TextAreaField("Краткое описание сайта", validators=[DataRequired()])
     tags = StringField("Тэги сайта (через запятую)", validators=[DataRequired()])
     set_logo = SubmitField("Сохранить новую иконку сайта")
     set_logo_sm = SubmitField("Сохранить новую иконку для ссылкок")

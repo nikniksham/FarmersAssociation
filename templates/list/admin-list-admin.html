@@ -9,7 +9,11 @@
     </div>
     {% for admin in adminlist %}
     <div class="settings-element">
+        {% if admin['id'] == current_id %}
+        <p class="settings-element-title">{{admin['name']}} {{admin['surname']}} (Вы)</p>
+        {% else %}
         <p class="settings-element-title">{{admin['name']}} {{admin['surname']}}</p>
+        {% endif %}
         {% if flag %}
         {% if admin["status"] < status or admin["id"] == current_id %}
         <a class="settings-element-edit" href="/admin-change-password/{{admin['id']}}">Изменить пароль</a>

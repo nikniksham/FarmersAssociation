@@ -47,6 +47,12 @@ class PasswordManager:
             return "Пользователь успешно удалён"
         return "Пользователь уже удалён"
 
+    def update_email(self, old_email, new_email):
+        password = password_manager.get_password(old_email)
+        self.delete_user(old_email)
+        self.add_user(new_email, password)
+        print(password_manager.get_password(new_email))
+
     def get_password(self, email):
         if email in list(self.data.keys()):
             return self.data[email].password
@@ -133,9 +139,15 @@ def get_coord(address):
 
     toponym = json_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
     toponym_coodrinates = toponym["Point"]["pos"]
-    province = [elem for elem in toponym["metaDataProperty"]["GeocoderMetaData"]["Address"]["Components"] if elem["kind"] == "province"][0]["name"]
+    province = None
+    try:
+        province = [elem for elem in toponym["metaDataProperty"]["GeocoderMetaData"]["Address"]["Components"] if elem["kind"] == "province"][0]["name"]
+    except Exception:
+        province = None
+    if province:
+        return {"success": [toponym_coodrinates, province]}
+    return {"message": "Адрес некорректный"}
     # print(toponym_coodrinates, province)
-    return {"success": [toponym_coodrinates, province]}
 
 
 def text_transform(text, filenames, path):  # Я не знаю, как это работает, это писал безумный человек
@@ -212,7 +224,7 @@ def text_transform(text, filenames, path):  # Я не знаю, как это р
                     if start_p:
                         res += "</p>"
                     if len(filenames) <= int(elem.lower().split()[1].split('>')[0]) - 1 or int(elem.lower().split()[1].split('>')[0]) - 1 < 0:
-                        return f'Error: нет такой картинки {elem.lower().split()[1].split(">")[0]}'
+                        return f'Error: нет картинки, с индексом {elem.lower().split()[1].split(">")[0]}'
                     res += f"<div><img src='/{path}{filenames[int(elem.lower().split()[1].split('>')[0])-1]}'></div>"
                     if len(">".join(elem.split(">")[1:])) > 0:
                         res += "<p>" + ">".join(elem.split(">")[1:])
@@ -290,7 +302,7 @@ if __name__ == '__main__':
     print(text_transform("<image>", ["", ""], "") == "Error: нет картинки в теге image")
     print(text_transform("<afafa>", ["", ""], "") == "Error: нет тега afafa")
     print(text_transform("<gei>", ["", ""], "") == "Error: нет тега gei")
-    print(text_transform("<image -2141>", ["", ""], "") == "Error: нет такой картинки -2141")
+    print(text_transform("<image -2141>", ["", ""], "") == "Error: нет картинки, с индексом -2141")
     print(text_transform("<p>a\na", ["", ""], "") == "Error: тег p не был закрыт")
     print(text_transform("Урааа, у нас теперь можно писать новости<br><br><p>Текст курсивом</p><h>Какой-то заголовок</h><image 1><image 2><a https://rostec.ru/%3E Ссылка на ростех</a>", ["", ""], "") == "Error: тэг a не был открыт")
     print(text_transform("this is statya about statyu about statyu about statyu about statyu about statyu kotoraya o statye kotoraya statye I talk about this <a />statya</a><image 1><h>this is imgage fom sobranie</h>", [""], "") == "<p>this is statya about statyu about statyu about statyu about statyu about statyu kotoraya o statye kotoraya statye I talk about this <a href='/'>statya</a></p><div><img src='/'></div><p class='title'>this is imgage fom sobranie</p>")
