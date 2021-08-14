@@ -1,0 +1,70 @@
+{% extends "admin-panel.html" %}
+
+{% block adminblock %}
+<p class="settings-title">Настройки SEO</p>
+<div class="settings">
+    <form action="" method="post" enctype=multipart/form-data>
+        {% if message %}
+        {% if result %}
+        <p class="message-success">{{message}}</p>
+        {% else %}
+        <p class="message-error">{{message}}</p>
+        {% endif %}
+        {% endif %}
+
+        <p>Иконка сайта</p>
+        <div class="input-file-row-1">
+            <div class="upload-file-container">
+                <img id="icon1" class="this-is-image visible " src="/static/img/logo.png" alt="">
+                <input type=file name=icon1 class="photo" id="iconInput1">
+            </div>
+        </div>
+        <div class="submit-block">
+            {{ form.set_logo(type="submit", class="btn btn-primary submit") }}
+        </div>
+
+        <p>Иконка для ссылок</p>
+        <div class="input-file-row-1">
+            <div class="upload-file-container">
+                <img id="icon2" class="this-is-image visible " src="/static/img/logo-sm.png" alt="">
+                <input type=file name=icon2 class="photo" id="iconInput2">
+            </div>
+        </div>
+        <div class="submit-block">
+            {{ form.set_logo_sm(type="submit", class="btn btn-primary submit") }}
+        </div>
+
+        {{ form.title.label }}<br>
+        {{ form.title(class="form-control") }}<br>
+        {% for error in form.title.errors %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+        {% endfor %}
+
+        {{ form.description.label }}<br>
+        {{ form.description(class="form-control") }}<br>
+        {% for error in form.description.errors %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+        {% endfor %}
+
+        {{ form.tags.label }}<br>
+        {{ form.tags(class="form-control") }}<br>
+        {% for error in form.tags.errors %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+        {% endfor %}
+
+        <div class="submit-block">
+            {{ form.submit(type="submit", class="btn btn-primary submit") }}
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block adminend %}
+<script src="/static/js/set-icon.js"></script>
+{% endblock %}

@@ -37,11 +37,11 @@ def find_by_id(id, session):
     return seo, session
 
 
-class SeoListRecourse(Resource):
-    def get(self):
+class SeoGetRecourse(Resource):
+    def get(self, seo_id):
         session = db_session.create_session()
-        seos = session.query(Seo).all()
-        return jsonify([item.to_dict(only=('id', 'title', 'description', 'tags')) for item in seos])
+        seo, session = find_by_id(seo_id, session)
+        return jsonify(seo.to_dict(only=('id', 'title', 'description', 'tags')))
 
 
 class AdminResourceSeo(Resource):

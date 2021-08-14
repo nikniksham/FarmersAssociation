@@ -27,11 +27,11 @@ from data.API.SocialmediaAPI.SocialmediaResource import SocialmediaListRecourse,
     CreateSocialmediaResource
 from data.API.WorkerAPI.WorkerResource import WorkerResourceUsual, WorkerResource, WorkerListRecourse, \
     CreateWorkerResource
-from data.API.SeoAPI.SeoResource import SeoListRecourse, AdminResourceSeo
+from data.API.SeoAPI.SeoResource import SeoGetRecourse, AdminResourceSeo
 from data.user import User
 from main import ManagerContainer, text_transform, get_coord, password_manager
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm, \
-    StartForm, PhoneForm, AddressForm, EmailForm, SocialmediaForm, WorkerForm
+    StartForm, PhoneForm, AddressForm, EmailForm, SocialmediaForm, WorkerForm, SeoForm
 from werkzeug.utils import secure_filename
 from PIL import Image
 import config
@@ -114,8 +114,8 @@ api.add_resource(SocialmediaListRecourse, "/api/socialmedia")
 db_session.global_init("db/FarmersAssociation.sqlite")
 
 # SeoApi
-api.add_resource(AdminResourceAddress, "/api/seo/<int:address_id>")
-api.add_resource(AddressListRecourse, "/api/seo")
+api.add_resource(AdminResourceSeo, "/api/seo/<int:seo_id>")
+api.add_resource(SeoGetRecourse, "/api/seo/<int:seo_id>")
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -152,7 +152,9 @@ def set_footer_params():
 
 
 def set_seo_params():
-    special_params["seo"] = {"icon": "logo.png", "link_icon": "logo-sm.png", "title": None, "description": None, "tags": None}
+    seoparams = get(f"{link_website}api/seo/1").json()
+    special_params["seo"] = {"icon": "logo.png", "link_icon": "logo-sm.png", "title": seoparams['title'],
+                             "description": seoparams["description"], "tags": seoparams["tags"].split(", ")}
 
 
 def set_other_params():
@@ -376,30 +378,63 @@ def admin():
     return render_template('admin-panel.html', title='админка', special_params=get_special_params())
 
 
-@app.route("/admin-website-settings", methods=['GET', 'POST'])
+@app.route("/admin-footer-settings")
 @login_required
-def admin_website_settings():
+def admin_footer_settings():
     set_footer_params()
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
         form = StartForm()
         message, result = "", False
+        return render_template('form/admin-form-footer.html', form=form, message=message, result=result,
+                               special_params=get_special_params(), title="Настройка подвала")
+    return you_dont_have_permission()
+
+
+@app.route("/admin-seo-settings", methods=['GET', 'POST'])
+@login_required
+def admin_seo_settings():
+    if check_user():
+        return redirect("/login")
+    if current_user.status > 0:
+        form = SeoForm()
+        seoparams = get(f"{link_website}api/seo/1").json()
+        message, result, img_list = "", False, list(request.files)
         if request.method == 'POST':
-            for ind, name in enumerate(request.files):
-                if ind > 0:
-                    break
-                file = request.files[name]
-                if file.filename != "":
-                    if file and allowed_file(file.filename):
-                        save_image("logo.png", file)
-                        message, result = "Картинка успешно изменена", True
-                    else:
-                        message = "Файл неподдерживаемемого формата"
-                else:
-                    message = "Пустой запрос"
-        return render_template('admin-website-settings.html', form=form, message=message, result=result,
-                               special_params=get_special_params())
+            if form.set_logo.data:
+                for ind, name in enumerate(request.files):
+                    file = request.files[name]
+                    if file.filename != "" and img_list[ind] in ["icon1", "iconInput1"]:
+                        if file and allowed_file(file.filename):
+                            save_image("logo.png", file)
+                            message, result = "Логотип сайта успешно изменён", True
+                        else:
+                            message = "Файл неподдерживаемемого формата"
+            if form.set_logo_sm.data:
+                if form.set_logo:
+                    for ind, name in enumerate(request.files):
+                        file = request.files[name]
+                        if file.filename != "" and img_list[ind] in ["icon2", "iconInput2"]:
+                            if file and allowed_file(file.filename):
+                                save_image("logo-sm.png", file)
+                                message, result = message + "Иконка для ссылок успешно изменена", True
+                            else:
+                                message = "Файл неподдерживаемемого формата"
+            if form.submit.data:
+                message = put(f"{link_website}api/seo/1", json={"admin_email": current_user.email, "action": "put",
+                                                                "title": form.title.data, "tags": form.tags.data,
+                                                                "description": form.description.data}).json()
+                if "success" in message:
+                    result = True
+                    set_seo_params()
+                message = list(message.values())[0]
+        else:
+            form.title.data = seoparams["title"]
+            form.description.data = seoparams["description"]
+            form.tags.data = seoparams["tags"]
+        return render_template('form/admin-form-seo.html', form=form, message=message, result=result,
+                               special_params=get_special_params(), title="Настройка seo")
     return you_dont_have_permission()
 
 
@@ -467,8 +502,7 @@ def admin_delete_phone(id):
                     set_footer_params()
                 message = list(message.values())[0]
         return render_template('form/admin-form-delete.html', title='Удаление телефона', message=message, form=form, name=name,
-                               result=result, link_back="/admin-website-settings",
-                               special_params=get_special_params())
+                               result=result, link_back="/admin-footer-settings", special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -536,7 +570,7 @@ def admin_delete_email(id):
                     set_footer_params()
                 message = list(message.values())[0]
         return render_template('form/admin-form-delete.html', title='Удаление почтового адреса', message=message, form=form,
-                               name=name, result=result, link_back="/admin-website-settings", special_params=get_special_params())
+                               name=name, result=result, link_back="/admin-footer-settings", special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -606,7 +640,7 @@ def admin_delete_socialmedia(id):
                     set_footer_params()
                 message = list(message.values())[0]
         return render_template('form/admin-form-delete.html', title='Удаление ссылки на соцсеть', message=message, form=form,
-                               name=name, result=result, link_back="/admin-website-settings", special_params=get_special_params())
+                               name=name, result=result, link_back="/admin-footer-settings", special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -627,7 +661,7 @@ def admin_edit_address(id):
                     if "success" in message:
                         result = True
                         set_footer_params()
-                    message = " ".join(list(message.values()))
+                    message = list(message.values())[0]
             else:
                 form.address.data = address["place"]
         else:
@@ -703,7 +737,7 @@ def admin_edit_news(id):
                                 "action": "put", "admin_email": current_user.email}).json()
                         containerManager.delete_container(f"tmp/news/news_{current_user.email}")
                         set_other_params()
-                    message = " ".join(list(message.values()))
+                    message = list(message.values())[0]
                 elif form.preview.data:
                     preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
             else:
@@ -740,7 +774,7 @@ def admin_delete_news(id):
                     result = True
                     delete_folder(f"news/news_{id}")
                     set_other_params()
-                message = " ".join(list(message.values()))
+                message = list(message.values())[0]
                 containerManager.delete_container(f"news_{id}")
         return render_template('form/admin-form-delete.html', title='Удаление новости', message=message, form=form,
                                result=result, name=name, link_back="/admin-list-news", special_params=get_special_params())
@@ -788,7 +822,7 @@ def admin_change_password(id):
                     if "success" in message:
                         password_manager.add_user(admin["email"], form.password.data)
                         result = True
-                    message = " ".join(list(message.values()))
+                    message = list(message.values())[0]
                 else:
                     message = "Новые пароли не совпадают"
         else:
@@ -817,7 +851,7 @@ def admin_create_admin():
                 if "success" in message:
                     password_manager.add_user(form.email.data, form.password)
                     result = True
-                message = " ".join(list(message.values()))
+                message = list(message.values())[0]
             else:
                 message = "Пароли не совпадают"
         return render_template('form/admin-form-admin.html', title='Создание админа', message=message, form=form,
@@ -854,7 +888,7 @@ def admin_edit_admin(id):
                     if f:
                         admin_status = int(form.status.data)
                     result = True
-                message = " ".join(list(message.values()))
+                message = list(message.values())[0]
             else:
                 admin_status = admin["status"]
                 form.name.data = admin["name"]
@@ -886,7 +920,7 @@ def admin_delete_admin(id):
                                                                          "action": "delete"}).json()
                     if "success" in message:
                         result = True
-                    message = " ".join(list(message.values()))
+                    message = list(message.values())[0]
             else:
                 message = "У вас недостаточно прав для этого"
         else:
@@ -964,7 +998,7 @@ def admin_edit_smartpage(id):
                     result = True
                     delete_folder(f"tmp/smartpage/smartpage_{current_user.email}")
                     set_other_params()
-                message = " ".join(list(message.values()))
+                message = list(message.values())[0]
             else:
                 form.heading.data = smartpage["heading"]
                 filenames = copy_files(f"smartpage/smartpage_{id}", f"tmp/smartpage/smartpage_{current_user.email}", smartpage["image"].split("//"))
@@ -1118,7 +1152,7 @@ def admin_delete_content(id):
                     result = True
                     delete_folder(f"content/content_{id}")
                     containerManager.delete_container(f"content/content_{id}")
-                message = " ".join(list(message.values()))
+                message = list(message.values())[0]
         return render_template('form/admin-form-delete.html', title='Удаление контента', message=message, form=form,
                                result=result, name=name, link_back=f"/admin-list-smartpage/{page_id}", special_params=get_special_params())
     return you_dont_have_permission()
@@ -1302,7 +1336,7 @@ def admin_edit_partner(id):
                                 'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put"}).json()
                         result = True
                         set_other_params()
-                    message = " ".join(list(message.values()))
+                    message = list(message.values())[0]
                 else:
                     message = coord["message"]
             else:
@@ -1342,7 +1376,7 @@ def admin_delete_partner(id):
                     delete_folder(f"partner/partner_{id}/logo")
                     delete_folder(f"partner/partner_{id}")
                     set_other_params()
-                message = " ".join(list(message.values()))
+                message = list(message.values())[0]
                 containerManager.delete_container(f"partner_{id}")
         else:
             message = list(partner.values())[0]
@@ -1396,7 +1430,7 @@ def admin_delete_feedback(id):
                 if "success" in message:
                     delete_folder(f"feedback/feedback_{feedback['id']}")
                     result = True
-                message = " ".join(list(message.values()))
+                message = list(message.values())[0]
                 images = feedback["image"]
                 for image in images.split("//"):
                     delete_img(image)
@@ -1423,7 +1457,7 @@ def write_feedback(code):
                 message = "Спасибо за отзыв"
                 containerManager.delete_container(f"feedback/feedback_{code}")
             else:
-                message = " ".join(list(message.values()))
+                message = list(message.values())[0]
         elif form.getcode.data:
             code_helper.create_code(form.email.data)
         elif form.preview.data:
