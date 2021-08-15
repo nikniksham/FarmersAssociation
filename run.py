@@ -209,7 +209,7 @@ def give_me_gif_filenames(filename, cont, path="static/img/"):
         for i in range(count):
             filename = f"gif_animation_{i + 1}.gif"
             filenames.append(filename)
-            gif = video.subclip(7 * i, duration if (i + 1) * 7 > duration else (i + 1) * 7)
+            gif = video.subclip(7 * i + 0.25, duration if (i + 1) * 7 > duration else (i + 1) * 7)
             t1 = threading.Thread(target=convert_video_to_gif_multithreading, args=(gif, f"{path}{cont}/{filename}"))
             t1.start()
             t1.join()
