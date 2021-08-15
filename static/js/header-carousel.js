@@ -1,6 +1,6 @@
-var speedHeadCarousel = 7000
+var speedHeadCarousel = 6500
 
-$(document).ready(function(){
+$(document).ready(function() {
     $('.header-carousel').slick({
         accessibility: false,
         speed: 500,
@@ -14,5 +14,10 @@ $(document).ready(function(){
         fade: true,
         cssEase: 'linear',
         pauseOnHover: false
+    });
+
+    $('.header-carousel').on('beforeChange', function(event, slick, currentSlide, nextSlide){
+        console.log("change src");
+        $(".need-change").attr('src', $(".need-change").attr('src'));
     });
 });
