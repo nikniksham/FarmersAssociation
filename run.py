@@ -1,6 +1,7 @@
 import os
 import random
 import threading
+import moviepy.editor as mp
 from markupsafe import Markup
 from flask import Flask, render_template, request
 from flask_login import LoginManager, login_required, logout_user, current_user, login_user
@@ -196,6 +197,27 @@ def create_random_name(name_len):
     return ''.join([random.choice(let) for i in range(name_len)])
 
 
+def convert_video_to_gif_multithreading(gif, path):
+    gif.write_gif(path, fps=10, verbose=False, logger=None)
+
+
+def give_me_gif_filenames(filename, cont, path="static/img/"):
+    if os.path.exists(path+filename):
+        video = mp.VideoFileClip(path+filename)
+        duration, filenames = video.duration, []
+        count = int(duration // 7 if duration > 7 else 1)
+        for i in range(count):
+            filename = f"gif_animation_{i + 1}.gif"
+            filenames.append(filename)
+            gif = video.subclip(7 * i, duration if (i + 1) * 7 > duration else (i + 1) * 7)
+            t1 = threading.Thread(target=convert_video_to_gif_multithreading, args=(gif, f"{path}{cont}/{filename}"))
+            t1.start()
+            t1.join()
+        video.close()
+        return filenames
+    return []
+
+
 def save_image_multithreading(filename, file):
     path = "/".join(filename.split("/")[:-1])
     if not os.path.exists(path):
@@ -272,17 +294,19 @@ def transport_images(old_folder, new_folder, filenames):
     return new_filenames
 
 
-def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False, logo=False, cont_logo=None, gif=True, icon=False):
+def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False, logo=False, cont_logo=None, gif=True, icon=False, feedback=False):
     filenames, filenames2, img_list, cont, cont2 = [], [], list(files), containerManager.get_container(cont_name), containerManager.get_container(cont_logo)
     for ind, name in enumerate(files):
         if max_image and len(filenames) >= max_image:
             break
         file = files[name]
         if file.filename != "":
-            if file and allowed_file(file.filename):
-                gif_i = False
+            if file and allowed_file(file.filename, feedback):
+                gif_i, mp4 = False, False
                 if file.filename.split(".")[-1] == "gif":
                     gif_i = gif
+                if file.filename.split(".")[-1] == "mp4":
+                    mp4 = True
                 if logo and img_list[ind] in ["icon", "iconInput"]:
                     if gif_i:
                         filename = f"{cont_logo}/" + secure_filename(create_new_image_name(gif=gif_i))
@@ -291,9 +315,17 @@ def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False,
                     save_image(filename, file)
                     filenames2.append(filename)
                 else:
-                    filename = f"{cont_name}/" + secure_filename(create_new_image_name(gif=gif_i))
-                    save_image(filename, file)
-                    filenames.append(filename)
+                    if mp4:
+                        file.save(f'{app.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
+                        for filename in give_me_gif_filenames(f"tmp/gif_{current_user.email}.mp4", cont_name):
+                            filenames.append(cont_name+"/"+filename)
+                            print(filename)
+                        if os.path.exists(f'{app.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4'):
+                            os.remove(f'{app.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
+                    else:
+                        filename = f"{cont_name}/" + secure_filename(create_new_image_name(gif=gif_i))
+                        save_image(filename, file)
+                        filenames.append(filename)
         else:
             if logo and img_list[ind] in ["icon", "iconInput"] and "image1" in cont2:
                 filenames2.append(cont2["image1"])
@@ -351,10 +383,12 @@ def create_new_image_name(logo=False, gif=False):
     return filename
 
 
-def allowed_file(filename):
-    ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', 'gif']
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def allowed_file(filename, feedback=False):
+    ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4']
+    ALLOWED_EXTENSIONS_FEEDBACK = ['pdf', 'png', 'jpg', 'jpeg']
+    if feedback:
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS_FEEDBACK
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 def main(port=8000):
@@ -1482,7 +1516,7 @@ def write_feedback(code):
     form = FeedbackForm()
     message, result, filenames, preview_text = None, False, [], None
     if request.method == 'POST':
-        filenames = save_images(f"tmp/feedback/feedback_{code}", request.files, r_img=False, max_image=5, auto_delete=True, gif=False)
+        filenames = save_images(f"tmp/feedback/feedback_{code}", request.files, r_img=False, max_image=5, auto_delete=True, gif=False, feedback=True)
         delete_everything_except(f"tmp/feedback/feedback_{code}", filenames)
         text_trans = text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"])
 
