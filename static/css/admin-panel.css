@@ -277,6 +277,11 @@ div.un-visible {
     font-size: 26px;
 }
 
+.message-success, .message-error {
+    font-size: 20px;
+    text-align: center;
+}
+
 .message-success {
     color: green;
 }

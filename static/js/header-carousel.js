@@ -1,9 +1,9 @@
-var speedHeadCarousel = 6000
+var speedHeadCarousel = 6750
 
 $(document).ready(function() {
     $('.header-carousel').slick({
         accessibility: false,
-        speed: 500,
+        speed: 0,
         dots: false,
         infinite: true,
         autoplay: true,
@@ -12,12 +12,17 @@ $(document).ready(function() {
         draggable: false,
         arrows: false,
         fade: true,
-        cssEase: 'linear',
+        cssEase: 'ease',
         pauseOnHover: false
     });
 
     $('.header-carousel').on('beforeChange', function(event, slick, currentSlide, nextSlide){
         console.log("change src");
-        $(".need-change").attr('src', $(".need-change").attr('src'));
+        var images = $(".need-change");
+        console.log(images);
+        for (var i=0; i < images.length; i++) {
+          $(images[i]).attr('src', $(images[i]).attr('src'));
+        }
+        // $('.header-carousel').slick('slickGoTo', nextSlide);
     });
 });

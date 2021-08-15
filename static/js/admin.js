@@ -18,10 +18,15 @@ function addImage(num) {
 
 function readURL(input) {
     if (input.files && input.files[0]) {
+        // console.log(input.files[0].name.endsWith(".mp4"));
         var num = parseInt(input.id.match(/\d+/))
         var fr = new FileReader();
         fr.onload = function () {
-            $('#image'+num).attr('src', fr.result);
+            if (input.files[0].name.endsWith(".mp4")) {
+                $('#image'+num).attr('src', '/static/img/video.png');
+            } else {
+                $('#image'+num).attr('src', fr.result);
+            }
             if ($('#image'+num).attr('class') === 'this-is-image' || $('#image'+num).attr('class') === '') {
                 console.log("im gay " + count_used)
                 count_used += 1;
