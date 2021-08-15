@@ -467,15 +467,23 @@ def admin_seo_settings():
                         else:
                             message = "Файл неподдерживаемемого формата"
             if form.set_logo_sm.data:
-                if form.set_logo:
-                    for ind, name in enumerate(request.files):
-                        file = request.files[name]
-                        if file.filename != "" and img_list[ind] in ["icon2", "iconInput2"]:
-                            if file and allowed_file(file.filename):
-                                save_image("logo-sm.png", file)
-                                message, result = message + "Иконка для ссылок успешно изменена", True
-                            else:
-                                message = "Файл неподдерживаемемого формата"
+                for ind, name in enumerate(request.files):
+                    file = request.files[name]
+                    if file.filename != "" and img_list[ind] in ["icon2", "iconInput2"]:
+                        if file and allowed_file(file.filename):
+                            save_image("logo-sm.png", file)
+                            message, result = "Иконка для ссылок успешно изменена", True
+                        else:
+                            message = "Файл неподдерживаемемого формата"
+            if form.set_standard_image.data:
+                for ind, name in enumerate(request.files):
+                    file = request.files[name]
+                    if file.filename != "" and img_list[ind] in ["icon3", "iconInput3"]:
+                        if file and allowed_file(file.filename):
+                            save_image("standard.png", file)
+                            message, result = "Новое изображение по умолчанию сохранено", True
+                        else:
+                            message = "Файл неподдерживаемемого формата"
             if form.submit.data:
                 message = put(f"{link_website}api/seo/1", json={"admin_email": current_user.email, "action": "put",
                                                                 "title": form.title.data, "tags": form.tags.data,

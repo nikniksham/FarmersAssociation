@@ -34,6 +34,17 @@
             {{ form.set_logo_sm(type="submit", class="btn btn-primary submit") }}
         </div>
 
+        <p>Изображение по умолчанию</p>
+        <div class="input-file-row-1">
+            <div class="upload-file-container">
+                <img id="icon3" class="this-is-image visible " src="/static/img/standard.png" alt="">
+                <input type=file name=icon3 class="photo" id="iconInput3">
+            </div>
+        </div>
+        <div class="submit-block">
+            {{ form.set_standard_image(type="submit", class="btn btn-primary submit") }}
+        </div>
+
         {{ form.title.label }}<br>
         {{ form.title(class="form-control") }}<br>
         {% for error in form.title.errors %}

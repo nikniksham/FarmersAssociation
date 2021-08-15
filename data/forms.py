@@ -89,3 +89,4 @@ class SeoForm(StartForm):
     tags = StringField("Тэги сайта (через запятую)", validators=[DataRequired()])
     set_logo = SubmitField("Сохранить новую иконку сайта")
     set_logo_sm = SubmitField("Сохранить новую иконку для ссылкок")
+    set_standard_image = SubmitField("Сохранить новое изображение по умолчанию")
