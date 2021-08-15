@@ -163,7 +163,6 @@ def set_other_params():
     partners = get(f"{link_website}api/partner").json()
     for ind, partner in enumerate(partners):
         partners[ind]["ratio"] = get_ratio(partner['logo'].split("//")[0])
-    print(partners)
     special_params['partner'] = partners
     special_params["smartpages"] = get(f"{link_website}api/smartpage").json()
     special_params["worker"] = get(f"{link_website}api/worker").json()
@@ -199,6 +198,7 @@ def create_random_name(name_len):
 
 def convert_video_to_gif_multithreading(gif, path):
     gif.write_gif(path, fps=10, verbose=False, logger=None)
+    gif.close()
 
 
 def give_me_gif_filenames(filename, cont, path="static/img/"):
@@ -207,9 +207,9 @@ def give_me_gif_filenames(filename, cont, path="static/img/"):
         duration, filenames = video.duration, []
         count = int(duration // 7 if duration > 7 else 1)
         for i in range(count):
-            filename = f"gif_animation_{i + 1}.gif"
+            filename = f"{create_random_name(50)}.gif"
             filenames.append(filename)
-            gif = video.subclip(7 * i + 0.25, duration if (i + 1) * 7 > duration else (i + 1) * 7)
+            gif = video.subclip(7 * i, duration if (i + 1) * 7 > duration else (i + 1) * 7)
             t1 = threading.Thread(target=convert_video_to_gif_multithreading, args=(gif, f"{path}{cont}/{filename}"))
             t1.start()
             t1.join()
@@ -319,7 +319,6 @@ def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False,
                         file.save(f'{app.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
                         for filename in give_me_gif_filenames(f"tmp/gif_{current_user.email}.mp4", cont_name):
                             filenames.append(cont_name+"/"+filename)
-                            print(filename)
                         if os.path.exists(f'{app.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4'):
                             os.remove(f'{app.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
                     else:
@@ -1364,7 +1363,6 @@ def admin_create_partner():
             coord = get_coord(form.address.data)
             filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
             if "success" in coord:
-                print([oc.strip().capitalize() for oc in form.occupation.data.split(',')])
                 message = post(f"{link_website}api/partner", json={"name": form.name.data, "logo": "//".join(filenames1),
                                "image": "//".join(filenames2), "text": form.text.data, "link": form.link.data,
                                "coord": coord['success'][0], "occupation": "//".join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]),
@@ -1625,7 +1623,6 @@ def page_by_link(link):
     page = get(f"{link_website}api/smartpage/{link}").json()
     if "message" in page:
         return page_not_found()
-        # print(page, "message" in page)
     content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('generated-page.html', title=page["heading"], page=page, content=content,
