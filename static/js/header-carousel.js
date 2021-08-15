@@ -1,4 +1,4 @@
-var speedHeadCarousel = 6500
+var speedHeadCarousel = 6000
 
 $(document).ready(function() {
     $('.header-carousel').slick({
