@@ -141,7 +141,7 @@ header img {
 }
 
 .main-news-text p:first-child {
-    font-size: 32px;
+    font-size: 36px;
     margin-bottom: 5px;
     font-family: 'Oswald';
     font-width: 400;
@@ -150,7 +150,7 @@ header img {
 
 .main-news-text p:last-child {
     margin: 0;
-    font-size: 18px;
+    font-size: 21px;
     letter-spacing: 2px;
 }
 

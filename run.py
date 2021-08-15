@@ -44,9 +44,9 @@ link_website = "http://127.0.0.1:8000/"
 link_website_heroku = "https://farmersassociation.herokuapp.com/"
 # link_website = link_website_heroku
 let = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890"
-app = Flask(__name__)
-app.config.from_object(config)
-api = Api(app)
+application = Flask(__name__)
+application.config.from_object(config)
+api = Api(application)
 # Подключаем api
 
 # AdminApi
@@ -125,7 +125,7 @@ api.add_resource(CreateTextResource, "/api/text")
 api.add_resource(AdminResourceText, "/api/text/<int:text_id>")
 
 login_manager = LoginManager()
-login_manager.init_app(app)
+login_manager.init_app(application)
 code_helper = CodeForConfirmation()
 containerManager = ManagerContainer()
 formatting_text_instruction = \
@@ -242,12 +242,12 @@ def save_image_multithreading(filename, file):
 
 
 def save_image(filename, file):
-    t1 = threading.Thread(target=save_image_multithreading, args=(os.path.join(app.config["UPLOAD_FOLDER"], filename), file))
+    t1 = threading.Thread(target=save_image_multithreading, args=(os.path.join(application.config["UPLOAD_FOLDER"], filename), file))
     t1.start()
     t1.join()
 
 
-def get_ratio(filename, path=app.config['UPLOAD_FOLDER']):
+def get_ratio(filename, path=application.config['UPLOAD_FOLDER']):
     ratio = 1
     if os.path.exists(path+filename):
         img = Image.open(path+filename)
@@ -259,20 +259,20 @@ def check_user():
     return not password_manager.user_is_authed(current_user.email)
 
 
-def clear_folder(folder_name, path=app.config['UPLOAD_FOLDER']):
+def clear_folder(folder_name, path=application.config['UPLOAD_FOLDER']):
     if os.path.exists(path+folder_name):
         delete_folder(folder_name, path=path)
     os.makedirs(path+folder_name)
 
 
-def delete_everything_except(folder_name, filenames, path=app.config['UPLOAD_FOLDER']):
+def delete_everything_except(folder_name, filenames, path=application.config['UPLOAD_FOLDER']):
     if os.path.exists(path+folder_name):
         for filename in os.listdir(path + folder_name):
             if f"{folder_name}/{filename}" not in filenames and os.path.exists(f"{path}{folder_name}/{filename}"):
                 os.remove(f"{path}{folder_name}/{filename}")
 
 
-def delete_folder(folder_name, path=app.config['UPLOAD_FOLDER']):
+def delete_folder(folder_name, path=application.config['UPLOAD_FOLDER']):
     if os.path.exists(path+folder_name):
         for filename in os.listdir(path + folder_name):
             os.remove(f"{path}{folder_name}/{filename}")
@@ -280,7 +280,7 @@ def delete_folder(folder_name, path=app.config['UPLOAD_FOLDER']):
 
 
 def copy_files(old_folder, new_folder, filenames):
-    path, new_filenames = app.config['UPLOAD_FOLDER'], []
+    path, new_filenames = application.config['UPLOAD_FOLDER'], []
     clear_folder(new_folder)
     if os.path.exists(path+old_folder):
         for filename in filenames:
@@ -291,7 +291,7 @@ def copy_files(old_folder, new_folder, filenames):
 
 
 def transport_images(old_folder, new_folder, filenames):
-    new_filenames, path = [], app.config['UPLOAD_FOLDER']
+    new_filenames, path = [], application.config['UPLOAD_FOLDER']
     clear_folder(new_folder)
     for filename in filenames:
         if os.path.exists(path+filename):
@@ -323,11 +323,11 @@ def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False,
                     filenames2.append(filename)
                 else:
                     if mp4:
-                        file.save(f'{app.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
+                        file.save(f'{application.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
                         for filename in give_me_gif_filenames(f"tmp/gif_{current_user.email}.mp4", cont_name):
                             filenames.append(cont_name+"/"+filename)
-                        if os.path.exists(f'{app.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4'):
-                            os.remove(f'{app.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
+                        if os.path.exists(f'{application.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4'):
+                            os.remove(f'{application.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
                     else:
                         filename = f"{cont_name}/" + secure_filename(create_new_image_name(gif=gif_i))
                         save_image(filename, file)
@@ -340,16 +340,16 @@ def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False,
             elif img_list[ind] in cont:
                 filenames.append(cont[img_list[ind]])
     if r_img:
-        img = Image.open(f"{app.config['UPLOAD_FOLDER']}standard.png")
+        img = Image.open(f"{application.config['UPLOAD_FOLDER']}standard.png")
         if logo and len(filenames2) == 0:
-            if not os.path.exists(f"{app.config['UPLOAD_FOLDER']}{cont_logo}"):
-                os.makedirs(f"{app.config['UPLOAD_FOLDER']}{cont_logo}")
-            img.save(f"{app.config['UPLOAD_FOLDER']}{cont_logo}/standard.png")
+            if not os.path.exists(f"{application.config['UPLOAD_FOLDER']}{cont_logo}"):
+                os.makedirs(f"{application.config['UPLOAD_FOLDER']}{cont_logo}")
+            img.save(f"{application.config['UPLOAD_FOLDER']}{cont_logo}/standard.png")
             filenames2 = [f"{cont_logo}/standard.png"]
         if len(filenames) == 0:
-            if not os.path.exists(f"{app.config['UPLOAD_FOLDER']}{cont_name}"):
-                os.makedirs(f"{app.config['UPLOAD_FOLDER']}{cont_name}")
-            img.save(f"{app.config['UPLOAD_FOLDER']}{cont_name}/standard.png")
+            if not os.path.exists(f"{application.config['UPLOAD_FOLDER']}{cont_name}"):
+                os.makedirs(f"{application.config['UPLOAD_FOLDER']}{cont_name}")
+            img.save(f"{application.config['UPLOAD_FOLDER']}{cont_name}/standard.png")
             filenames = [f"{cont_name}/standard.png"]
     if logo:
         containerManager.add_container(cont_logo, filenames2, auto_delete)
@@ -361,7 +361,7 @@ def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False,
 
 def get_special_params():
     global load_new_footer_params, load_new_params, load_seo_params
-    containerManager.clear_container(app.config['UPLOAD_FOLDER'])
+    containerManager.clear_container(application.config['UPLOAD_FOLDER'])
     if load_new_footer_params:
         load_new_footer_params = False
         set_footer_params()
@@ -377,12 +377,12 @@ def get_special_params():
 
 
 def delete_img(filename):
-    if filename not in ["", "standard.png"] and os.path.exists(f"{app.config['UPLOAD_FOLDER']}{filename}"):
-        os.remove(f"{app.config['UPLOAD_FOLDER']}{filename}")
+    if filename not in ["", "standard.png"] and os.path.exists(f"{application.config['UPLOAD_FOLDER']}{filename}"):
+        os.remove(f"{application.config['UPLOAD_FOLDER']}{filename}")
 
 
 def create_new_image_name(logo=False, gif=False):
-    filelist, format = os.listdir(app.config['UPLOAD_FOLDER']), ".gif" if gif else (".png" if logo else ".jpg")
+    filelist, format = os.listdir(application.config['UPLOAD_FOLDER']), ".gif" if gif else (".png" if logo else ".jpg")
     filename = create_random_name(50) + format
     while filename in filelist:
         filename = create_random_name(50) + format
@@ -400,7 +400,7 @@ def allowed_file(filename, feedback=False):
 def main(port=8000):
     """session = db_session.create_session()
     session.execute("alter table partner add column 'logo' VARCHAR")"""
-    app.run(port=port)
+    application.run(port=port)
 
 
 def you_dont_have_permission():
@@ -411,7 +411,7 @@ def page_not_found():
     return redirect("/")
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@application.route('/login', methods=['GET', 'POST'])
 def login():
     if not current_user.is_anonymous:
         if password_manager.user_is_authed(current_user.email) is False:
@@ -431,7 +431,7 @@ def login():
     return render_template('login.html', title='Авторизация', form=form, special_params=get_special_params())
 
 
-@app.route("/admin")
+@application.route("/admin")
 @login_required
 def admin():
     if check_user():
@@ -439,7 +439,7 @@ def admin():
     return render_template('admin-panel.html', title='админка', special_params=get_special_params())
 
 
-@app.route("/admin-footer-settings")
+@application.route("/admin-footer-settings")
 @login_required
 def admin_footer_settings():
     set_footer_params()
@@ -453,7 +453,7 @@ def admin_footer_settings():
     return you_dont_have_permission()
 
 
-@app.route("/admin-seo-settings", methods=['GET', 'POST'])
+@application.route("/admin-seo-settings", methods=['GET', 'POST'])
 @login_required
 def admin_seo_settings():
     if check_user():
@@ -507,7 +507,7 @@ def admin_seo_settings():
     return you_dont_have_permission()
 
 
-@app.route("/admin-create-text", methods=['GET', 'POST'])
+@application.route("/admin-create-text", methods=['GET', 'POST'])
 @login_required
 def admin_create_text():
     if check_user():
@@ -528,7 +528,7 @@ def admin_create_text():
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-text/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-edit-text/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_text(id):
     if check_user():
@@ -556,7 +556,7 @@ def admin_edit_text(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-delete-text/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-delete-text/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_text(id):
     if check_user():
@@ -578,7 +578,7 @@ def admin_delete_text(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-create-phone", methods=['GET', 'POST'])
+@application.route("/admin-create-phone", methods=['GET', 'POST'])
 @login_required
 def admin_create_phone():
     if check_user():
@@ -598,7 +598,7 @@ def admin_create_phone():
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-phone/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-edit-phone/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_phone(id):
     if check_user():
@@ -624,7 +624,7 @@ def admin_edit_phone(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-delete-phone/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-delete-phone/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_phone(id):
     if check_user():
@@ -646,7 +646,7 @@ def admin_delete_phone(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-create-email", methods=['GET', 'POST'])
+@application.route("/admin-create-email", methods=['GET', 'POST'])
 @login_required
 def admin_create_email():
     if check_user():
@@ -666,7 +666,7 @@ def admin_create_email():
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-email/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-edit-email/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_email(id):
     if check_user():
@@ -692,7 +692,7 @@ def admin_edit_email(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-delete-email/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-delete-email/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_email(id):
     if check_user():
@@ -714,7 +714,7 @@ def admin_delete_email(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-create-socialmedia", methods=['GET', 'POST'])
+@application.route("/admin-create-socialmedia", methods=['GET', 'POST'])
 @login_required
 def admin_create_socialmedia():
     if check_user():
@@ -735,7 +735,7 @@ def admin_create_socialmedia():
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-socialmedia/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-edit-socialmedia/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_socialmedia(id):
     if check_user():
@@ -762,7 +762,7 @@ def admin_edit_socialmedia(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-delete-socialmedia/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-delete-socialmedia/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_socialmedia(id):
     if check_user():
@@ -784,7 +784,7 @@ def admin_delete_socialmedia(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-address/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-edit-address/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_address(id):
     if check_user():
@@ -811,7 +811,7 @@ def admin_edit_address(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-list-news")
+@application.route("/admin-list-news")
 @login_required
 def admin_list_news():
     if check_user():
@@ -824,7 +824,7 @@ def admin_list_news():
     return you_dont_have_permission()
 
 
-@app.route("/admin-create-news", methods=['GET', 'POST'])
+@application.route("/admin-create-news", methods=['GET', 'POST'])
 @login_required
 def admin_create_news():
     if check_user():
@@ -835,7 +835,7 @@ def admin_create_news():
         message, result, preview_text = None, False, None
         if request.method == 'POST':
             filenames = save_images(f"tmp/news/news_{current_user.email}", request.files, auto_delete=True, r_img=False)
-            text_trans = text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"])
+            text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
             if form.submit.data:
                 if text_trans[:5] != "Error":
                     message = post(f"{link_website}api/newspage", json={"heading": form.heading.data, "text": form.text.data,
@@ -860,7 +860,7 @@ def admin_create_news():
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-news/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-edit-news/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_news(id):
     if check_user():
@@ -872,7 +872,7 @@ def admin_edit_news(id):
         if "message" not in list(news):
             if request.method == 'POST':
                 filenames = save_images(f"tmp/news/news_{current_user.email}", request.files, r_img=False)
-                text_trans = text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"])
+                text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
                 if form.submit.data:
                     if text_trans[:5] != "Error":
                         message = put(f"{link_website}api/newspage/{id}", json={"heading": form.heading.data, "text": form.text.data,
@@ -888,7 +888,7 @@ def admin_edit_news(id):
                     else:
                         message = text_trans[7:].capitalize()
                 elif form.preview.data:
-                    preview_text = Markup(text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"]))
+                    preview_text = Markup(text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"]))
             else:
                 form.heading.data = news["heading"]
                 form.text.data = news["text"]
@@ -905,7 +905,7 @@ def admin_edit_news(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-delete-news/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-delete-news/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_news(id):
     if check_user():
@@ -930,7 +930,7 @@ def admin_delete_news(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-list-admin")
+@application.route("/admin-list-admin")
 @login_required
 def admin_list_admin():
     if check_user():
@@ -942,7 +942,7 @@ def admin_list_admin():
     return you_dont_have_permission()
 
 
-@app.route("/admin-change-password/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-change-password/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_change_password(id):
     if check_user():
@@ -981,7 +981,7 @@ def admin_change_password(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-create-admin", methods=['GET', 'POST'])
+@application.route("/admin-create-admin", methods=['GET', 'POST'])
 @login_required
 def admin_create_admin():
     if check_user():
@@ -1009,7 +1009,7 @@ def admin_create_admin():
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-admin/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-edit-admin/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_admin(id):
     if check_user():
@@ -1054,7 +1054,7 @@ def admin_edit_admin(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-delete-admin/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-delete-admin/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_admin(id):
     if check_user():
@@ -1081,7 +1081,7 @@ def admin_delete_admin(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-list-smartpage/<int:page_id>")
+@application.route("/admin-list-smartpage/<int:page_id>")
 @login_required
 def admin_list_smartpage(page_id):
     if check_user():
@@ -1102,7 +1102,7 @@ def admin_list_smartpage(page_id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-create-smartpage", methods=['GET', 'POST'])
+@application.route("/admin-create-smartpage", methods=['GET', 'POST'])
 @login_required
 def admin_create_smartpage():
     if check_user():
@@ -1129,7 +1129,7 @@ def admin_create_smartpage():
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-smartpage/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-edit-smartpage/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_smartpage(id):
     if check_user():
@@ -1163,7 +1163,7 @@ def admin_edit_smartpage(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-delete-smartpage/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-delete-smartpage/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_smartpage(id):
     if check_user():
@@ -1191,7 +1191,7 @@ def admin_delete_smartpage(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-create-content/<int:page_id>", methods=['GET', 'POST'])
+@application.route("/admin-create-content/<int:page_id>", methods=['GET', 'POST'])
 @login_required
 def admin_create_content(page_id):
     if check_user():
@@ -1218,7 +1218,7 @@ def admin_create_content(page_id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-content-move-up/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-edit-content-move-up/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_content_move_up(id):
     if check_user():
@@ -1233,7 +1233,7 @@ def admin_content_move_up(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-content-move-down/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-edit-content-move-down/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_content_move_down(id):
     if check_user():
@@ -1248,7 +1248,7 @@ def admin_content_move_down(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-content/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-edit-content/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_content(id):
     if check_user():
@@ -1286,7 +1286,7 @@ def admin_edit_content(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-delete-content/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-delete-content/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_content(id):
     if check_user():
@@ -1311,7 +1311,7 @@ def admin_delete_content(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-list-worker")
+@application.route("/admin-list-worker")
 @login_required
 def admin_list_worker():
     if check_user():
@@ -1323,7 +1323,7 @@ def admin_list_worker():
     return you_dont_have_permission()
 
 
-@app.route("/admin-create-worker", methods=['GET', 'POST'])
+@application.route("/admin-create-worker", methods=['GET', 'POST'])
 @login_required
 def admin_create_worker():
     if check_user():
@@ -1349,7 +1349,7 @@ def admin_create_worker():
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-worker/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-edit-worker/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_worker(id):
     if check_user():
@@ -1391,7 +1391,7 @@ def admin_edit_worker(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-delete-worker/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-delete-worker/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_worker(id):
     if check_user():
@@ -1415,7 +1415,7 @@ def admin_delete_worker(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-list-partner")
+@application.route("/admin-list-partner")
 @login_required
 def admin_list_partner():
     if check_user():
@@ -1426,7 +1426,7 @@ def admin_list_partner():
     return you_dont_have_permission()
 
 
-@app.route("/admin-create-partner", methods=['GET', 'POST'])
+@application.route("/admin-create-partner", methods=['GET', 'POST'])
 @login_required
 def admin_create_partner():
     if check_user():
@@ -1464,7 +1464,7 @@ def admin_create_partner():
     return you_dont_have_permission()
 
 
-@app.route("/admin-edit-partner/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-edit-partner/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_partner(id):
     if check_user():
@@ -1513,7 +1513,7 @@ def admin_edit_partner(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-delete-partner/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-delete-partner/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_partner(id):
     if check_user():
@@ -1541,7 +1541,7 @@ def admin_delete_partner(id):
     return you_dont_have_permission()
 
 
-@app.route("/admin-list-auditlog")
+@application.route("/admin-list-auditlog")
 @login_required
 def admin_auditlog():
     if check_user():
@@ -1550,7 +1550,7 @@ def admin_auditlog():
     return render_template('list/admin-list-auditlog.html', title='Журнал аудита', auditlogs=auditlogs, special_params=get_special_params())
 
 
-@app.route("/admin-list-feedback")
+@application.route("/admin-list-feedback")
 @login_required
 def admin_feedback():
     if check_user():
@@ -1559,7 +1559,7 @@ def admin_feedback():
     return render_template('list/admin-list-feedback.html', title='Отзывы', feedbacks=feedbacks, special_params=get_special_params())
 
 
-@app.route("/view-feedback/<int:id>", methods=['GET', 'POST'])
+@application.route("/view-feedback/<int:id>", methods=['GET', 'POST'])
 @login_required
 def view_feedback(id):
     if check_user():
@@ -1570,7 +1570,7 @@ def view_feedback(id):
     return render_template('feedback.html', title=feedback["heading"], feedback=feedback, special_params=get_special_params())
 
 
-@app.route("/admin-delete-feedback/<int:id>", methods=['GET', 'POST'])
+@application.route("/admin-delete-feedback/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_feedback(id):
     if check_user():
@@ -1595,14 +1595,14 @@ def admin_delete_feedback(id):
     return you_dont_have_permission()
 
 
-@app.route("/write-feedback/<string:code>", methods=['GET', 'POST'])
+@application.route("/write-feedback/<string:code>", methods=['GET', 'POST'])
 def write_feedback(code):
     form = FeedbackForm()
     message, result, filenames, preview_text = None, False, [], None
     if request.method == 'POST':
         filenames = save_images(f"tmp/feedback/feedback_{code}", request.files, r_img=False, max_image=5, auto_delete=True, gif=False, feedback=True)
         delete_everything_except(f"tmp/feedback/feedback_{code}", filenames)
-        text_trans = text_transform(form.text.data, filenames, app.config["UPLOAD_FOLDER"])
+        text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
 
         if form.submit.data:
             if text_trans[:5] != "Error":
@@ -1633,7 +1633,7 @@ def write_feedback(code):
                            formatting_text_instruction=formatting_text_instruction)
 
 
-@app.route("/contacts")
+@application.route("/contacts")
 def contacts():
     page = get(f"{link_website}api/smartpage/6").json()
     content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
@@ -1642,7 +1642,7 @@ def contacts():
                            special_params=get_special_params(), flag_map=flag_map)
 
 
-@app.route("/agro_and_agro-tourism_sector")
+@application.route("/agro_and_agro-tourism_sector")
 def agro_and_agro_tourism_sector():
     page = get(f"{link_website}api/smartpage/2").json()
     content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
@@ -1651,7 +1651,7 @@ def agro_and_agro_tourism_sector():
                            special_params=get_special_params(), flag_map=flag_map)
 
 
-@app.route("/partners")
+@application.route("/partners")
 def partners():
     page = get(f"{link_website}api/smartpage/3").json()
     content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
@@ -1659,7 +1659,7 @@ def partners():
     return render_template('partners.html', title=page["heading"], page=page, content=content, special_params=get_special_params(), flag_map=flag_map)
 
 
-@app.route("/all_news")
+@application.route("/all_news")
 def all_news():
     page = get(f"{link_website}api/smartpage/4").json()
     content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
@@ -1667,7 +1667,7 @@ def all_news():
     return render_template('all_news.html', title=page["heading"], page=page, content=content, special_params=get_special_params(), flag_map=flag_map)
 
 
-@app.route("/team")
+@application.route("/team")
 def team():
     page = get(f"{link_website}api/smartpage/5").json()
     content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
@@ -1675,7 +1675,7 @@ def team():
     return render_template('team.html', title=page["heading"], page=page, content=content, special_params=get_special_params(), flag_map=flag_map)
 
 
-@app.route("/")
+@application.route("/")
 def website_main():
     page = get(f"{link_website}api/smartpage/1").json()
     content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
@@ -1683,7 +1683,7 @@ def website_main():
     return render_template('main-page.html', title=page["heading"], page=page, content=content, special_params=get_special_params(), flag_map=flag_map)
 
 
-@app.route("/page/<string:link>")
+@application.route("/page/<string:link>")
 def page_by_link(link):
     smartpages = get(f"{link_website}api/smartpage").json()
     if link == smartpages[0]["link"]:
@@ -1707,7 +1707,7 @@ def page_by_link(link):
                            special_params=get_special_params(), flag_map=flag_map)
 
 
-@app.route("/news-page/<string:link>")
+@application.route("/news-page/<string:link>")
 def news_page(link):
     news = get(f"{link_website}api/newspage/{link}").json()
     if "message" in news:
@@ -1715,7 +1715,7 @@ def news_page(link):
     return render_template('news.html', title=news["heading"], news=news, special_params=get_special_params())
 
 
-@app.route('/logout')
+@application.route('/logout')
 @login_required
 def logout():
     password_manager.delete_user(current_user.email)

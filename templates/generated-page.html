@@ -52,19 +52,6 @@
     </div>
     {% endfor %}
 </div>
-<div class="header-carousel-text">
-    {% for src in range(2) %}
-    <div class="main-news-item">
-        <div class="main-news-container">
-            <img src="/static/img/logo.png">
-            <div class="main-news-text">
-                <p>Заглавный текст {{loop.index}}</p>
-                <p>просто текст</p>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
 <div class="container">
     {% for block in content %}
     {% if block['type'] == "News" %}
