@@ -1615,6 +1615,9 @@ def page_by_link(link):
     if link == smartpages[5]["link"]:
         return redirect("/contacts")
     page = get(f"{link_website}api/smartpage/{link}").json()
+    if "message" in page:
+        return page_not_found()
+        # print(page, "message" in page)
     content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('generated-page.html', title=page["heading"], page=page, content=content,

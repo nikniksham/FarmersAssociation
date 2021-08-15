@@ -139,7 +139,7 @@
 <script type="text/javascript">
     var partners = []
     {% for partner in special_params["partner"] %}
-    partners.push(["{{partner["name"]}}", "{{partner["logo"]}}", [{{', '.join(partner["coord"].split()[::-1])}}], "{{partner["province"]}}", "{{partner["occupation"]}}", "{{partner["link"]}}"])
+    partners.push(["{{partner["name"]}}", "{{partner["logo"]}}", [{{', '.join(partner["coord"].split()[::-1])}}], "{{partner["province"]}}",[{% for occupation in partner["occupation"].split("//") %}{{('"'+occupation+'", ')|safe}}{% endfor %}],"{{partner["link"]}}", {{partner["ratio"]}}])
     {% endfor %}
     console.log(partners);
 
@@ -154,9 +154,7 @@
         var provinces = $('#provinces').val();
         console.log(occupations, provinces);
         for (var i=0; i < partners.length; i++) {
-            console.log(partners[i][4].split(", "))
-            if ((partners[i][3] === provinces || provinces === 'all') && (partners[i][4] === occupations || occupations === 'all')) {
-                console.log(partners[i][2]);
+            if ((partners[i][3] === provinces || provinces === 'all') && (partners[i][4].includes(occupations) || occupations === 'all')) {
                 myPlacemark = new ymaps.Placemark(partners[i][2], {
                     hintContent: partners[i][0],
                     balloonContent: partners[i][0]+'<br>'+partners[i][4]+'<br><a href="/'+partners[i][5]+'">сайт</a>'
@@ -167,7 +165,7 @@
                     // Своё изображение иконки метки.
                     iconImageHref: '/static/img/'+partners[i][1],
                     // Размеры метки.
-                    iconImageSize: [50, 50],
+                    iconImageSize: [80 * partners[i][6], 80],
                     // Смещение левого верхнего угла иконки относительно
                     // её "ножки" (точки привязки).
                     iconImageOffset: [-25, -25]
