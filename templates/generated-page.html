@@ -46,8 +46,21 @@
 <div class="header-carousel">
     {% for src in page['image'].split('//') %}
     <div class="carousel-head">
-        <div>
-            <img class="need-change" src="/static/img/{{src}}" alt="">
+        <div class="carousel-head-div">
+            <img class="carousel-head-img need-change" src="/static/img/{{src}}" alt="">
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<div class="header-carousel-text">
+    {% for src in range(2) %}
+    <div class="main-news-item">
+        <div class="main-news-container">
+            <img src="/static/img/logo.png">
+            <div class="main-news-text">
+                <p>Заглавный текст {{loop.index}}</p>
+                <p>просто текст</p>
+            </div>
         </div>
     </div>
     {% endfor %}
