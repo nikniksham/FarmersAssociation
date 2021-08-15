@@ -83,6 +83,11 @@ class WorkerForm(StartForm):
     email = StringField("Почта", validators=[DataRequired()])
 
 
+class TextForm(StartForm):
+    heading = StringField('Текст сверху', validators=[DataRequired()])
+    description = StringField('Текст снизу', validators=[DataRequired()])
+
+
 class SeoForm(StartForm):
     title = StringField("Название сайта", validators=[DataRequired()])
     description = TextAreaField("Краткое описание сайта", validators=[DataRequired()])

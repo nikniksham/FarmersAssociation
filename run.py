@@ -28,11 +28,12 @@ from data.API.SocialmediaAPI.SocialmediaResource import SocialmediaListRecourse,
     CreateSocialmediaResource
 from data.API.WorkerAPI.WorkerResource import WorkerResourceUsual, WorkerResource, WorkerListRecourse, \
     CreateWorkerResource
+from data.API.TextAPI.TextResource import TextListRecourse, CreateTextResource, AdminResourceText
 from data.API.SeoAPI.SeoResource import SeoGetRecourse, AdminResourceSeo
 from data.user import User
 from main import ManagerContainer, text_transform, get_coord, password_manager
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm, \
-    StartForm, PhoneForm, AddressForm, EmailForm, SocialmediaForm, WorkerForm, SeoForm
+    StartForm, PhoneForm, AddressForm, EmailForm, SocialmediaForm, WorkerForm, SeoForm, TextForm
 from werkzeug.utils import secure_filename
 from PIL import Image
 import config
@@ -118,6 +119,11 @@ db_session.global_init("db/FarmersAssociation.sqlite")
 api.add_resource(AdminResourceSeo, "/api/seo/<int:seo_id>")
 api.add_resource(SeoGetRecourse, "/api/seo/<int:seo_id>")
 
+# TextApi
+api.add_resource(TextListRecourse, "/api/text")
+api.add_resource(CreateTextResource, "/api/text")
+api.add_resource(AdminResourceText, "/api/text/<int:text_id>")
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 code_helper = CodeForConfirmation()
@@ -166,6 +172,7 @@ def set_other_params():
     special_params['partner'] = partners
     special_params["smartpages"] = get(f"{link_website}api/smartpage").json()
     special_params["worker"] = get(f"{link_website}api/worker").json()
+    special_params["text"] = get(f"{link_website}api/text").json()
     set_map_params()
 
 
@@ -496,7 +503,78 @@ def admin_seo_settings():
             form.description.data = seoparams["description"]
             form.tags.data = seoparams["tags"]
         return render_template('form/admin-form-seo.html', form=form, message=message, result=result,
-                               special_params=get_special_params(), title="Настройка seo")
+                               special_params=get_special_params(), title="Настройка сайта")
+    return you_dont_have_permission()
+
+
+@app.route("/admin-create-text", methods=['GET', 'POST'])
+@login_required
+def admin_create_text():
+    if check_user():
+        return redirect("/login")
+    if current_user.status > 0:
+        form = TextForm()
+        message, result = None, False
+        if request.method == 'POST':
+            if form.submit.data:
+                message = post(f"{link_website}api/text", json={"heading": form.heading.data, "description": form.description.data,
+                                                                "admin_email": current_user.email}).json()
+                if "success" in message:
+                    result = True
+                    set_other_params()
+                message = list(message.values())[0]
+        return render_template('form/admin-form-text.html', title='Добавление текста', message=message,
+                               form=form, result=result, special_params=get_special_params())
+    return you_dont_have_permission()
+
+
+@app.route("/admin-edit-text/<int:id>", methods=['GET', 'POST'])
+@login_required
+def admin_edit_text(id):
+    if check_user():
+        return redirect("/login")
+    if current_user.status > 0:
+        form = TextForm()
+        message, result = None, False
+        text = put(f"{link_website}api/text/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
+        if "message" not in text:
+            if request.method == 'POST':
+                if form.submit.data:
+                    message = put(f"{link_website}api/text/{id}", json={"heading": form.heading.data, "description": form.description.data,
+                                                                        "admin_email": current_user.email, "action": "put"}).json()
+                    if "success" in message:
+                        result = True
+                        set_other_params()
+                    message = list(message.values())[0]
+            else:
+                form.heading.data = text["heading"]
+                form.description.data = text["description"]
+        else:
+            message = "Телефон не найден"
+        return render_template('form/admin-form-text.html', title='Редактирование текста', message=message,
+                               result=result, form=form, special_params=get_special_params())
+    return you_dont_have_permission()
+
+
+@app.route("/admin-delete-text/<int:id>", methods=['GET', 'POST'])
+@login_required
+def admin_delete_text(id):
+    if check_user():
+        return redirect("/login")
+    if current_user.status > 0:
+        form = DeleteForm()
+        message, result, name = None, False, "текст не найден"
+        text = put(f"{link_website}api/text/{id}", json={"admin_email": current_user.email, "action": "get"}).json()
+        if "message" not in text:
+            name = "текст " + text["heading"]
+            if request.method == 'POST':
+                message = put(f"{link_website}api/text/{id}", json={"admin_email": current_user.email, "action": "delete"}).json()
+                if "success" in message:
+                    result = True
+                    set_other_params()
+                message = list(message.values())[0]
+        return render_template('form/admin-form-delete.html', title='Удаление текста', message=message, form=form, name=name,
+                               result=result, link_back="/admin-seo-settings", special_params=get_special_params())
     return you_dont_have_permission()
 
 

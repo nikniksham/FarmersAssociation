@@ -1,7 +1,7 @@
 {% extends "admin-panel.html" %}
 
 {% block adminblock %}
-<p class="settings-title">Настройки SEO</p>
+<p class="settings-title">Настройки сайта</p>
 <div class="settings">
     <form action="" method="post" enctype=multipart/form-data>
         {% if message %}
@@ -73,6 +73,18 @@
             {{ form.submit(type="submit", class="btn btn-primary submit") }}
         </div>
     </form>
+
+    <p>Текста на главной странице</p>
+    <div class="settings-add">
+        <a class="settings-element-add" href="/admin-create-text">Добавить</a>
+    </div>
+    {% for text in special_params["text"] %}
+    <div class="settings-element">
+        <p class="settings-element-title">{{text['heading']}}</p>
+        <a class="settings-element-edit" href="/admin-edit-text/{{text['id']}}">Изменить</a>
+        <a class="settings-element-delete" href="/admin-delete-text/{{text['id']}}">Удалить</a>
+    </div>
+    {% endfor %}<br>
 </div>
 {% endblock %}
 
