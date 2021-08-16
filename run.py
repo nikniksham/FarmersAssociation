@@ -42,6 +42,8 @@ import shutil
 load_new_footer_params, load_new_params, load_seo_params = True, True, True
 link_website = "http://127.0.0.1:8000/"
 link_website_heroku = "https://farmersassociation.herokuapp.com/"
+link_web = "https://фермермо.рф"
+link_web_2 = "https://xn--e1aaubkic1a.xn--p1ai/"
 # link_website = link_website_heroku
 let = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890"
 application = Flask(__name__)
