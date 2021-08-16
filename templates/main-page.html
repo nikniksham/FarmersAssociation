@@ -4,6 +4,19 @@
 {% endblock %}
 
 {% block pageblockext %}
+<div class="header-carousel-text">
+    {% for text in special_params["text"] %}
+    <div class="main-news-item">
+        <div class="main-news-container">
+            <img src="/static/img/logo.png">
+            <div class="main-news-text">
+                <p>{{text["heading"]}}</p>
+                <p>{{text["description"]}}</p>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}
 
 {% block endext %}
