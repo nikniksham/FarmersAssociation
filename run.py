@@ -158,7 +158,7 @@ def set_footer_params():
     special_params["emails"] = get(f"{link_website}api/email").json()
     special_params["address"] = get(f"{link_website}api/address").json()
     special_params["link"] = link_website
-    special_params['our_coord'] = get_coord(get(f"{link_website}api/address").json()[0])["place"]["success"][0]
+    special_params['our_coord'] = get_coord(get(f"{link_website}api/address").json()[0]["place"])["success"][0]
 
 
 def set_seo_params():
