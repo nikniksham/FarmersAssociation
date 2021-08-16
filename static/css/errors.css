@@ -1,0 +1,29 @@
+*,
+*::before,
+*::after {
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    background: #f4f4f4;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.error {
+    text-align: center;
+}
+
+.error-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 64px;
+}
+
+.error-text {
+    font-family: 'Yanone Kaffeesatz', sans-serif;
+    font-size: 24px;
+}
