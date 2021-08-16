@@ -3,21 +3,21 @@
 {% block headext %}
 <script type="text/javascript">
     ymaps.ready(function () {
-        myMap2 = new ymaps.Map('contacts-map', {
-        center: [{{coords}}],
-        zoom: 9
+        myMap2 = new ymaps.Map('map', {
+            center: [{{", ".join(special_params["our_coord"].split()[::-1])}}],
+            zoom: 9
         }, {
             searchControlProvider: 'yandex#search'
         })
 
-        myPlacemark = new ymaps.Placemark(partners[i][2], {
-            hintContent: partners[i][0],
-            balloonContent: partners[i][0]+'<br>'+partners[i][4]+'<br><a href="/'+partners[i][5]+'">сайт</a>'
+        myPlacemark = new ymaps.Placemark([{{", ".join(special_params["our_coord"].split()[::-1])}}], {
+            hintContent: "Ассоциация фермеров",
+            balloonContent: ""
         }, {
             iconLayout: 'default#image',
-            iconImageHref: '/static/img/'+partners[i][1],
-            iconImageSize: [80 * partners[i][6], 80],
-            iconImageOffset: [-25, -25]
+            iconImageHref: '/static/img/logo.png',
+            iconImageSize: [80, 80],
+            iconImageOffset: [-40, -40]
         })
 
         myMap2.geoObjects.add(myPlacemark);
@@ -29,31 +29,28 @@
 <div class="row">
     <div class="col-md-6 col-sm-12">
         <p class="contacts-title">Адрес</p>
-        <p class="contacts-data">адрес компании</p>
+        <p class="contacts-data">{{special_params["address"][0]["place"]}}</p>
     </div>
     <div class="col-md-6 col-sm-12">
         <p class="contacts-title">Почтовый адрес</p>
-        <p class="contacts-data">почтовый адресс компании</p>
+        <p class="contacts-data">{{special_params["address"][1]["place"]}}</p>
     </div>
     <div class="col-md-6 col-sm-12">
         <p class="contacts-title">Телефон</p>
-        <p class="contacts-data"><a href="tel:+81112223344">+8 (111) 222-33-44</a></p>
+        {%for number in special_params["numbers"]%}
+        <p class="contacts-data"><a href="tel:{{number}}">{{number["number"]}}</a></p>
+        {%endfor%}
     </div>
     <div class="col-md-6 col-sm-12">
         <p class="contacts-title">Почта</p>
-        <p class="contacts-data">почта компании</p>
-    </div>
-    <div class="col-md-6 col-sm-12">
-        <p class="contacts-title">Реквизиты</p>
-        <p class="contacts-data">реквизиты компании</p>
-    </div>
-    <div class="col-md-6 col-sm-12">
-        <p class="contacts-title">Мы в соц. сетях</p>
+        {%for email in special_params["emails"]%}
+        <p class="contacts-data">{{email["email_address"]}}</p>
+        {%endfor%}
     </div>
 </div>
 <div class="contact-map">
     <div class="map">
-        <div id="contacts-map"></div>
+        <div id="map"></div>
     </div>
 </div>
 <div class="feedback">
