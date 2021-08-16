@@ -1,6 +1,28 @@
 {% extends "generated-page.html" %}
 
 {% block headext %}
+<script type="text/javascript">
+    ymaps.ready(function () {
+        myMap2 = new ymaps.Map('contacts-map', {
+        center: [{{coords}}],
+        zoom: 9
+        }, {
+            searchControlProvider: 'yandex#search'
+        })
+
+        myPlacemark = new ymaps.Placemark(partners[i][2], {
+            hintContent: partners[i][0],
+            balloonContent: partners[i][0]+'<br>'+partners[i][4]+'<br><a href="/'+partners[i][5]+'">сайт</a>'
+        }, {
+            iconLayout: 'default#image',
+            iconImageHref: '/static/img/'+partners[i][1],
+            iconImageSize: [80 * partners[i][6], 80],
+            iconImageOffset: [-25, -25]
+        })
+
+        myMap2.geoObjects.add(myPlacemark);
+    })
+</script>
 {% endblock %}
 
 {% block pageblockext %}
@@ -30,8 +52,9 @@
     </div>
 </div>
 <div class="contact-map">
-    <script type="text/javascript" charset="utf-8" async src="https://api-maps.yandex.ru/services/constructor/1.0/js/?um=constructor%3Aa720be7f3b65c4133f2896f03173d31cb2ac5f749ab24705c35fd4d9334febff&amp;width=100%25&amp;height=400&amp;lang=ru_RU&amp;scroll=true">
-    </script>
+    <div class="map">
+        <div id="contacts-map"></div>
+    </div>
 </div>
 <div class="feedback">
     <button class="button-feedback"><a href=/write-feedback/{{code}}>Оставить отзыв</a></button>
