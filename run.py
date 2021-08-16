@@ -158,6 +158,7 @@ def set_footer_params():
     special_params["emails"] = get(f"{link_website}api/email").json()
     special_params["address"] = get(f"{link_website}api/address").json()
     special_params["link"] = link_website
+    special_params['our_coord'] = get(f"{link_website}api/address").json()[0]["place"]
 
 
 def set_seo_params():
@@ -798,12 +799,17 @@ def admin_edit_address(id):
         if "message" not in address:
             if request.method == 'POST':
                 if form.submit.data:
-                    message = put(f"{link_website}api/address/{id}", json={"place": form.address.data, "admin_email": current_user.email,
-                                                                           "action": "put"}).json()
-                    if "success" in message:
-                        result = True
-                        set_footer_params()
-                    message = list(message.values())[0]
+                    res = get_coord(form.address.data)
+                    if "success" in form.address.data:
+                        special_params["our_coord"] = res
+                        message = put(f"{link_website}api/address/{id}", json={"place": form.address.data["success"][0], "admin_email": current_user.email,
+                                                                               "action": "put"}).json()
+                        if "success" in message:
+                            result = True
+                            set_footer_params()
+                        message = list(message.values())[0]
+                    else:
+                        message = list(res.values())[0]
             else:
                 form.address.data = address["place"]
         else:
