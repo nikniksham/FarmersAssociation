@@ -800,9 +800,9 @@ def admin_edit_address(id):
             if request.method == 'POST':
                 if form.submit.data:
                     res = get_coord(form.address.data)
-                    if "success" in form.address.data:
+                    if "success" in res:
                         special_params["our_coord"] = res
-                        message = put(f"{link_website}api/address/{id}", json={"place": form.address.data["success"][0], "admin_email": current_user.email,
+                        message = put(f"{link_website}api/address/{id}", json={"place": res["success"][0], "admin_email": current_user.email,
                                                                                "action": "put"}).json()
                         if "success" in message:
                             result = True
