@@ -94,4 +94,4 @@ class CreateTextResource(Resource):
         session.commit()
         add_auditlog("Создание", f"Админ {admin.name} {admin.surname} добавляет новый текстна сайт {new_text.heading}: "
                                  f"{new_text.to_dict(only=('id', 'heading', 'description'))}", admin, datetime.datetime.now())
-        return jsonify({'success': f'Ссылка на соцсеть {new_text.heading} создана'})
+        return jsonify({'success': f'Новый текст {new_text.heading} добавлен'})
