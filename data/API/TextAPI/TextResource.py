@@ -6,7 +6,7 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.API.TextAPI.parser_text import parser_text
 from data.text import Text
-from main import password_manager, write_log
+from main import write_log
 
 
 def raise_error(error):
@@ -47,9 +47,9 @@ class TextListRecourse(Resource):
 class AdminResourceText(Resource):
     def put(self, text_id):
         args, count = parser_text.parse_args(), 0
-        if not all(args[key] is not None for key in ['admin_email', 'action']):
+        if not all(args[key] is not None for key in ['admin_email', 'action', 'admin_password']):
             raise_error('Пропущены некоторые важные аргументы')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         text, session = find_by_id(text_id, session)
         if args['action'] == "get":
             return jsonify(text.to_dict(only=('id', 'heading', 'description')))
@@ -83,10 +83,10 @@ class AdminResourceText(Resource):
 class CreateTextResource(Resource):
     def post(self):
         args = parser_text.parse_args()
-        write_log(f"{args['admin_email']} {password_manager.get_password(args['admin_email'])}")
-        if not all(args[key] is not None for key in ['heading', 'description', "admin_email"]):
+        write_log(f"{args['admin_email']} {args['admin_password']}")
+        if not all(args[key] is not None for key in ['heading', 'description', "admin_email", 'admin_password']):
             raise_error('Пропущены некоторые аргументы, необходимые для добавления нового текста')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         new_text = Text()
         new_text.description = args["description"]
         new_text.heading = args["heading"]

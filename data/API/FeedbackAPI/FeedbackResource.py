@@ -9,7 +9,6 @@ from data.confirmationcode import ConfirmationCode
 from data.API.FeedbackAPI.parser_feedback import parser_feedback
 from main import text_transform
 from config import UPLOAD_FOLDER as path
-from main import password_manager
 
 
 def raise_error(error):
@@ -54,9 +53,9 @@ def find_by_id(id, session):
 class FeedbackResource(Resource):
     def put(self):
         args = parser_feedback.parse_args()
-        if not all(args[key] is not None for key in ['admin_email', 'action']):
+        if not all(args[key] is not None for key in ['admin_email', 'action', 'admin_password']):
             raise_error('Пропущены некоторые важные аргументы')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         if args['action'] == "get":
             feedback, session = find_by_id(args["feedback_id"], session)
             news_dict = feedback.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))

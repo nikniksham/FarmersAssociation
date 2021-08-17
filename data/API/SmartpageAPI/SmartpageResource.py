@@ -8,7 +8,6 @@ from data.smartpage import Smartpage
 from data.content import Content
 from data.API.NewspageAPI.NewspageResource import trans_link
 from data.API.SmartpageAPI.parser_smartpage import parser_smartpage
-from main import password_manager
 
 
 def raise_error(error):
@@ -42,9 +41,9 @@ def find_by_id(id, session):
 class SmartpageResource(Resource):
     def put(self, smartpage_id):
         args, count = parser_smartpage.parse_args(), 0
-        if not all(args[key] is not None for key in ['admin_email', 'action']):
+        if not all(args[key] is not None for key in ['admin_email', 'action', 'admin_password']):
             raise_error('Пропущены некоторые важные аргументы')
-        admin, session = check_admin_status(args['admin_email'], password_manager.get_password(args['admin_email']))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         smartpage, session = find_by_id(smartpage_id, session)
         if args['action'] == "get":
             return jsonify(smartpage.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id')))
@@ -118,9 +117,9 @@ class SmartpageListRecourse(Resource):
 class CreateSmartpageResource(Resource):
     def post(self):
         args = parser_smartpage.parse_args()
-        if not all(args[key] is not None for key in ['heading', 'admin_email']):
+        if not all(args[key] is not None for key in ['heading', 'admin_email', 'admin_password']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания страницы')
-        admin, session = check_admin_status(args['admin_email'], password_manager.get_password(args['admin_email']))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         if session.query(Smartpage).filter(Smartpage.heading == args["heading"]).first() is not None:
             raise_error("Этот заголовок уже занят")
         new_smartpage = Smartpage()

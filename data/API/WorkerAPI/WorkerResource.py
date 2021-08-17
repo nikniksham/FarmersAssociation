@@ -6,7 +6,6 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.worker import Worker
 from data.API.WorkerAPI.parser_worker import parser_worker
-from main import password_manager
 
 
 def raise_error(error):
@@ -40,9 +39,9 @@ def find_by_id(id, session):
 class WorkerResource(Resource):
     def put(self, worker_id):
         args, count = parser_worker.parse_args(), 0
-        if not all(args[key] is not None for key in ['admin_email', 'action']):
+        if not all(args[key] is not None for key in ['admin_email', 'action', 'admin_password']):
             raise_error('Пропущены некоторые важные аргументы')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         worker, session = find_by_id(worker_id, session)
         if args['action'] == "get":
             return jsonify(worker.to_dict(only=('id', 'image', 'name', 'profession', 'phone', 'email', 'created_date')))
@@ -96,9 +95,9 @@ class WorkerListRecourse(Resource):
 class CreateWorkerResource(Resource):
     def post(self):
         args = parser_worker.parse_args()
-        if not all(args[key] is not None for key in ['image', 'name', 'profession', 'phone', 'email', 'admin_email']):
+        if not all(args[key] is not None for key in ['image', 'name', 'profession', 'phone', 'email', 'admin_email', 'admin_password']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания партнёра')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         new_worker = Worker()
         new_worker.image = args["image"]
         new_worker.name = args["name"]

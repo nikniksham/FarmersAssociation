@@ -6,7 +6,6 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.partner import Partner
 from data.API.PartnerAPI.parser_partner import parser_partner
-from main import password_manager
 
 
 def raise_error(error):
@@ -40,9 +39,9 @@ def find_by_id(id, session):
 class PartnerResource(Resource):
     def put(self, partner_id):
         args, count = parser_partner.parse_args(), 0
-        if not all(args[key] is not None for key in ['admin_email', 'action']):
+        if not all(args[key] is not None for key in ['admin_email', 'action', 'admin_password']):
             raise_error('Пропущены некоторые важные аргументы')
-        admin, session = check_admin_status(args['admin_email'], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         partner, session = find_by_id(partner_id, session)
         if args['action'] == "get":
             return jsonify(partner.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', 'created_date', 'author_id')))
@@ -103,9 +102,9 @@ class PartnerListRecourse(Resource):
 class CreatePartnerResource(Resource):
     def post(self):
         args = parser_partner.parse_args()
-        if not all(args[key] is not None for key in ['name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', 'admin_email']):
+        if not all(args[key] is not None for key in ['name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', 'admin_email', 'admin_password']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания партнёра')
-        admin, session = check_admin_status(args['admin_email'], password_manager.get_password(args['admin_email']))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         new_partner = Partner()
         new_partner.name = args["name"]
         new_partner.logo = args["logo"]

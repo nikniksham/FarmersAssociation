@@ -6,7 +6,6 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.API.PhoneAPI.parser_phone import parser_phone
 from data.phone import Phone
-from main import password_manager
 
 
 def raise_error(error):
@@ -47,9 +46,9 @@ class PhoneListRecourse(Resource):
 class AdminResourcePhone(Resource):
     def put(self, phone_id):
         args, count = parser_phone.parse_args(), 0
-        if not all(args[key] is not None for key in ['admin_email', 'action']):
+        if not all(args[key] is not None for key in ['admin_email', 'action', 'admin_password']):
             raise_error('Пропущены некоторые важные аргументы')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         phone, session = find_by_id(phone_id, session)
         if args['action'] == "get":
             return jsonify(phone.to_dict(only=('id', 'number')))
@@ -66,6 +65,8 @@ class AdminResourcePhone(Resource):
             for key in keys:
                 count += 1
                 if key == 'number':
+                    if session.query(Phone).filter(Phone.number == args['number']).first():
+                        raise_error("Этот номер телефона уже существует")
                     phone.number = args["number"]
             if count == 0:
                 return raise_error("Пустой запрос")
@@ -81,9 +82,9 @@ class AdminResourcePhone(Resource):
 class CreatePhoneResource(Resource):
     def post(self):
         args = parser_phone.parse_args()
-        if not all(args[key] is not None for key in ['number', 'admin_email']):
+        if not all(args[key] is not None for key in ['number', 'admin_email', 'admin_password']):
             raise_error('Пропущены некоторые аргументы, необходимые для добавления нового номера телефона')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         if session.query(Phone).filter(Phone.number == args['number']).first():
             raise_error("Этот номер телефона уже существует")
         new_phone = Phone()

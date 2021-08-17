@@ -6,7 +6,6 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.API.EmailAPI.parser_email import parser_email
 from data.email import Email
-from main import password_manager
 
 
 def raise_error(error):
@@ -47,9 +46,9 @@ class EmailListRecourse(Resource):
 class AdminResourceEmail(Resource):
     def put(self, email_id):
         args, count = parser_email.parse_args(), 0
-        if not all(args[key] is not None for key in ['admin_email', 'action']):
+        if not all(args[key] is not None for key in ['admin_email', 'action', 'admin_password']):
             raise_error('Пропущены некоторые важные аргументы')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         email, session = find_by_id(email_id, session)
         if args['action'] == "get":
             return jsonify(email.to_dict(only=('id', 'email_address')))
@@ -66,6 +65,8 @@ class AdminResourceEmail(Resource):
             for key in keys:
                 count += 1
                 if key == 'email_address':
+                    if session.query(Email).filter(Email.email_address == args['email_address']).first():
+                        raise_error("Этот адрес электронной почты уже существует")
                     email.email_address = args["email_address"]
             if count == 0:
                 return raise_error("Пустой запрос")
@@ -81,9 +82,9 @@ class AdminResourceEmail(Resource):
 class CreateEmailResource(Resource):
     def post(self):
         args = parser_email.parse_args()
-        if not all(args[key] is not None for key in ['email_address', 'admin_email']):
+        if not all(args[key] is not None for key in ['email_address', 'admin_email', 'admin_password']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания нового адреса электронной почты')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         if session.query(Email).filter(Email.email_address == args['email_address']).first():
             raise_error("Этот адрес электронной почты уже существует")
         new_email = Email()

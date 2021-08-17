@@ -6,7 +6,6 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.API.SeoAPI.parser_seo import parser_seo
 from data.seo import Seo
-from main import password_manager
 
 
 def raise_error(error):
@@ -47,9 +46,9 @@ class SeoGetRecourse(Resource):
 class AdminResourceSeo(Resource):
     def put(self, seo_id):
         args, count = parser_seo.parse_args(), 0
-        if not all(args[key] is not None for key in ['admin_email', 'action']):
+        if not all(args[key] is not None for key in ['admin_email', 'action', 'admin_password']):
             raise_error('Пропущены некоторые важные аргументы')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         seo, session = find_by_id(seo_id, session)
         if args['action'] == "get":
             return jsonify(seo.to_dict(only=('id', 'title', 'description', 'tags')))

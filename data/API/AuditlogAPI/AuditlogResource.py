@@ -4,7 +4,6 @@ from data import db_session
 from data.user import User
 from data.auditlog import AuditLog
 from data.API.AuditlogAPI.parser_auditlog import parser_auditlog
-from main import password_manager
 
 
 def raise_error(error):
@@ -38,9 +37,9 @@ def find_by_id(id, session):
 class AuditlogResource(Resource):
     def put(self):
         args = parser_auditlog.parse_args()
-        if not all(args[key] is not None for key in ['admin_email', 'action']):
+        if not all(args[key] is not None for key in ['admin_email', 'action', 'admin_password']):
             raise_error('Пропущены некоторые важные аргументы')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args["admin_email"], args["admin_password"])
         if args['action'] == "get":
             content, session = find_by_id(args["id"], session)
             return jsonify(content.to_dict(only=('id', 'event', 'info', 'user', 'created_date')))

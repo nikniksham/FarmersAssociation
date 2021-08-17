@@ -7,7 +7,6 @@ from data.content import Content
 from data.API.ContentAPI.parser_content import parser_content
 from data.smartpage import Smartpage
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
-from main import password_manager
 
 
 def raise_error(error):
@@ -41,9 +40,9 @@ def find_by_id(id, session):
 class ContentResource(Resource):
     def put(self, content_id):
         args, count = parser_content.parse_args(), 0
-        if not all(args[key] is not None for key in ['admin_email', 'action']):
+        if not all(args[key] is not None for key in ['admin_email', 'action', 'admin_password']):
             raise_error('Пропущены некоторые важные аргументы')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         content, session = find_by_id(content_id, session)
         if args['action'] == "get":
             return jsonify(content.to_dict(only=('id', 'position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id')))
@@ -126,9 +125,9 @@ class ContentListRecourseId(Resource):
 class CreateContentResource(Resource):
     def post(self):
         args = parser_content.parse_args()
-        if not all(args[key] is not None for key in ['type', 'page_id', 'heading', 'admin_email']):
+        if not all(args[key] is not None for key in ['type', 'page_id', 'heading', 'admin_email', 'admin_password']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания страницы')
-        admin, session = check_admin_status(args['admin_email'], password_manager.get_password(args['admin_email']))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         page = session.query(Smartpage).get(args["page_id"])
         if page is None:
             raise_error(f"Страница с id {args['page_id']} не найдена")

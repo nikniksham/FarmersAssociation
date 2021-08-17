@@ -6,7 +6,7 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.newspage import Newspage
 from data.API.NewspageAPI.parser_newspage import parser_newspage
-from main import mini_text, text_transform, password_manager
+from main import mini_text, text_transform
 from config import UPLOAD_FOLDER as path
 
 
@@ -59,9 +59,9 @@ def find_by_id(id, session):
 class NewspageResource(Resource):
     def put(self, newspage_id):
         args, count_params = parser_newspage.parse_args(), 0
-        if not all(args[key] is not None for key in ['admin_email', 'action']):
+        if not all(args[key] is not None for key in ['admin_email', 'action', 'admin_password']):
             raise_error('Пропущены некоторые важные аргументы')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         newspage, session = find_by_id(newspage_id, session)
         if args["action"] == "get":
             news_dict = newspage.to_dict(
@@ -163,9 +163,9 @@ class NewspageListRecourse(Resource):
 class CreateNewspageResource(Resource):
     def post(self):
         args = parser_newspage.parse_args()
-        if not all(args[key] is not None for key in ['heading', 'text', 'admin_email']):
+        if not all(args[key] is not None for key in ['heading', 'text', 'admin_email', 'admin_password']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания новостной страницы')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         new_newspage = Newspage()
         new_newspage.heading = args["heading"]
         new_newspage.text = args["text"]

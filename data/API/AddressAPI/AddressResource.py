@@ -6,7 +6,6 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.API.AddressAPI.parser_address import parser_address
 from data.address import Address
-from main import password_manager
 
 
 def raise_error(error):
@@ -47,9 +46,9 @@ class AddressListRecourse(Resource):
 class AdminResourceAddress(Resource):
     def put(self, address_id):
         args, count = parser_address.parse_args(), 0
-        if not all(args[key] is not None for key in ['admin_email', 'action']):
+        if not all(args[key] is not None for key in ['admin_email', 'action', 'admin_password']):
             raise_error('Пропущены некоторые важные аргументы')
-        admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args["admin_email"], args["admin_password"])
         address, session = find_by_id(address_id, session)
         if args['action'] == "get":
             return jsonify(address.to_dict(only=('id', 'name', 'place')))

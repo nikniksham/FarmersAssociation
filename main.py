@@ -21,22 +21,6 @@ class PasswordManager:
         self.data[email] = User(email, password)
         return "Пользователь успешно добавлен"
 
-    def add_tmp_password(self, email, password):
-        self.tmp_data[email] = password
-
-    def get_tmp_password(self, email):
-        return self.tmp_data[email]
-
-    def delete_tmp_password(self, email):
-        if email in self.tmp_data.keys():
-            new_tmp_data = {}
-            for key in self.tmp_data.keys():
-                if key != email:
-                    new_tmp_data[key] = self.tmp_data[key]
-            self.tmp_data = new_tmp_data
-            return True
-        return False
-
     def delete_user(self, email):
         if email in list(self.data.keys()):
             new_data = {}
@@ -48,10 +32,9 @@ class PasswordManager:
         return "Пользователь уже удалён"
 
     def update_email(self, old_email, new_email):
-        password = password_manager.get_password(old_email)
+        password = self.get_password(old_email)
         self.delete_user(old_email)
         self.add_user(new_email, password)
-        print(password_manager.get_password(new_email))
 
     def get_password(self, email):
         if email in list(self.data.keys()):
@@ -288,8 +271,6 @@ def write_log(info):
     f.write(info+"\n")
     f.close()
 
-
-password_manager = PasswordManager()
 
 if __name__ == '__main__':
     print('test for mini text')

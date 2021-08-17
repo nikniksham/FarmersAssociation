@@ -5,7 +5,6 @@ from data import db_session
 from data.user import User
 from data.API.AdminAPI.parser_admin import parser_admin
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
-from main import password_manager
 
 
 def raise_error(error):
@@ -53,9 +52,9 @@ def find_by_id(id, session, status=0):
 class AdminResource(Resource):
     def put(self):
         args, count, f = parser_admin.parse_args(), 0, False
-        if not all(args[key] is not None for key in ['admin_email', 'action']):
+        if not all(args[key] is not None for key in ['admin_email', 'action', 'admin_password']):
             raise_error("Отсутствуют важные параметры")
-        admin, session = check_admin(args['admin_email'], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin(args['admin_email'], args["admin_password"])
         if args["action"] == "get":
             return jsonify(admin.to_dict(only=('id', 'name', 'surname', 'status', 'email')))
         elif args["action"] == "get_list":
@@ -77,10 +76,10 @@ class AdminResource(Resource):
                 if key == 'surname':
                     admin.surname = args["surname"]
             if args["change_password"]:
-                if not admin.check_password(password_manager.get_tmp_password(args["admin_email"])):
+                if not admin.check_password(args["check_admin_password"]):
                     raise_error("Пароль не совпадает с текущим паролем")
-                check_password(password_manager.get_tmp_password(f"new_password_{args['admin_email']}"))
-                admin.set_password(password_manager.get_tmp_password(f"new_password_{args['admin_email']}"))
+                check_password(args['new_admin_password'])
+                admin.set_password(args['new_admin_password'])
                 f, count = True, count + 1
             if count == 0:
                 return raise_error("Пустой запрос")
@@ -98,9 +97,9 @@ class AdminResource(Resource):
 class UserResourceAdmin(Resource):
     def put(self, user_id):
         args, count, f = parser_admin.parse_args(), 0, False
-        if not all(args[key] is not None for key in ['admin_email', 'action']):
+        if not all(args[key] is not None for key in ['admin_email', 'action', 'admin_password']):
             raise_error("Отсутствуют важные параметры")
-        admin, session = check_admin_status(args['admin_email'], password_manager.get_password(args["admin_email"]), 1)
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"], 1)
         user, session = find_by_id(user_id, session, admin.status)
         if args["action"] == "get":
             return jsonify(user.to_dict(only=('id', 'surname', 'name', 'status', 'email', 'created_date')))
@@ -129,10 +128,10 @@ class UserResourceAdmin(Resource):
                             raise_error("У вас недостаточно прав для этого")
                         user.status = args["status"]
             if args["change_password"]:
-                if not admin.check_password(password_manager.get_tmp_password(args["admin_email"])):
+                if not admin.check_password(args["check_admin_password"]):
                     raise_error("Пароль не совпадает с текущим паролем")
-                check_password(password_manager.get_tmp_password(f"new_password_{args['admin_email']}"))
-                user.set_password(password_manager.get_tmp_password(f"new_password_{args['admin_email']}"))
+                check_password(args['new_admin_password'])
+                user.set_password(args['new_admin_password'])
                 f, count = True, count + 1
             if count == 0:
                 return raise_error("Пустой запрос")
@@ -151,17 +150,17 @@ class UserResourceAdmin(Resource):
 class CreateAdminResource(Resource):
     def post(self):
         args = parser_admin.parse_args()
-        if not all(args[key] is not None for key in ['surname', 'name', 'email', 'admin_email']):
+        if not all(args[key] is not None for key in ['surname', 'name', 'email', 'admin_email', 'admin_password']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания пользователя')
-        admin, session = check_admin_status(args['admin_email'], password_manager.get_password(args["admin_email"]))
+        admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         if session.query(User).filter(User.email == args['email']).first():
             raise_error("Этот email уже занят")
-        check_password(password_manager.get_tmp_password(args["admin_email"]))
+        check_password(args["new_admin_password"])
         new_admin = User()
         new_admin.name = args["name"]
         new_admin.surname = args["surname"]
         new_admin.email = args['email']
-        new_admin.set_password(password_manager.get_tmp_password(args["admin_email"]))
+        new_admin.set_password(args["new_admin_password"])
         if args["id"] is not None:
             if session.query(User).get(args["id"]) is not None:
                 raise_error("Этот id уже занят")
