@@ -3,12 +3,12 @@
 {% block headext %}
 {% endblock %}
 
-{% block pageblockext %}
+{% block fortext %}
 <div class="header-carousel-text">
     {% for text in special_params["text"] %}
     <div class="main-news-item">
         <div class="main-news-container">
-            <img src="/static/img/logo.png">
+            <img class="d-none d-md-block" src="/static/img/logo.png">
             <div class="main-news-text">
                 <p>{{text["heading"]}}</p>
                 <p>{{text["description"]}}</p>
@@ -17,7 +17,4 @@
     </div>
     {% endfor %}
 </div>
-{% endblock %}
-
-{% block endext %}
 {% endblock %}
