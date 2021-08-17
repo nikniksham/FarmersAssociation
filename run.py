@@ -31,7 +31,7 @@ from data.API.WorkerAPI.WorkerResource import WorkerResourceUsual, WorkerResourc
 from data.API.TextAPI.TextResource import TextListRecourse, CreateTextResource, AdminResourceText
 from data.API.SeoAPI.SeoResource import SeoGetRecourse, AdminResourceSeo
 from data.user import User
-from main import ManagerContainer, text_transform, get_coord, password_manager
+from main import ManagerContainer, text_transform, get_coord, password_manager, write_log
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm, \
     StartForm, PhoneForm, AddressForm, EmailForm, SocialmediaForm, WorkerForm, SeoForm, TextForm
 from werkzeug.utils import secure_filename
@@ -429,6 +429,7 @@ def login():
         if user and user.check_password(form.password.data):
             password_manager.add_user(form.email.data, form.password.data)
             login_user(user, remember=True)
+            write_log(f"User login {password_manager.user_is_authed(current_user.email)} {current_user.email}")
             return redirect("/admin")
         return render_template('login.html', message="Неправильный логин или пароль", form=form, special_params=get_special_params())
     return render_template('login.html', title='Авторизация', form=form, special_params=get_special_params())
@@ -520,6 +521,7 @@ def admin_create_text():
         message, result = None, False
         if request.method == 'POST':
             if form.submit.data:
+                write_log(f"{current_user.email} {password_manager.user_is_authed(current_user.email)} {password_manager.get_password(current_user.email)}")
                 message = post(f"{link_website}api/text", json={"heading": form.heading.data, "description": form.description.data,
                                                                 "admin_email": current_user.email}).json()
                 if "success" in message:

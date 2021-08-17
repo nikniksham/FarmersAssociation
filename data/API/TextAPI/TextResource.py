@@ -6,7 +6,7 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.API.TextAPI.parser_text import parser_text
 from data.text import Text
-from main import password_manager
+from main import password_manager, write_log
 
 
 def raise_error(error):
@@ -83,6 +83,7 @@ class AdminResourceText(Resource):
 class CreateTextResource(Resource):
     def post(self):
         args = parser_text.parse_args()
+        write_log(f"{args['admin_email']} {password_manager.get_password(args['admin_email'])}")
         if not all(args[key] is not None for key in ['heading', 'description', "admin_email"]):
             raise_error('Пропущены некоторые аргументы, необходимые для добавления нового текста')
         admin, session = check_admin_status(args["admin_email"], password_manager.get_password(args["admin_email"]))

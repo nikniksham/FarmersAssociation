@@ -283,6 +283,12 @@ def mini_text(text):  # Я не знаю, как это работает, это
     return tmp.strip()
 
 
+def write_log(info):
+    f = open('log.txt', 'a')  # дозапись в файл
+    f.write(info+"\n")
+    f.close()
+
+
 password_manager = PasswordManager()
 
 if __name__ == '__main__':
