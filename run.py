@@ -1647,7 +1647,7 @@ def contacts():
     content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('contacts.html', title=page["heading"], page=page, content=content, code=create_random_name(15),
-                           special_params=get_special_params(), flag_map=flag_map)
+                           special_params=get_special_params(), flag_map=flag_map, contacts=True)
 
 
 @application.route("/agro_and_agro-tourism_sector")
