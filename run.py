@@ -1475,7 +1475,7 @@ def admin_list_partner():
         return redirect("/login")
     if current_user.status > 0:
         partnerlist = get(f"{link_website}api/partner").json()
-        return render_template('list/admin-list-partner.html', title='Партнёры', partnerlist=partnerlist, special_params=get_special_params())
+        return render_template('list/admin-list-partner.html', title='Участники', partnerlist=partnerlist, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -1513,7 +1513,7 @@ def admin_create_partner():
                 message = list(message.values())[-1]
             else:
                 message = coord["message"]
-        return render_template('form/admin-form-partner.html', title='Создание партнёра', message=message, form=form,
+        return render_template('form/admin-form-partner.html', title='Создание участника', message=message, form=form,
                                result=result, flag=True, filenames1=filenames1, filenames2=filenames2, image_len=len(filenames2) + 1,
                                special_params=get_special_params())
     return you_dont_have_permission()
@@ -1565,7 +1565,7 @@ def admin_edit_partner(id):
                 containerManager.add_container(cont_name_logo, filenames1)
         else:
             message = list(partner.values())[0]
-        return render_template('form/admin-form-partner.html', title='Редактирование партнёра', message=message, form=form,
+        return render_template('form/admin-form-partner.html', title='Редактирование участника', message=message, form=form,
                                result=result, flag=False, filenames1=filenames1, filenames2=filenames2,
                                image_len=len(filenames2) + 1, special_params=get_special_params())
     return you_dont_have_permission()
@@ -1578,7 +1578,7 @@ def admin_delete_partner(id):
         return redirect("/login")
     if current_user.status > 0:
         form = DeleteForm()
-        message, name, result = "", "партнёр не найден", False
+        message, name, result = "", "участник не найден", False
         partner = put(f"{link_website}api/partner/{id}", json={"admin_email": current_user.email, "action": "get",
                                                                "admin_password": password_manager.get_password(current_user.email)}).json()
         if "message" not in partner:
@@ -1596,7 +1596,7 @@ def admin_delete_partner(id):
                 containerManager.delete_container(f"partner_{id}")
         else:
             message = list(partner.values())[0]
-        return render_template('form/admin-form-delete.html', title='Удаление партнёра', message=message, form=form,
+        return render_template('form/admin-form-delete.html', title='Удаление участника', message=message, form=form,
                                result=result, name=name, link_back="/admin-list-partner", special_params=get_special_params())
     return you_dont_have_permission()
 

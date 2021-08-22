@@ -32,7 +32,7 @@ def check_admin(email, password):
 def find_by_id(id, session):
     partner = session.query(Partner).get(id)
     if not partner:
-        raise_error(f"Партнёр не найден")
+        raise_error(f"Участник не найден")
     return partner, session
 
 
@@ -48,8 +48,8 @@ class PartnerResource(Resource):
         elif args['action'] == 'delete':
             session.delete(partner)
             session.commit()
-            add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет партнёра: {partner.name}", admin, datetime.datetime.now())
-            return jsonify({"success": f"Партнёр {partner.name} успешно удален"})
+            add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет участника: {partner.name}", admin, datetime.datetime.now())
+            return jsonify({"success": f"Участник {partner.name} успешно удален"})
         elif args['action'] == 'put':
             part_dict = partner.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
             keys = list(filter(lambda key: args[key] is not None and key in part_dict.keys() and args[key] != part_dict[key], list(args.keys())))
@@ -79,9 +79,9 @@ class PartnerResource(Resource):
             part_dict_2 = partner.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
             list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key not in ["image", "logo"] else "изменяет изображения/аватарку" for key in keys]
             session.commit()
-            add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет партнёра {name}: {', '.join(list_chang)}",
+            add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет участника {name}: {', '.join(list_chang)}",
                          admin, datetime.datetime.now())
-            return jsonify({"success": f"Партнёр {name} успешно изменен"})
+            return jsonify({"success": f"Участник {name} успешно изменен"})
         raise_error("Неизвестный метод")
 
 
@@ -103,7 +103,7 @@ class CreatePartnerResource(Resource):
     def post(self):
         args = parser_partner.parse_args()
         if not all(args[key] is not None for key in ['name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', 'admin_email', 'admin_password']):
-            raise_error('Пропущены некоторые аргументы, необходимые для создания партнёра')
+            raise_error('Пропущены некоторые аргументы, необходимые для создания участника')
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         new_partner = Partner()
         new_partner.name = args["name"]
@@ -126,6 +126,6 @@ class CreatePartnerResource(Resource):
         params_dict = new_partner.to_dict(only=('id', 'name', 'image', 'text', 'link', 'address', 'coord', 'province', 'occupation', 'created_date', 'author_id'))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание",
-                     f"{admin.name} {admin.surname} создаёт партнёра {new_partner.name}: {params_dict}",
+                     f"{admin.name} {admin.surname} создаёт участника {new_partner.name}: {params_dict}",
                      admin, datetime.datetime.now())
-        return jsonify({'success': f'Партнёр {new_partner.name} создан', 'id': new_partner.id})
+        return jsonify({'success': f'Участник {new_partner.name} создан', 'id': new_partner.id})
