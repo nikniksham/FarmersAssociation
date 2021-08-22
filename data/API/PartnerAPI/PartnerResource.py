@@ -65,7 +65,7 @@ class PartnerResource(Resource):
                 if key == "text":
                     partner.text = args["text"]
                 if key == "link":
-                    partner.tags = args["link"]
+                    partner.link = args["link"]
                 if key == "occupation":
                     partner.occupation = args["occupation"]
                 if key == "address":

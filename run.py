@@ -137,6 +137,8 @@ formatting_text_instruction = \
      "<h></h> Текст между тэгов будет заголовочным и по середине экрана",
      "<a href></a> Текст между тэгов будет подчёркнутым и содержать в себе ссылку, написанную на месте href",
      "<image id> Вставляет на этом месте картинку из поля загрузки картинок (нумерация изображений идёт с 1)"]
+formatting_text_instruction_usual = \
+    ["<image id> Вставляет на этом месте картинку из поля загрузки картинок (нумерация изображений идёт с 1)"]
 special_params = {}
 
 
@@ -825,8 +827,9 @@ def admin_edit_address(id):
                     res = get_coord(form.address.data)
                     if "success" in res:
                         special_params["our_coord"] = res
-                        message = put(f"{link_website}api/address/{id}", json={"place": res["success"][0], "admin_email": current_user.email,
-                                                                               "action": "put", "admin_password": password_manager.get_password(current_user.email)}).json()
+                        message = put(f"{link_website}api/address/{id}", json={"coord": res["success"][0], "admin_email": current_user.email,
+                                                                               "action": "put", "admin_password": password_manager.get_password(current_user.email),
+                                                                               "place": form.address.data}).json()
                         if "success" in message:
                             result = True
                             set_footer_params()
@@ -1694,7 +1697,7 @@ def write_feedback(code):
     return render_template('write-feedback.html', title="Отзыв", page=page, content=content,
                            result=result, flag=True, message=message, form=form, preview_text=preview_text,
                            filenames=filenames, image_len=len(filenames) + 1, special_params=get_special_params(),
-                           formatting_text_instruction=formatting_text_instruction)
+                           formatting_text_instruction=formatting_text_instruction_usual)
 
 
 @application.route("/contacts")

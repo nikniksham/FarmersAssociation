@@ -59,6 +59,8 @@ class AdminResourceAddress(Resource):
                 count += 1
                 if key == 'place':
                     address.place = args["place"]
+                if key == 'coord':
+                    address.coord = args["coord"]
             if count == 0:
                 return raise_error("Пустой запрос")
             address_dict_2 = address.to_dict(only=('place',))
