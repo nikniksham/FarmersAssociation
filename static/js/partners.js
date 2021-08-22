@@ -1,4 +1,5 @@
 var speedPartners = 2000
+var speedPartnerImageCarousel = 2000
 var deltaX = 0
 
 function openPopUp(name) {
@@ -15,6 +16,17 @@ function openPopUp(name) {
 }
 
 $(document).ready(function(){
+    $('.partner-image-carousel').slick({
+        dots: false,
+        infinite: true,
+        autoplay: true,
+        autoplaySpeed: speedCarousel,
+        slidesToShow: 1,
+        draggable: true,
+        arrows: false,
+        swipeToSlide: true,
+    });
+
     $('.partners-carousel').slick({
         dots: false,
         infinite: true,

@@ -28,7 +28,7 @@
                 <img class="partner-Pop-up-close" src="/static/img/close.png" alt="закрыть"
                      onclick="openPopUp({{partner['id']}})">
             </div>
-            <div class="carousel image-block">
+            <div class="partner-image-carousel image-block">
                 {% for src in partner['image'].split('//') %}
                 <div class="carousel-item">
                     <div style="background-image: url(/static/img/{{src}});"></div>
@@ -84,7 +84,11 @@
     {% endif %}
     {% elif block['type'] == "Text" %}
     <div class="text-block">
-        <p>{{block['text']}}</p>
+        <p>
+            {% for text in block['text'].split('\n') %}
+            {{text}}<br>
+            {% endfor %}
+        </p>
     </div>
     {% elif block['type'] == "Image" %}
     <div class="carousel image-block">
@@ -95,33 +99,37 @@
         {% endfor %}
     </div>
     {% elif block['type'] == "Partner" %}
-    <div class="partners-carousel">
+    <div class="row">
         {% for partner in special_params["partner"] %}
-        <div class="partner-item" onclick="openPopUp({{partner['id']}})">
-            <div>
-                <img class="partner-item-image" src="/static/img/{{partner['logo']}}" alt={{partner['id']}}>
-                <p class="partner-item-text">{{partner['name']}}</p>
+        <div class="col-sm-12 col-md-6 col-lg-4 col-xl-3 partner-align">
+            <div class="partner-item" onclick="openPopUp({{partner['id']}})">
+                <div>
+                    <img class="partner-item-image" src="/static/img/{{partner['logo']}}" alt={{partner['id']}}>
+                    <p class="partner-item-text">{{partner['name']}}</p>
+                </div>
             </div>
         </div>
         {% endfor %}
     </div>
     {% elif block['type'] == "Map" %}
-    <div>
-        <select name="provinces[]" id="provinces">
-            <option selected value="all">Все области</option>
-            {% for province in special_params["provinces"] %}
-            <option value="{{province}}">{{province}}</option>
-            {% endfor%}
-        </select>
-        <select name="occupations[]" id="occupations">
-            <option selected value="all">Все направления</option>
-            {% for occupation in special_params["occupations"] %}
-            <option value="{{occupation}}">{{occupation}}</option>
-            {% endfor%}
-        </select>
-    </div>
-    <div class="map">
-        <div id="map"></div>
+    <div class="map-block">
+        <div class="map-block-settings">
+            <select name="provinces[]" id="provinces">
+                <option selected value="all">Все области</option>
+                {% for province in special_params["provinces"] %}
+                <option value="{{province}}">{{province}}</option>
+                {% endfor%}
+            </select>
+            <select name="occupations[]" id="occupations">
+                <option selected value="all">Все направления</option>
+                {% for occupation in special_params["occupations"] %}
+                <option value="{{occupation}}">{{occupation}}</option>
+                {% endfor%}
+            </select>
+        </div>
+        <div class="map">
+            <div id="map"></div>
+        </div>
     </div>
     {% endif %}
     {% endfor %}

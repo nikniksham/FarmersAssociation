@@ -48,8 +48,16 @@
     justify-content: flex-end;
 }
 
-.partner-Pop-up-footer a { text-decoration: underline; }
-.partner-Pop-up-footer a { cursor: pointer; }
+.partner-Pop-up-footer a {
+    text-decoration: underline;
+    color: #eca137;
+    font-size: 18px;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 300;
+    letter-spacing: 1px;
+    font-weight: bold;
+}
+.partner-Pop-up-footer a:hover { cursor: pointer; }
 
 .partner-Pop-up-img {
     height: 80px;

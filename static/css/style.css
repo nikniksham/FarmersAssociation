@@ -219,7 +219,7 @@ header img {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,.7);
+  background: rgba(0,0,0,.5);
   z-index: 2;
   transition: background 0.5s ease;
 }
@@ -243,17 +243,22 @@ header img {
     letter-spacing: 1px;
 }
 
-.date {
+div.date {
+    padding-bottom: 15px;
+}
+
+span.date {
     color: #eca137;
-    font-size: 16px;
+    font-size: 18px;
     font-family: 'Open Sans', sans-serif;
     font-weight: 300;
     text-decoration: underline;
     letter-spacing: 1px;
+    font-weight: bold;
 }
 
 .news-2:hover .news-img:after, .news:hover .news-img:after {
-    background: rgba(0,0,0,.8);
+    background: rgba(0,0,0,.7);
 }
 
 .news-2 {
@@ -304,7 +309,7 @@ footer {
 }
 
 footer p {
-    margin-bottom: 0.25rem;
+    margin-bottom: 4px;
     letter-spacing: 1.5px;
 }
 
@@ -312,7 +317,7 @@ footer p {
     margin-top: 0.5rem;
     font-family: 'Oswald', sans-serif;
     font-weight: 500;
-    font-size: 24px;
+    font-size: 21px;
     letter-spacing: 1.3px;
 }
 
@@ -320,7 +325,7 @@ footer p {
     margin-top: 0.5rem;
     font-family: 'Oswald', sans-serif;
     font-weight: 500;
-    font-size: 1.15rem;
+    font-size: 18px;
     letter-spacing: 1.2px;
 }
 
@@ -372,7 +377,7 @@ footer p {
 #nav-icon2 span {
   display: block;
   position: absolute;
-  height: 5px;
+  height: 4px;
   width: 50%;
   background: white;
   opacity: 1;
@@ -388,12 +393,12 @@ footer p {
 
 #nav-icon2 span:nth-child(even) {
   left: 50%;
-  border-radius: 0 5px 5px 0;
+  border-radius: 0 4px 4px 0;
 }
 
 #nav-icon2 span:nth-child(odd) {
   left:0px;
-  border-radius: 5px 0 0 5px;
+  border-radius: 4px 0 0 4px;
 }
 
 #nav-icon2 span:nth-child(1), #nav-icon2 span:nth-child(2) {
@@ -453,7 +458,8 @@ footer p {
 }
 
 .news-header {
-    font-size: 56px;
+    padding-top: 15px;
+    font-size: 46px;
     font-width: 400;
     font-family: 'Oswald', sans-serif;
     text-align: center;
@@ -465,7 +471,7 @@ footer p {
 }
 .render-text a {
     text-decoration: underline;
-    color: inherit;
+    color: blue;
 }
 .render-text a:hover {
     color: inherit;
@@ -481,11 +487,10 @@ footer p {
 }
 .render-text div {
     text-align: center;
-    max-width: 767px;
     margin: 15px auto;
     border-radius: 15px;
 }
 .render-text img {
-    width: 70%;
+    width: 80%;
     border-radius: 15px;
 }
