@@ -95,3 +95,12 @@ class SeoForm(StartForm):
     set_logo = SubmitField("Сохранить новую иконку сайта")
     set_logo_sm = SubmitField("Сохранить новую иконку для ссылкок")
     set_standard_image = SubmitField("Сохранить новое изображение по умолчанию")
+
+
+class MemberForm(StartForm):
+    image = StringField("Логотип", validators=[DataRequired()])
+    name = StringField("Название", validators=[DataRequired()])
+    info = StringField("Краткая информация", validators=[DataRequired()])
+    link = StringField("Ссылка", validators=[DataRequired()])
+    preferences = StringField("Преференции", validators=[DataRequired()])
+    address = StringField("Адрес", validators=[DataRequired()])

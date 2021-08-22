@@ -28,12 +28,14 @@ from data.API.SocialmediaAPI.SocialmediaResource import SocialmediaListRecourse,
     CreateSocialmediaResource
 from data.API.WorkerAPI.WorkerResource import WorkerResourceUsual, WorkerResource, WorkerListRecourse, \
     CreateWorkerResource
+from data.API.MemberAPI.MemberResource import MemberResourceUsual, MemberResource, MemberListRecourse, \
+    CreateMemberResource
 from data.API.TextAPI.TextResource import TextListRecourse, CreateTextResource, AdminResourceText
 from data.API.SeoAPI.SeoResource import SeoGetRecourse, AdminResourceSeo
 from data.user import User
 from main import ManagerContainer, text_transform, get_coord, PasswordManager, write_log
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm, \
-    StartForm, PhoneForm, AddressForm, EmailForm, SocialmediaForm, WorkerForm, SeoForm, TextForm
+    StartForm, PhoneForm, AddressForm, EmailForm, SocialmediaForm, WorkerForm, SeoForm, TextForm, MemberForm
 from werkzeug.utils import secure_filename
 from PIL import Image
 import config
@@ -89,6 +91,12 @@ api.add_resource(CreatePartnerResource, "/api/partner")
 api.add_resource(PartnerResource, "/api/partner/<int:partner_id>")
 api.add_resource(PartnerResourceUsual, "/api/partner/<int:partner_id>")
 api.add_resource(PartnerListRecourse, "/api/partner")
+
+# MemberApi
+api.add_resource(MemberResource, "/api/member/<int:member_id>")
+api.add_resource(MemberResourceUsual, "/api/member/<int:member_id>")
+api.add_resource(MemberListRecourse, "/api/member")
+api.add_resource(CreateMemberResource, "/api/member")
 
 # AuditlogApi
 api.add_resource(AuditlogResource, "/api/auditlog")
@@ -1598,6 +1606,118 @@ def admin_delete_partner(id):
             message = list(partner.values())[0]
         return render_template('form/admin-form-delete.html', title='Удаление участника', message=message, form=form,
                                result=result, name=name, link_back="/admin-list-partner", special_params=get_special_params())
+    return you_dont_have_permission()
+
+
+@application.route("/admin-list-member")
+@login_required
+def admin_list_member():
+    if check_user():
+        return redirect("/login")
+    if current_user.status > 0:
+        memberlist = get(f"{link_website}api/member").json()
+        return render_template('list/admin-list-member.html', title='Партнёры', memberlist=memberlist,
+                               special_params=get_special_params())
+    return you_dont_have_permission()
+
+
+@application.route("/admin-create-member", methods=['GET', 'POST'])
+@login_required
+def admin_create_member():
+    if check_user():
+        return redirect("/login")
+    if current_user.status > 0:
+        containerManager.delete_container(f"tmp/member/member_{current_user.email}")
+        form = MemberForm()
+        message, result, filenames = None, False, []
+        if request.method == 'POST':
+            filenames = save_images(f"tmp/member/member_{current_user.email}", request.files, auto_delete=True)
+            message = post(f"{link_website}api/member", json={"name": form.name.data, "image": "//".join(filenames), "info": form.info.data,
+                           "preferences": form.preferences.data, "address": form.address.data, "link": form.link.data, "admin_email": current_user.email,
+                                                              "admin_password": password_manager.get_password(current_user.email)}).json()
+            if "success" in message:
+                filenames = transport_images(f"tmp/member/member_{current_user.email}", f"member/member_{message['id']}", filenames)
+                m = put(f"{link_website}api/member/{message['id']}", json={"image": "//".join(filenames), "admin_email": current_user.email, "action": "put",
+                                                                           "admin_password": password_manager.get_password(current_user.email)}).json()
+                result = True
+                delete_folder(f"tmp/member/member_{current_user.email}")
+                containerManager.delete_container(f"tmp/member/member_{current_user.email}")
+                set_other_params()
+            message = list(message.values())[-1]
+        return render_template('form/admin-form-member.html', title='Добавление партнёра', message=message, form=form,
+                               result=result, filenames=filenames, special_params=get_special_params(), image_len=len(filenames) + 1)
+    return you_dont_have_permission()
+
+
+@application.route("/admin-edit-member/<int:id>", methods=['GET', 'POST'])
+@login_required
+def admin_edit_member(id):
+    if check_user():
+        return redirect("/login")
+    if current_user.status > 0:
+        form = MemberForm()
+        member = put(f"{link_website}api/member/{id}", json={"admin_email": current_user.email, "action": "get",
+                                                             "admin_password": password_manager.get_password(current_user.email)}).json()
+        message, result, filenames = None, False, []
+        if "message" not in member:
+            if request.method == 'POST':
+                filenames = save_images(f"tmp/member/member_{current_user.email}", request.files, auto_delete=True)
+                message = put(f"{link_website}api/member/{id}", json={"preferences": form.preferences.data, "name": form.name.data,
+                                                                      "address": form.address.data, "link": form.link.data, "info": form.info.data,
+                                                                      "image": '//'.join(filenames), "action": "put",
+                                                                      "admin_email": current_user.email,
+                                                                      "admin_password": password_manager.get_password(current_user.email)}).json()
+                if "success" in message:
+                    filenames = copy_files(f"tmp/member/member_{current_user.email}", f"member/member_{id}",
+                                                 filenames)
+                    m = put(f"{link_website}api/member/{id}", json={"image": '//'.join(filenames), "action": "put",
+                                                                    "admin_email": current_user.email,
+                                                                    "admin_password": password_manager.get_password(current_user.email)}).json()
+                    result = True
+                    set_other_params()
+                message = list(message.values())[-1]
+            else:
+                form.preferences.data = member["preferences"]
+                form.address.data = member["address"]
+                form.name.data = member["name"]
+                form.info.data = member["info"]
+                form.link.data = member["link"]
+                if member["image"]:
+                    filenames = member["image"].split("//")
+                    clear_folder(f"tmp/member/member_{current_user.email}")
+                    filenames = copy_files(f"member/member_{id}", f"tmp/member/member_{current_user.email}", filenames)
+                containerManager.add_container(f"tmp/member/member_{current_user.email}", filenames, auto_delete=True)
+        else:
+            message = list(member.values())[-1]
+        return render_template('form/admin-form-member.html', title='Редактирование партнёра', message=message,
+                               form=form, result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1,
+                               special_params=get_special_params())
+    return you_dont_have_permission()
+
+
+@application.route("/admin-delete-member/<int:id>", methods=['GET', 'POST'])
+@login_required
+def admin_delete_member(id):
+    if check_user():
+        return redirect("/login")
+    if current_user.status > 0:
+        form = DeleteForm()
+        message, name, result = "", "сотрудник не найден", False
+        member = put(f"{link_website}api/member/{id}", json={"admin_email": current_user.email, "action": "get",
+                                                             "admin_password": password_manager.get_password(current_user.email)}).json()
+        if "message" not in member:
+            name = "сотрудник " + member['name']
+            if request.method == 'POST':
+                message = put(f"{link_website}api/member/{id}", json={"admin_email": current_user.email, "action": "delete",
+                                                                      "admin_password": password_manager.get_password(current_user.email)}).json()
+                if "success" in message:
+                    result = True
+                    containerManager.delete_container(f"member/member_{id}")
+                    delete_folder(f"member/member_{id}")
+                    set_other_params()
+                message = list(message.values())[-1]
+        return render_template('form/admin-form-delete.html', title='Удаление страницы', message=message, form=form,
+                               result=result, name=name, link_back="/admin-list-member", special_params=get_special_params())
     return you_dont_have_permission()
 
 

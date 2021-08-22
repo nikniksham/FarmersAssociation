@@ -44,7 +44,7 @@ class MemberResource(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         member, session = find_by_id(member_id, session)
         if args['action'] == "get":
-            return jsonify(member.to_dict(only=('id', 'image', 'name', 'info', 'preferences', 'address', 'link', 'created_date')))
+            return jsonify(member.to_dict(only=('id', 'image', 'name', 'info', 'preferences', 'address', 'link')))
         elif args['action'] == 'delete':
             session.delete(member)
             session.commit()
@@ -101,21 +101,12 @@ class CreateMemberResource(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         new_member = Member()
         new_member.name = args["name"]
-        new_member.logo = args["logo"]
         new_member.image = args["image"]
-        new_member.text = args["text"]
+        new_member.preferences = args["preferences"]
         new_member.link = args["link"]
         new_member.address = args["address"]
-        new_member.coord = args["coord"]
-        new_member.province = args['province']
-        new_member.occupation = args["occupation"]
-        new_member.created_date = datetime.datetime.now()
-        if args["id"] is not None:
-            if session.query(Member).get(args["id"]) is not None:
-                raise_error("Этот id уже занят")
-            new_member.id = args["id"]
-        admin.member.append(new_member)
-        session.merge(admin)
+        new_member.info = args["info"]
+        session.add(new_member)
         session.commit()
         params_dict = new_member.to_dict(only=('id', 'image', 'name', 'info', 'preferences', 'address', 'link'))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
