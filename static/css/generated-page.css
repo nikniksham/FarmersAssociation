@@ -11,6 +11,11 @@ p {
     margin: 15px 0;
 }
 
+.partner-align {
+    padding-top: calc(var(--bs-gutter-x) * .5);
+    padding-bottom: calc(var(--bs-gutter-x) * .5);
+}
+
 .text-block p {
     color: black;
     text-align: center;
@@ -52,6 +57,11 @@ p {
     bottom: 0;
     background: rgba(0,0,0,.5);
     z-index: 2;
+}
+
+@media (max-width: 767px) {
+    .carousel-head { padding-bottom: 0; }
+    .carousel-head-div { position: relative; }
 }
 
 .carousel-item div {
@@ -165,4 +175,18 @@ p {
     -ms-transition: opacity 2000s ease-in-out;
     -o-transition: opacity 2000s ease-in-out;
      opacity: 1;
+}
+
+.map-block {
+    margin: 15px 0;
+}
+
+.map-block-settings {
+    padding-bottom: 15px;
+}
+
+.map-block-settings select {
+    padding: 3px;
+    border-radius: 5px;
+    width: 49.5%;
 }

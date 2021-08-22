@@ -6,6 +6,8 @@
     <div class="render-text">
         {{news["text_render"]|safe}}
     </div>
-    <span class="date">date: {{news["created_date"]}}</span>
+    <div class="date">
+        <span class="date">дата публикации: {{news["created_date"]}}</span>
+    </div>
 </div>
 {% endblock %}
