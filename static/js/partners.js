@@ -34,9 +34,9 @@ $(document).ready(function(){
         autoplaySpeed: speedPartners,
         slidesToShow: 4,
         draggable: true,
-        touchThreshold: 5,
         arrows: false,
         swipeToSlide: true,
+        focusOnSelect: true,
         responsive: [
             {
               breakpoint: 768,
