@@ -36,7 +36,6 @@ $(document).ready(function(){
         draggable: true,
         arrows: false,
         swipeToSlide: true,
-        focusOnSelect: true,
         responsive: [
             {
               breakpoint: 768,
