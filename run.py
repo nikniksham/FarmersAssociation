@@ -1071,7 +1071,6 @@ def admin_edit_admin(id):
         else:
             f = True
             admin = put(f"{link_website}api/admin/{id}", json={"admin_email": current_user.email, "action": "get", "admin_password": password_manager.get_password(current_user.email)}).json()
-        print(admin)
         form.stat = current_user.status
         message, result, admin_status = None, False, 0
         if "message" not in admin:
