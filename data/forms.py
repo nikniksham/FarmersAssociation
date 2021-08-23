@@ -30,7 +30,7 @@ class ContentForm(StartForm):
     type = SelectField('Тип', choices=[("News", "Новостной"), ("Text", "Текстовый"),
                                        ("Image", "С картинками"), ("Partner", "Партнёры"), ("Map", "Карта")])
     heading = StringField('Название', validators=[DataRequired()])
-    # animation_type = StringField('Тип анимации', validators=[DataRequired()])
+    display_type = SelectField('Тип отображения партнёров', choices=[("0", "Бегущая строка"), ("1", "Блоки")])
     text = TextAreaField('Текст')
 
 

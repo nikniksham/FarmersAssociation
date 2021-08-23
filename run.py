@@ -187,6 +187,7 @@ def set_other_params():
     special_params["smartpages"] = get(f"{link_website}api/smartpage").json()
     special_params["worker"] = get(f"{link_website}api/worker").json()
     special_params["text"] = get(f"{link_website}api/text").json()
+    special_params["member"] = get(f"{link_website}api/member").json()
     set_map_params()
 
 
@@ -1253,7 +1254,7 @@ def admin_create_content(page_id):
         if request.method == 'POST':
             filenames = save_images(f"tmp/content/content_{current_user.email}", request.files, auto_delete=True, r_img=False)
             image = "" if len(filenames) == 0 else "//".join(filenames)
-            message = post(f"{link_website}api/content", json={"type": form.type.data, "text": form.text.data, "page_id": page_id,
+            message = post(f"{link_website}api/content", json={"type": form.type.data, "text": form.text.data, "page_id": page_id, "display_type": form.display_type.data,
                            "heading": form.heading.data, "image": image, 'admin_email': current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
             if "success" in message:
                 filenames = transport_images(f"tmp/content/content_{current_user.email}", f"content/content_{message['id']}", filenames)
@@ -1311,11 +1312,12 @@ def admin_edit_content(id):
                                                                "admin_password": password_manager.get_password(current_user.email)}).json()
         message, result, filenames, page_id = None, False, [], 0
         if "message" not in content:
+            page_id = content["smartpage_id"]
             if request.method == 'POST':
                 filenames = save_images(f"tmp/content/content_{current_user.email}", request.files, auto_delete=True)
                 message = put(f"{link_website}api/content/{id}", json={"type": form.type.data, "text": form.text.data,
-                              "heading": form.heading.data, "image": '//'.join(filenames), "action": "put",
-                                                                       "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
+                              "heading": form.heading.data, "image": '//'.join(filenames), "action": "put", "display_type": form.display_type.data,
+                              "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
                 if "success" in message:
                     filenames = transport_images(f"tmp/content/content_{current_user.email}", f"content/content_{id}", filenames)
                     m = put(f"{link_website}api/content/{id}", json={"image": '//'.join(filenames), "action": "put",
@@ -1326,6 +1328,7 @@ def admin_edit_content(id):
                 form.type.data = content["type"]
                 form.text.data = content["text"]
                 form.heading.data = content["heading"]
+                form.display_type.data = content["display_type"]
                 page_id = content["smartpage_id"]
                 if content["image"]:
                     filenames = content["image"].split("//")

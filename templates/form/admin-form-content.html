@@ -13,6 +13,7 @@
             {% endif %}
             {% endif %}
 
+            {{ form.hidden_tag() }}
             {{ form.heading.label }}<br>
             {{ form.heading(class="form-control") }}<br>
             {% for error in form.heading.errors %}
@@ -21,14 +22,26 @@
             </div>
             {% endfor %}
 
-            {{ form.hidden_tag() }}
             {{ form.type.label }}<br>
-            {{ form.type(class="form-control") }}<br>
+            {{ form.type(class="form-control type") }}<br>
             {% for error in form.type.errors %}
             <div class="alert alert-danger" role="alert">
                 {{ error }}
             </div>
             {% endfor %}
+            {% if form.type.data == "Partner" %}
+            <div id="partner" class="">
+            {% else %}
+            <div id="partner" class="hidden">
+            {% endif %}
+                {{ form.display_type.label }}<br>
+                {{ form.display_type(class="form-control") }}<br>
+                {% for error in form.display_type.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+            </div>
             {% if form.type.data == "Text" %}
             <div id="text" class="">
             {% else %}
@@ -86,7 +99,7 @@
         console.log("only for " + this.value);
     });
 
-    $('select').change(function(){
+    $('select.type').change(function(){
         console.log(this);
         console.log("only for " + this.value)
         console.log($('#images').hasClass('hidden'));
@@ -100,6 +113,11 @@
             $('#text').addClass('hidden');
         } else if (this.value === 'Text' && $('#text').hasClass('hidden')) {
             $('#text').removeClass('hidden');
+        }
+        if (this.value !== 'Partner' && !$('#partner').hasClass('hidden')) {
+            $('#partner').addClass('hidden');
+        } else if (this.value === 'Partner' && $('#partner').hasClass('hidden')) {
+            $('#partner').removeClass('hidden');
         }
     });
 
