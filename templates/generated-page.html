@@ -24,7 +24,7 @@
             <div class="left" onclick="openPopUp({{partner['id']}})"></div>
             <div class="down" onclick="openPopUp({{partner['id']}})"></div>
             <div class="partner-Pop-up-header">
-                <img class="partner-Pop-up-img" src="/static/img/{{partner['image']}}" alt={{partner["image"]}}>
+                <img class="partner-Pop-up-img" src="/static/img/{{partner['logo']}}" alt={{partner["name"]}}>
                 <p class="partner-Pop-up-title">{{partner["name"]}}</p>
                 <img class="partner-Pop-up-close" src="/static/img/close.png" alt="закрыть"
                      onclick="openPopUp({{partner['id']}})">
@@ -109,7 +109,7 @@
         <div class="col-sm-12 col-md-6 col-lg-4 col-xl-3 partner-align">
             <div class="partner-item" onclick="openPopUp({{partner['id']}})">
                 <div>
-                    <img class="partner-item-image" src="/static/img/{{partner['image']}}" alt={{partner['id']}}>
+                    <img class="partner-item-image" src="/static/img/{{partner['logo']}}" alt={{partner['name']}}>
                     <p class="partner-item-text">{{partner['name']}}</p>
                 </div>
             </div>

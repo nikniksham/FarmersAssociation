@@ -246,8 +246,8 @@ def save_image_multithreading(filename, file):
         os.makedirs(path)
     file.save(filename)
     image = Image.open(filename)
-    if image.size[0] > 720 or image.size[1] > 405:
-        image.thumbnail((720, 405))
+    if image.size[0] > 1280 or image.size[1] > 720:
+        image.thumbnail((1280, 720))
     split_name = filename.split('.')
     path, format = '.'.join(split_name[:-1]), split_name[-1]
     if format not in ["png", "gif"]:
