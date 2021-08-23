@@ -4,9 +4,8 @@
 {% endblock %}
 
 {% block pageblockext %}
-    <form action="" method="post">
-
-    </form>
+    <input name="text" class="findtext">
+    <input type="submit" onclick="searching_text()">
     <div class="row" id="news">
         {% for news in special_params["news"] %}
         <div class="col-sm-12 col-md-6 col-lg-4">

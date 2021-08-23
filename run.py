@@ -66,7 +66,7 @@ api.add_resource(NewspageResourceUsual, "/api/newspage/<int:newspage_id>")
 api.add_resource(NewspageListRecourseId, "/api/newspage/<int:start_id>/<int:end_id>")
 api.add_resource(NewspageListRecourse, "/api/newspage")
 api.add_resource(NewspageResourceLink, "/api/newspage/<string:link>")
-api.add_resource(NewspageListRecourseTags, "/api/newspage/<string:tags>/<int:start_id>/<int:end_id>")
+api.add_resource(NewspageListRecourseTags, "/api/newspage/<int:start_id>/<int:end_id>/<string:text>")
 
 # SmartpageApi
 api.add_resource(CreateSmartpageResource, "/api/smartpage")

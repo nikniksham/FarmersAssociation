@@ -149,12 +149,17 @@ class NewspageListRecourseId(Resource):
 
 
 class NewspageListRecourseTags(Resource):
-    def get(self, text, start_id, end_id):
+    def get(self, start_id, end_id, text):
         session = db_session.create_session()
         pages, newspages = session.query(Newspage).order_by(Newspage.created_date)[::-1], []
+        if text is None:
+            text = ""
+        find_text = text.replace("<", "").replace(">", "").replace("/", "").lower().rstrip()
         for news in pages:
-            find_text = text.replace("<", "").replace(">", "").replace("/", "").lower().rstrip()
-            if find_text in news.tags or find_text in news.text:
+            tags = news.tags.lower() if news.tags else ""
+            text = news.text.lower() if news.text else ""
+            heading = news.heading.lower() if news.heading else ""
+            if find_text in tags or find_text in text or find_text in heading:
                 newspages.append(news)
         if start_id > len(newspages):
             return jsonify([])

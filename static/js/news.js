@@ -1,9 +1,14 @@
 var loaded_news = 9
 var load_news = 9
 var link_website = ""
+var search_text = ""
 
 function add_news() {
-    $.get( link_website+"api/newspage/"+loaded_news+"/"+(loaded_news + load_news), function( data ) {
+    var req = link_website+"api/newspage/"+loaded_news+"/"+(loaded_news + load_news);
+    if (search_text !== "") {
+        req += "/"+search_text
+    }
+    $.get( req, function( data ) {
         console.log(data);
         console.log(loaded_news+"/"+(loaded_news + load_news));
         loaded_news += load_news
@@ -17,4 +22,11 @@ function add_news() {
             $('.more-news').remove()
         }
     });
+}
+
+function searching_text() {
+    search_text = document.getElementsByClassName("findtext")[0].value;
+    document.getElementById("news").innerHTML = ""
+    loaded_news = 0
+    add_news()
 }
