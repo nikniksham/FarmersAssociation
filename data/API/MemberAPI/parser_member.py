@@ -1,6 +1,7 @@
 from flask_restful import reqparse
 
 parser_member = reqparse.RequestParser()
+parser_member.add_argument('logo', type=str)
 parser_member.add_argument('image', type=str)
 parser_member.add_argument('name', type=str)
 parser_member.add_argument('info', type=str)

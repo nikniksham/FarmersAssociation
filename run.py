@@ -1474,7 +1474,7 @@ def admin_delete_worker(id):
                     delete_folder(f"worker/worker_{id}")
                     set_other_params()
                 message = list(message.values())[-1]
-        return render_template('form/admin-form-delete.html', title='Удаление страницы', message=message, form=form,
+        return render_template('form/admin-form-delete.html', title='Удаление сотрудника', message=message, form=form,
                                result=result, name=name, link_back="/admin-list-worker", special_params=get_special_params())
     return you_dont_have_permission()
 
@@ -1519,6 +1519,7 @@ def admin_create_partner():
                     containerManager.delete_container(cont_name_image)
                     containerManager.delete_container(cont_name_logo)
                     delete_folder(f"partner/partner_{current_user.email}")
+                    # filenames1, filenames2 = [], []
                     result = True
                     set_other_params()
                 message = list(message.values())[-1]
@@ -1602,9 +1603,9 @@ def admin_delete_partner(id):
                     delete_folder(f"partner/partner_{id}/image")
                     delete_folder(f"partner/partner_{id}/logo")
                     delete_folder(f"partner/partner_{id}")
+                    containerManager.delete_container(f"partner_{id}")
                     set_other_params()
                 message = list(message.values())[0]
-                containerManager.delete_container(f"partner_{id}")
         else:
             message = list(partner.values())[0]
         return render_template('form/admin-form-delete.html', title='Удаление участника', message=message, form=form,
@@ -1630,25 +1631,30 @@ def admin_create_member():
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
-        containerManager.delete_container(f"tmp/member/member_{current_user.email}")
         form = MemberForm()
-        message, result, filenames = None, False, []
+        cont_name_logo, cont_name_image = f"tmp/member/member_{current_user.email}/logo", f"tmp/member/member_{current_user.email}/image"
+        containerManager.delete_container(cont_name_logo)
+        containerManager.delete_container(cont_name_image)
+        message, result, filenames2, filenames1 = None, False, [], []
         if request.method == 'POST':
-            filenames = save_images(f"tmp/member/member_{current_user.email}", request.files, auto_delete=True)
-            message = post(f"{link_website}api/member", json={"name": form.name.data, "image": "//".join(filenames), "info": form.info.data,
+            filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
+            message = post(f"{link_website}api/member", json={"name": form.name.data, "image": "//".join(filenames2), "info": form.info.data,
                            "preferences": form.preferences.data, "address": form.address.data, "link": form.link.data, "admin_email": current_user.email,
-                                                              "admin_password": password_manager.get_password(current_user.email)}).json()
+                           "logo": "//".join(filenames1), "admin_password": password_manager.get_password(current_user.email)}).json()
             if "success" in message:
-                filenames = transport_images(f"tmp/member/member_{current_user.email}", f"member/member_{message['id']}", filenames)
-                m = put(f"{link_website}api/member/{message['id']}", json={"image": "//".join(filenames), "admin_email": current_user.email, "action": "put",
+                filenames1, filenames2 = transport_images(cont_name_logo, f"member/member_{message['id']}/logo", filenames1), \
+                                         transport_images(cont_name_image, f"member/member_{message['id']}/image", filenames2)
+                m = put(f"{link_website}api/member/{message['id']}", json={"image": "//".join(filenames2), "logo": "//".join(filenames1), "admin_email": current_user.email, "action": "put",
                                                                            "admin_password": password_manager.get_password(current_user.email)}).json()
+                containerManager.delete_container(cont_name_image)
+                containerManager.delete_container(cont_name_logo)
                 result = True
-                delete_folder(f"tmp/member/member_{current_user.email}")
-                containerManager.delete_container(f"tmp/member/member_{current_user.email}")
+                # filenames1, filenames2 = [], []
+                delete_folder(f"member/member_{current_user.email}")
                 set_other_params()
             message = list(message.values())[-1]
         return render_template('form/admin-form-member.html', title='Добавление партнёра', message=message, form=form,
-                               result=result, filenames=filenames, special_params=get_special_params(), image_len=len(filenames) + 1)
+                               result=result, filenames1=filenames1, filenames2=filenames2, special_params=get_special_params(), image_len=len(filenames2) + 1)
     return you_dont_have_permission()
 
 
@@ -1659,22 +1665,23 @@ def admin_edit_member(id):
         return redirect("/login")
     if current_user.status > 0:
         form = MemberForm()
+        cont_name_logo, cont_name_image = f"tmp/member/member_{current_user.email}/logo", f"tmp/member/member_{current_user.email}/image"
         member = put(f"{link_website}api/member/{id}", json={"admin_email": current_user.email, "action": "get",
                                                              "admin_password": password_manager.get_password(current_user.email)}).json()
-        message, result, filenames = None, False, []
+        message, result, filenames1, filenames2 = None, False, [], []
         if "message" not in member:
             if request.method == 'POST':
-                filenames = save_images(f"tmp/member/member_{current_user.email}", request.files, auto_delete=True)
+                filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo)
                 message = put(f"{link_website}api/member/{id}", json={"preferences": form.preferences.data, "name": form.name.data,
                                                                       "address": form.address.data, "link": form.link.data, "info": form.info.data,
-                                                                      "image": '//'.join(filenames), "action": "put",
+                                                                      "image": '//'.join(filenames2), "logo": '//'.join(filenames1), "action": "put",
                                                                       "admin_email": current_user.email,
                                                                       "admin_password": password_manager.get_password(current_user.email)}).json()
                 if "success" in message:
-                    filenames = copy_files(f"tmp/member/member_{current_user.email}", f"member/member_{id}",
-                                                 filenames)
-                    m = put(f"{link_website}api/member/{id}", json={"image": '//'.join(filenames), "action": "put",
-                                                                    "admin_email": current_user.email,
+                    filenames1, filenames2 = transport_images(cont_name_logo, f"member/member_{id}/logo", filenames1), \
+                                             transport_images(cont_name_image, f"member/member_{id}/image", filenames2)
+                    m = put(f"{link_website}api/member/{id}", json={"image": '//'.join(filenames2), "action": "put",
+                                                                    "admin_email": current_user.email, "logo": '//'.join(filenames1),
                                                                     "admin_password": password_manager.get_password(current_user.email)}).json()
                     result = True
                     set_other_params()
@@ -1685,15 +1692,14 @@ def admin_edit_member(id):
                 form.name.data = member["name"]
                 form.info.data = member["info"]
                 form.link.data = member["link"]
-                if member["image"]:
-                    filenames = member["image"].split("//")
-                    clear_folder(f"tmp/member/member_{current_user.email}")
-                    filenames = copy_files(f"member/member_{id}", f"tmp/member/member_{current_user.email}", filenames)
-                containerManager.add_container(f"tmp/member/member_{current_user.email}", filenames, auto_delete=True)
+                filenames1 = copy_files(f"member/member_{id}/logo", cont_name_logo, member["logo"].split("//"))
+                filenames2 = copy_files(f"member/member_{id}/image", cont_name_image, member["image"].split("//"))
+                containerManager.add_container(cont_name_image, filenames2)
+                containerManager.add_container(cont_name_logo, filenames1)
         else:
             message = list(member.values())[-1]
         return render_template('form/admin-form-member.html', title='Редактирование партнёра', message=message,
-                               form=form, result=result, flag=False, filenames=filenames, image_len=len(filenames) + 1,
+                               form=form, result=result, flag=False, filenames1=filenames1, filenames2=filenames2, image_len=len(filenames2) + 1,
                                special_params=get_special_params())
     return you_dont_have_permission()
 
@@ -1715,11 +1721,13 @@ def admin_delete_member(id):
                                                                       "admin_password": password_manager.get_password(current_user.email)}).json()
                 if "success" in message:
                     result = True
-                    containerManager.delete_container(f"member/member_{id}")
+                    delete_folder(f"member/member_{id}/image")
+                    delete_folder(f"member/member_{id}/logo")
                     delete_folder(f"member/member_{id}")
+                    containerManager.delete_container(f"member  _{id}")
                     set_other_params()
                 message = list(message.values())[-1]
-        return render_template('form/admin-form-delete.html', title='Удаление страницы', message=message, form=form,
+        return render_template('form/admin-form-delete.html', title='Удаление участника', message=message, form=form,
                                result=result, name=name, link_back="/admin-list-member", special_params=get_special_params())
     return you_dont_have_permission()
 

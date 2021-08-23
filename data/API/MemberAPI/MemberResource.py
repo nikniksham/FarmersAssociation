@@ -44,14 +44,14 @@ class MemberResource(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         member, session = find_by_id(member_id, session)
         if args['action'] == "get":
-            return jsonify(member.to_dict(only=('id', 'image', 'name', 'info', 'preferences', 'address', 'link')))
+            return jsonify(member.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link')))
         elif args['action'] == 'delete':
             session.delete(member)
             session.commit()
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет партнёра: {member.name}", admin, datetime.datetime.now())
             return jsonify({"success": f"Партнёр {member.name} успешно удален"})
         elif args['action'] == 'put':
-            part_dict = member.to_dict(only=('image', 'name', 'info', 'preferences', 'address', 'link'))
+            part_dict = member.to_dict(only=('image', 'logo', 'name', 'info', 'preferences', 'address', 'link'))
             keys = list(filter(lambda key: args[key] is not None and key in part_dict.keys() and args[key] != part_dict[key], list(args.keys())))
             name = member.name
             for key in keys:
@@ -68,9 +68,11 @@ class MemberResource(Resource):
                     member.link = args["link"]
                 if key == "address":
                     member.address = args["address"]
+                if key == 'logo':
+                    member.logo = args['logo']
             if count == 0:
                 return raise_error("Пустой запрос")
-            part_dict_2 = member.to_dict(only=('image', 'name', 'info', 'preferences', 'address', 'link'))
+            part_dict_2 = member.to_dict(only=('image', 'logo', 'name', 'info', 'preferences', 'address', 'link'))
             list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key not in ["image", "logo"] else "изменяет изображения/аватарку" for key in keys]
             session.commit()
             add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет партнёра {name}: {', '.join(list_chang)}",
@@ -83,20 +85,20 @@ class MemberResourceUsual(Resource):
     def get(self, member_id):
         session = db_session.create_session()
         member, session = find_by_id(member_id, session)
-        return jsonify(member.to_dict(only=('id', 'image', 'name', 'info', 'preferences', 'address', 'link')))
+        return jsonify(member.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link')))
 
 
 class MemberListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
         members = session.query(Member).all()
-        return jsonify([item.to_dict(only=('id', 'image', 'name', 'info', 'preferences', 'address', 'link')) for item in members])
+        return jsonify([item.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link')) for item in members])
 
 
 class CreateMemberResource(Resource):
     def post(self):
         args = parser_member.parse_args()
-        if not all(args[key] is not None for key in ['image', 'name', 'info', 'preferences', 'address', 'link', 'admin_email', 'admin_password']):
+        if not all(args[key] is not None for key in ['image', 'logo', 'name', 'info', 'preferences', 'address', 'link', 'admin_email', 'admin_password']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания партнёра')
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         new_member = Member()
@@ -106,9 +108,10 @@ class CreateMemberResource(Resource):
         new_member.link = args["link"]
         new_member.address = args["address"]
         new_member.info = args["info"]
+        new_member.logo = args['logo']
         session.add(new_member)
         session.commit()
-        params_dict = new_member.to_dict(only=('id', 'image', 'name', 'info', 'preferences', 'address', 'link'))
+        params_dict = new_member.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link'))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание",
                      f"{admin.name} {admin.surname} создаёт партнёра {new_member.name}: {params_dict}",
