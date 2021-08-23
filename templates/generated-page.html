@@ -203,7 +203,7 @@
                     iconImageSize: [80 * members[i][6], 80],
                     // Смещение левого верхнего угла иконки относительно
                     // её "ножки" (точки привязки).
-                    iconImageOffset: [(80 * members[i][6]) / 2, -40]
+                    iconImageOffset: [-((80 * members[i][6]) / 2), -40]
                 })
 
                 myPlacemark.events.add('click', function () {
