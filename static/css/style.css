@@ -136,6 +136,10 @@ header img {
 }
 
 .main-news-text {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     color: white;
 }
 
