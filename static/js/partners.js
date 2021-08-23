@@ -16,7 +16,7 @@ function openPopUp(name) {
 }
 
 $(document).ready(function(){
-    a = $('.partner-image-carousel').slick({
+    $('.partner-image-carousel').slick({
         dots: false,
         infinite: true,
         autoplay: true,
@@ -65,8 +65,6 @@ $(document).ready(function(){
             }
         ]
     });
-
-    a.slick('refresh');
 
     $('.partner-item').mousedown(function(event) {
         deltaX = event.pageX
