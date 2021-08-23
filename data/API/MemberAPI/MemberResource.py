@@ -32,7 +32,7 @@ def check_admin(email, password):
 def find_by_id(id, session):
     member = session.query(Member).get(id)
     if not member:
-        raise_error(f"Партнёр не найден")
+        raise_error(f"Участник не найден")
     return member, session
 
 
@@ -44,40 +44,44 @@ class MemberResource(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         member, session = find_by_id(member_id, session)
         if args['action'] == "get":
-            return jsonify(member.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link')))
+            return jsonify(member.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', 'created_date', 'author_id')))
         elif args['action'] == 'delete':
             session.delete(member)
             session.commit()
-            add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет партнёра: {member.name}", admin, datetime.datetime.now())
-            return jsonify({"success": f"Партнёр {member.name} успешно удален"})
+            add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет участника: {member.name}", admin, datetime.datetime.now())
+            return jsonify({"success": f"Участник {member.name} успешно удален"})
         elif args['action'] == 'put':
-            part_dict = member.to_dict(only=('image', 'logo', 'name', 'info', 'preferences', 'address', 'link'))
+            part_dict = member.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
             keys = list(filter(lambda key: args[key] is not None and key in part_dict.keys() and args[key] != part_dict[key], list(args.keys())))
             name = member.name
             for key in keys:
                 count += 1
                 if key == "name":
                     member.name = args["name"]
-                if key == "info":
-                    member.info = args["info"]
+                if key == "logo":
+                    member.logo = args["logo"]
                 if key == 'image':
                     member.image = args['image']
-                if key == "preferences":
-                    member.preferences = args["preferences"]
+                if key == "text":
+                    member.text = args["text"]
                 if key == "link":
                     member.link = args["link"]
+                if key == "occupation":
+                    member.occupation = args["occupation"]
                 if key == "address":
                     member.address = args["address"]
-                if key == 'logo':
-                    member.logo = args['logo']
+                if key == "coord":
+                    member.coord = args["coord"]
+                if key == "province":
+                    member.province = args["province"]
             if count == 0:
                 return raise_error("Пустой запрос")
-            part_dict_2 = member.to_dict(only=('image', 'logo', 'name', 'info', 'preferences', 'address', 'link'))
+            part_dict_2 = member.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
             list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key not in ["image", "logo"] else "изменяет изображения/аватарку" for key in keys]
             session.commit()
-            add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет партнёра {name}: {', '.join(list_chang)}",
+            add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет участника {name}: {', '.join(list_chang)}",
                          admin, datetime.datetime.now())
-            return jsonify({"success": f"Партнёр {name} успешно изменен"})
+            return jsonify({"success": f"Участник {name} успешно изменен"})
         raise_error("Неизвестный метод")
 
 
@@ -85,35 +89,43 @@ class MemberResourceUsual(Resource):
     def get(self, member_id):
         session = db_session.create_session()
         member, session = find_by_id(member_id, session)
-        return jsonify(member.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link')))
+        return jsonify(member.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link')))
 
 
 class MemberListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
         members = session.query(Member).all()
-        return jsonify([item.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link')) for item in members])
+        return jsonify([item.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link')) for item in members])
 
 
 class CreateMemberResource(Resource):
     def post(self):
         args = parser_member.parse_args()
-        if not all(args[key] is not None for key in ['image', 'logo', 'name', 'info', 'preferences', 'address', 'link', 'admin_email', 'admin_password']):
-            raise_error('Пропущены некоторые аргументы, необходимые для создания партнёра')
+        if not all(args[key] is not None for key in ['name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', 'admin_email', 'admin_password']):
+            raise_error('Пропущены некоторые аргументы, необходимые для создания участника')
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         new_member = Member()
         new_member.name = args["name"]
+        new_member.logo = args["logo"]
         new_member.image = args["image"]
-        new_member.preferences = args["preferences"]
+        new_member.text = args["text"]
         new_member.link = args["link"]
         new_member.address = args["address"]
-        new_member.info = args["info"]
-        new_member.logo = args['logo']
-        session.add(new_member)
+        new_member.coord = args["coord"]
+        new_member.province = args['province']
+        new_member.occupation = args["occupation"]
+        new_member.created_date = datetime.datetime.now()
+        if args["id"] is not None:
+            if session.query(Member).get(args["id"]) is not None:
+                raise_error("Этот id уже занят")
+            new_member.id = args["id"]
+        admin.member.append(new_member)
+        session.merge(admin)
         session.commit()
-        params_dict = new_member.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link'))
+        params_dict = new_member.to_dict(only=('id', 'name', 'image', 'text', 'link', 'address', 'coord', 'province', 'occupation', 'created_date', 'author_id'))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание",
-                     f"{admin.name} {admin.surname} создаёт партнёра {new_member.name}: {params_dict}",
+                     f"{admin.name} {admin.surname} создаёт участника {new_member.name}: {params_dict}",
                      admin, datetime.datetime.now())
-        return jsonify({'success': f'Партнёр {new_member.name} создан', 'id': new_member.id})
+        return jsonify({'success': f'Участник {new_member.name} создан', 'id': new_member.id})

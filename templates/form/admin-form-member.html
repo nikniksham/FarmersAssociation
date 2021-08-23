@@ -13,8 +13,6 @@
             {% endif %}
             {% endif %}
 
-            {{ form.hidden_tag() }}
-
             {{ form.name.label }}<br>
             {{ form.name(class="form-control") }}<br>
             {% for error in form.name.errors %}
@@ -23,17 +21,17 @@
             </div>
             {% endfor %}
 
-            {{ form.info.label }}<br>
-            {{ form.info(class="form-control") }}<br>
-            {% for error in form.info.errors %}
+            {{ form.text.label }}<br>
+            {{ form.text(class="form-control") }}<br>
+            {% for error in form.text.errors %}
             <div class="alert alert-danger" role="alert">
                 {{ error }}
             </div>
             {% endfor %}
 
-            {{ form.link.label }}<br>
-            {{ form.link(class="form-control") }}<br>
-            {% for error in form.link.errors %}
+            {{ form.occupation.label }}<br>
+            {{ form.occupation(class="form-control") }}<br>
+            {% for error in form.occupation.errors %}
             <div class="alert alert-danger" role="alert">
                 {{ error }}
             </div>
@@ -47,15 +45,15 @@
             </div>
             {% endfor %}
 
-            {{ form.preferences.label }}<br>
-            {{ form.preferences(class="form-control") }}<br>
-            {% for error in form.preferences.errors %}
+            {{ form.link.label }}<br>
+            {{ form.link(class="form-control") }}<br>
+            {% for error in form.link.errors %}
             <div class="alert alert-danger" role="alert">
                 {{ error }}
             </div>
             {% endfor %}
 
-             <p>Логотип</p>
+            <p>Логотип</p>
             <div class="input-file-row-1">
                 <div class="upload-file-container">
                     {% if filenames1 == [] %}

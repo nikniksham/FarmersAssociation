@@ -108,7 +108,7 @@
     </div>
     {% elif block['type'] == "Partner" %}
     <div class="row">
-        {% for partner in special_params["member"] %}
+        {% for partner in special_params["partner"] %}
         <div class="col-sm-12 col-md-6 col-lg-4 col-xl-3 partner-align">
             <a class="dont-blue" href="/partner-page/{{partner['id']}}">
                 <div class="partner-item"> <!-- onclick="openPopUp({{partner['id']}})" -->
@@ -160,11 +160,11 @@
 </script>
 {% if flag_map %}
 <script type="text/javascript">
-    var partners = []
-    {% for partner in special_params["partner"] %}
-    partners.push(["{{partner["name"]}}", "{{partner["logo"]}}", [{{', '.join(partner["coord"].split()[::-1])}}], "{{partner["province"]}}",[{% for occupation in partner["occupation"].split("//") %}{{('"'+occupation+'", ')|safe}}{% endfor %}],"{{partner["link"]}}", {{partner["ratio"]}}, {{partner["id"]}}])
+    var members = []
+    {% for member in special_params["member"] %}
+    members.push(["{{member["name"]}}", "{{member["logo"]}}", [{{', '.join(member["coord"].split()[::-1])}}], "{{member["province"]}}",[{% for occupation in member["occupation"].split("//") %}{{('"'+occupation+'", ')|safe}}{% endfor %}],"{{member["link"]}}", {{member["ratio"]}}, {{member["id"]}}])
     {% endfor %}
-    console.log(partners);
+    console.log(members);
 
     $( document ).ready( function() {
         $('select').change(function(){update_map()});
@@ -176,22 +176,22 @@
         var occupations = $('#occupations').val();
         var provinces = $('#provinces').val();
         console.log(occupations, provinces);
-        for (var i=0; i < partners.length; i++) {
-            if ((partners[i][3] === provinces || provinces === 'all') && (partners[i][4].includes(occupations) || occupations === 'all')) {
-                myPlacemark = new ymaps.Placemark(partners[i][2], {
-                    hintContent: partners[i][0],
-                    balloonContent: partners[i][0]+'<br>'+partners[i][4]+'<br><a href="'+partners[i][5]+'">сайт</a><br><a href="/member-page/'+partners[i][7]+'">страничка участника</a>'
+        for (var i=0; i < members.length; i++) {
+            if ((members[i][3] === provinces || provinces === 'all') && (members[i][4].includes(occupations) || occupations === 'all')) {
+                myPlacemark = new ymaps.Placemark(members[i][2], {
+                    hintContent: members[i][0],
+                    balloonContent: members[i][0]+'<br>'+members[i][4]+'<br><a href="'+members[i][5]+'">сайт</a><br><a href="/member-page/'+members[i][7]+'">страничка участника</a>'
                 }, {
                     // Опции.
                     // Необходимо указать данный тип макета.
                     iconLayout: 'default#image',
                     // Своё изображение иконки метки.
-                    iconImageHref: '/static/img/'+partners[i][1],
+                    iconImageHref: '/static/img/'+members[i][1],
                     // Размеры метки.
-                    iconImageSize: [80 * partners[i][6], 80],
+                    iconImageSize: [80 * members[i][6], 80],
                     // Смещение левого верхнего угла иконки относительно
                     // её "ножки" (точки привязки).
-                    iconImageOffset: [(80 * partners[i][6]) / 2, -40]
+                    iconImageOffset: [(80 * members[i][6]) / 2, -40]
                 })
 
                 myPlacemark.events.add('click', function () {

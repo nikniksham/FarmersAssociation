@@ -18,7 +18,7 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     confirmation_time = sqlalchemy.Column(sqlalchemy.DateTime)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime)
     smartpage = orm.relation('Smartpage')
-    partner = orm.relation('Partner')
+    member = orm.relation('Member')
     content = orm.relation('Content')
     newspage = orm.relation('Newspage')
 

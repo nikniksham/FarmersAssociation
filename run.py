@@ -152,11 +152,11 @@ special_params = {}
 
 
 def set_map_params():
-    partners, provinces, occupations = special_params["partner"], [], []
-    for partner in partners:
-        if partner['province'] not in provinces:
-            provinces.append(partner['province'])
-        for ocup in partner['occupation'].split("//"):
+    members, provinces, occupations = special_params["member"], [], []
+    for member in members:
+        if member['province'] not in provinces:
+            provinces.append(member['province'])
+        for ocup in member['occupation'].split("//"):
             ocup = ocup.strip().capitalize()
             if ocup not in occupations:
                 occupations.append(ocup)
@@ -181,14 +181,14 @@ def set_seo_params():
 
 def set_other_params():
     special_params["news"] = get(f"{link_website}api/newspage/0/9").json()
-    partners = get(f"{link_website}api/partner").json()
-    for ind, partner in enumerate(partners):
-        partners[ind]["ratio"] = get_ratio(partner['logo'].split("//")[0])
-    special_params['partner'] = partners
+    members = get(f"{link_website}api/member").json()
+    for ind, member in enumerate(members):
+        members[ind]["ratio"] = get_ratio(member['logo'].split("//")[0])
+    special_params['member'] = members
     special_params["smartpages"] = get(f"{link_website}api/smartpage").json()
     special_params["worker"] = get(f"{link_website}api/worker").json()
     special_params["text"] = get(f"{link_website}api/text").json()
-    special_params["member"] = get(f"{link_website}api/member").json()
+    special_params["partner"] = get(f"{link_website}api/partner").json()
     set_map_params()
 
 
@@ -1480,140 +1480,6 @@ def admin_delete_worker(id):
     return you_dont_have_permission()
 
 
-@application.route("/admin-list-partner")
-@login_required
-def admin_list_partner():
-    if check_user():
-        return redirect("/login")
-    if current_user.status > 0:
-        partnerlist = get(f"{link_website}api/partner").json()
-        return render_template('list/admin-list-partner.html', title='Участники', partnerlist=partnerlist, special_params=get_special_params())
-    return you_dont_have_permission()
-
-
-@application.route("/admin-create-partner", methods=['GET', 'POST'])
-@login_required
-def admin_create_partner():
-    if check_user():
-        return redirect("/login")
-    if current_user.status > 0:
-        form = PartnerForm()
-        cont_name_logo, cont_name_image = f"tmp/partner/partner_{current_user.email}/logo", f"tmp/partner/partner_{current_user.email}/image"
-        containerManager.delete_container(cont_name_image)
-        containerManager.delete_container(cont_name_logo)
-        message, result, filenames1, filenames2 = None, False, [], []
-        if request.method == 'POST':
-            coord = get_coord(form.address.data)
-            filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
-            if "success" in coord:
-                message = post(f"{link_website}api/partner", json={"name": form.name.data, "logo": "//".join(filenames1),
-                               "image": "//".join(filenames2), "text": form.text.data, "link": form.link.data,
-                               "coord": coord['success'][0], "occupation": "//".join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]),
-                               "address": form.address.data, "province": coord["success"][1], "admin_email": current_user.email,
-                                                                   "admin_password": password_manager.get_password(current_user.email)}).json()
-                if "success" in message:
-                    filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{message['id']}/logo", filenames1), \
-                                                     transport_images(cont_name_image, f"partner/partner_{message['id']}/image", filenames2)
-                    m = put(f"{link_website}api/partner/{message['id']}", json={"image": "//".join(filenames2),
-                            'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put",
-                                                                                "admin_password": password_manager.get_password(current_user.email)}).json()
-                    containerManager.delete_container(cont_name_image)
-                    containerManager.delete_container(cont_name_logo)
-                    delete_folder(f"partner/partner_{current_user.email}")
-                    # filenames1, filenames2 = [], []
-                    result = True
-                    set_other_params()
-                message = list(message.values())[-1]
-            else:
-                message = coord["message"]
-        return render_template('form/admin-form-partner.html', title='Создание участника', message=message, form=form,
-                               result=result, flag=True, filenames1=filenames1, filenames2=filenames2, image_len=len(filenames2) + 1,
-                               special_params=get_special_params())
-    return you_dont_have_permission()
-
-
-@application.route("/admin-edit-partner/<int:id>", methods=['GET', 'POST'])
-@login_required
-def admin_edit_partner(id):
-    if check_user():
-        return redirect("/login")
-    if current_user.status > 0:
-        form = PartnerForm()
-        cont_name_logo, cont_name_image = f"tmp/partner/partner_{current_user.email}/logo", f"tmp/partner/partner_{current_user.email}/image"
-        partner = put(f"{link_website}api/partner/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                               "admin_password": password_manager.get_password(current_user.email)}).json()
-        message, result, filenames1, filenames2 = None, False, [], []
-        if "message" not in partner:
-            if request.method == 'POST':
-                filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo)
-                coord = get_coord(form.address.data) if form.address.data != partner["address"] else {"success": [None, None]}
-                if "success" in coord:
-                    if coord["success"] == [None, None]:
-                        coord["success"] = [partner["coord"], partner["province"]]
-                    message = put(f"{link_website}api/partner/{id}", json={"name": form.name.data, "image": "//".join(filenames2),
-                                  "logo": "//".join(filenames1), "text": form.text.data, "link": form.link.data, "address": form.address.data,
-                                  "coord": coord["success"][0], "province": coord["success"][1], "admin_email": current_user.email,
-                                  "occupation": '//'.join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]), "action": "put",
-                                                                           "admin_password": password_manager.get_password(current_user.email)}).json()
-                    if "success" in message:
-                        filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{id}/logo", filenames1), \
-                                                 transport_images(cont_name_image, f"partner/partner_{id}/image", filenames2)
-                        m = put(f"{link_website}api/partner/{id}", json={"image": "//".join(filenames2),
-                                'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put",
-                                                                         "admin_password": password_manager.get_password(current_user.email)}).json()
-                        result = True
-                        set_other_params()
-                    message = list(message.values())[0]
-                else:
-                    message = coord["message"]
-            else:
-                form.name.data = partner["name"]
-                form.text.data = partner["text"]
-                form.link.data = partner["link"]
-                form.address.data = partner["address"]
-                form.occupation.data = ", ".join(partner["occupation"].split("//"))
-                filenames1 = copy_files(f"partner/partner_{id}/logo", cont_name_logo, partner["logo"].split("//"))
-                filenames2 = copy_files(f"partner/partner_{id}/image", cont_name_image, partner["image"].split("//"))
-                containerManager.add_container(cont_name_image, filenames2)
-                containerManager.add_container(cont_name_logo, filenames1)
-        else:
-            message = list(partner.values())[0]
-        return render_template('form/admin-form-partner.html', title='Редактирование участника', message=message, form=form,
-                               result=result, flag=False, filenames1=filenames1, filenames2=filenames2,
-                               image_len=len(filenames2) + 1, special_params=get_special_params())
-    return you_dont_have_permission()
-
-
-@application.route("/admin-delete-partner/<int:id>", methods=['GET', 'POST'])
-@login_required
-def admin_delete_partner(id):
-    if check_user():
-        return redirect("/login")
-    if current_user.status > 0:
-        form = DeleteForm()
-        message, name, result = "", "участник не найден", False
-        partner = put(f"{link_website}api/partner/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                               "admin_password": password_manager.get_password(current_user.email)}).json()
-        if "message" not in partner:
-            name = "страница " + partner['name']
-            if request.method == 'POST':
-                message = put(f"{link_website}api/partner/{id}", json={"admin_email": current_user.email, "action": "delete",
-                                                                       "admin_password": password_manager.get_password(current_user.email)}).json()
-                if "success" in message:
-                    result = True
-                    delete_folder(f"partner/partner_{id}/image")
-                    delete_folder(f"partner/partner_{id}/logo")
-                    delete_folder(f"partner/partner_{id}")
-                    containerManager.delete_container(f"partner_{id}")
-                    set_other_params()
-                message = list(message.values())[0]
-        else:
-            message = list(partner.values())[0]
-        return render_template('form/admin-form-delete.html', title='Удаление участника', message=message, form=form,
-                               result=result, name=name, link_back="/admin-list-partner", special_params=get_special_params())
-    return you_dont_have_permission()
-
-
 @application.route("/admin-list-member")
 @login_required
 def admin_list_member():
@@ -1621,8 +1487,7 @@ def admin_list_member():
         return redirect("/login")
     if current_user.status > 0:
         memberlist = get(f"{link_website}api/member").json()
-        return render_template('list/admin-list-member.html', title='Партнёры', memberlist=memberlist,
-                               special_params=get_special_params())
+        return render_template('list/admin-list-member.html', title='Участники', memberlist=memberlist, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -1634,28 +1499,36 @@ def admin_create_member():
     if current_user.status > 0:
         form = MemberForm()
         cont_name_logo, cont_name_image = f"tmp/member/member_{current_user.email}/logo", f"tmp/member/member_{current_user.email}/image"
-        containerManager.delete_container(cont_name_logo)
         containerManager.delete_container(cont_name_image)
-        message, result, filenames2, filenames1 = None, False, [], []
+        containerManager.delete_container(cont_name_logo)
+        message, result, filenames1, filenames2 = None, False, [], []
         if request.method == 'POST':
+            coord = get_coord(form.address.data)
             filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
-            message = post(f"{link_website}api/member", json={"name": form.name.data, "image": "//".join(filenames2), "info": form.info.data,
-                           "preferences": form.preferences.data, "address": form.address.data, "link": form.link.data, "admin_email": current_user.email,
-                           "logo": "//".join(filenames1), "admin_password": password_manager.get_password(current_user.email)}).json()
-            if "success" in message:
-                filenames1, filenames2 = transport_images(cont_name_logo, f"member/member_{message['id']}/logo", filenames1), \
-                                         transport_images(cont_name_image, f"member/member_{message['id']}/image", filenames2)
-                m = put(f"{link_website}api/member/{message['id']}", json={"image": "//".join(filenames2), "logo": "//".join(filenames1), "admin_email": current_user.email, "action": "put",
-                                                                           "admin_password": password_manager.get_password(current_user.email)}).json()
-                containerManager.delete_container(cont_name_image)
-                containerManager.delete_container(cont_name_logo)
-                result = True
-                # filenames1, filenames2 = [], []
-                delete_folder(f"member/member_{current_user.email}")
-                set_other_params()
-            message = list(message.values())[-1]
-        return render_template('form/admin-form-member.html', title='Добавление партнёра', message=message, form=form,
-                               result=result, filenames1=filenames1, filenames2=filenames2, special_params=get_special_params(), image_len=len(filenames2) + 1)
+            if "success" in coord:
+                message = post(f"{link_website}api/member", json={"name": form.name.data, "logo": "//".join(filenames1),
+                               "image": "//".join(filenames2), "text": form.text.data, "link": form.link.data,
+                               "coord": coord['success'][0], "occupation": "//".join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]),
+                               "address": form.address.data, "province": coord["success"][1], "admin_email": current_user.email,
+                                                                   "admin_password": password_manager.get_password(current_user.email)}).json()
+                if "success" in message:
+                    filenames1, filenames2 = transport_images(cont_name_logo, f"member/member_{message['id']}/logo", filenames1), \
+                                                     transport_images(cont_name_image, f"member/member_{message['id']}/image", filenames2)
+                    m = put(f"{link_website}api/member/{message['id']}", json={"image": "//".join(filenames2),
+                            'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put",
+                                                                                "admin_password": password_manager.get_password(current_user.email)}).json()
+                    containerManager.delete_container(cont_name_image)
+                    containerManager.delete_container(cont_name_logo)
+                    delete_folder(f"member/member_{current_user.email}")
+                    # filenames1, filenames2 = [], []
+                    result = True
+                    set_other_params()
+                message = list(message.values())[-1]
+            else:
+                message = coord["message"]
+        return render_template('form/admin-form-member.html', title='Создание участника', message=message, form=form,
+                               result=result, flag=True, filenames1=filenames1, filenames2=filenames2, image_len=len(filenames2) + 1,
+                               special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -1668,40 +1541,46 @@ def admin_edit_member(id):
         form = MemberForm()
         cont_name_logo, cont_name_image = f"tmp/member/member_{current_user.email}/logo", f"tmp/member/member_{current_user.email}/image"
         member = put(f"{link_website}api/member/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                             "admin_password": password_manager.get_password(current_user.email)}).json()
+                                                               "admin_password": password_manager.get_password(current_user.email)}).json()
         message, result, filenames1, filenames2 = None, False, [], []
         if "message" not in member:
             if request.method == 'POST':
                 filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo)
-                message = put(f"{link_website}api/member/{id}", json={"preferences": form.preferences.data, "name": form.name.data,
-                                                                      "address": form.address.data, "link": form.link.data, "info": form.info.data,
-                                                                      "image": '//'.join(filenames2), "logo": '//'.join(filenames1), "action": "put",
-                                                                      "admin_email": current_user.email,
-                                                                      "admin_password": password_manager.get_password(current_user.email)}).json()
-                if "success" in message:
-                    filenames1, filenames2 = transport_images(cont_name_logo, f"member/member_{id}/logo", filenames1), \
-                                             transport_images(cont_name_image, f"member/member_{id}/image", filenames2)
-                    m = put(f"{link_website}api/member/{id}", json={"image": '//'.join(filenames2), "action": "put",
-                                                                    "admin_email": current_user.email, "logo": '//'.join(filenames1),
-                                                                    "admin_password": password_manager.get_password(current_user.email)}).json()
-                    result = True
-                    set_other_params()
-                message = list(message.values())[-1]
+                coord = get_coord(form.address.data) if form.address.data != member["address"] else {"success": [None, None]}
+                if "success" in coord:
+                    if coord["success"] == [None, None]:
+                        coord["success"] = [member["coord"], member["province"]]
+                    message = put(f"{link_website}api/member/{id}", json={"name": form.name.data, "image": "//".join(filenames2),
+                                  "logo": "//".join(filenames1), "text": form.text.data, "link": form.link.data, "address": form.address.data,
+                                  "coord": coord["success"][0], "province": coord["success"][1], "admin_email": current_user.email,
+                                  "occupation": '//'.join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]), "action": "put",
+                                                                           "admin_password": password_manager.get_password(current_user.email)}).json()
+                    if "success" in message:
+                        filenames1, filenames2 = transport_images(cont_name_logo, f"member/member_{id}/logo", filenames1), \
+                                                 transport_images(cont_name_image, f"member/member_{id}/image", filenames2)
+                        m = put(f"{link_website}api/member/{id}", json={"image": "//".join(filenames2),
+                                'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put",
+                                                                         "admin_password": password_manager.get_password(current_user.email)}).json()
+                        result = True
+                        set_other_params()
+                    message = list(message.values())[0]
+                else:
+                    message = coord["message"]
             else:
-                form.preferences.data = member["preferences"]
-                form.address.data = member["address"]
                 form.name.data = member["name"]
-                form.info.data = member["info"]
+                form.text.data = member["text"]
                 form.link.data = member["link"]
+                form.address.data = member["address"]
+                form.occupation.data = ", ".join(member["occupation"].split("//"))
                 filenames1 = copy_files(f"member/member_{id}/logo", cont_name_logo, member["logo"].split("//"))
                 filenames2 = copy_files(f"member/member_{id}/image", cont_name_image, member["image"].split("//"))
                 containerManager.add_container(cont_name_image, filenames2)
                 containerManager.add_container(cont_name_logo, filenames1)
         else:
-            message = list(member.values())[-1]
-        return render_template('form/admin-form-member.html', title='Редактирование партнёра', message=message,
-                               form=form, result=result, flag=False, filenames1=filenames1, filenames2=filenames2, image_len=len(filenames2) + 1,
-                               special_params=get_special_params())
+            message = list(member.values())[0]
+        return render_template('form/admin-form-member.html', title='Редактирование участника', message=message, form=form,
+                               result=result, flag=False, filenames1=filenames1, filenames2=filenames2,
+                               image_len=len(filenames2) + 1, special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -1712,24 +1591,145 @@ def admin_delete_member(id):
         return redirect("/login")
     if current_user.status > 0:
         form = DeleteForm()
-        message, name, result = "", "сотрудник не найден", False
+        message, name, result = "", "участник не найден", False
         member = put(f"{link_website}api/member/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                             "admin_password": password_manager.get_password(current_user.email)}).json()
+                                                               "admin_password": password_manager.get_password(current_user.email)}).json()
         if "message" not in member:
-            name = "сотрудник " + member['name']
+            name = "страница " + member['name']
             if request.method == 'POST':
                 message = put(f"{link_website}api/member/{id}", json={"admin_email": current_user.email, "action": "delete",
-                                                                      "admin_password": password_manager.get_password(current_user.email)}).json()
+                                                                       "admin_password": password_manager.get_password(current_user.email)}).json()
                 if "success" in message:
                     result = True
                     delete_folder(f"member/member_{id}/image")
                     delete_folder(f"member/member_{id}/logo")
                     delete_folder(f"member/member_{id}")
-                    containerManager.delete_container(f"member  _{id}")
+                    containerManager.delete_container(f"member_{id}")
+                    set_other_params()
+                message = list(message.values())[0]
+        else:
+            message = list(member.values())[0]
+        return render_template('form/admin-form-delete.html', title='Удаление участника', message=message, form=form,
+                               result=result, name=name, link_back="/admin-list-member", special_params=get_special_params())
+    return you_dont_have_permission()
+
+
+@application.route("/admin-list-partner")
+@login_required
+def admin_list_partner():
+    if check_user():
+        return redirect("/login")
+    if current_user.status > 0:
+        partnerlist = get(f"{link_website}api/partner").json()
+        return render_template('list/admin-list-partner.html', title='Партнёры', partnerlist=partnerlist,
+                               special_params=get_special_params())
+    return you_dont_have_permission()
+
+
+@application.route("/admin-create-partner", methods=['GET', 'POST'])
+@login_required
+def admin_create_partner():
+    if check_user():
+        return redirect("/login")
+    if current_user.status > 0:
+        form = PartnerForm()
+        cont_name_logo, cont_name_image = f"tmp/partner/partner_{current_user.email}/logo", f"tmp/partner/partner_{current_user.email}/image"
+        containerManager.delete_container(cont_name_logo)
+        containerManager.delete_container(cont_name_image)
+        message, result, filenames2, filenames1 = None, False, [], []
+        if request.method == 'POST':
+            filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
+            message = post(f"{link_website}api/partner", json={"name": form.name.data, "image": "//".join(filenames2), "info": form.info.data,
+                           "preferences": form.preferences.data, "address": form.address.data, "link": form.link.data, "admin_email": current_user.email,
+                           "logo": "//".join(filenames1), "admin_password": password_manager.get_password(current_user.email)}).json()
+            if "success" in message:
+                filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{message['id']}/logo", filenames1), \
+                                         transport_images(cont_name_image, f"partner/partner_{message['id']}/image", filenames2)
+                m = put(f"{link_website}api/partner/{message['id']}", json={"image": "//".join(filenames2), "logo": "//".join(filenames1), "admin_email": current_user.email, "action": "put",
+                                                                           "admin_password": password_manager.get_password(current_user.email)}).json()
+                containerManager.delete_container(cont_name_image)
+                containerManager.delete_container(cont_name_logo)
+                result = True
+                # filenames1, filenames2 = [], []
+                delete_folder(f"partner/partner_{current_user.email}")
+                set_other_params()
+            message = list(message.values())[-1]
+        return render_template('form/admin-form-partner.html', title='Добавление партнёра', message=message, form=form,
+                               result=result, filenames1=filenames1, filenames2=filenames2, special_params=get_special_params(), image_len=len(filenames2) + 1)
+    return you_dont_have_permission()
+
+
+@application.route("/admin-edit-partner/<int:id>", methods=['GET', 'POST'])
+@login_required
+def admin_edit_partner(id):
+    if check_user():
+        return redirect("/login")
+    if current_user.status > 0:
+        form = PartnerForm()
+        cont_name_logo, cont_name_image = f"tmp/partner/partner_{current_user.email}/logo", f"tmp/partner/partner_{current_user.email}/image"
+        partner = put(f"{link_website}api/partner/{id}", json={"admin_email": current_user.email, "action": "get",
+                                                             "admin_password": password_manager.get_password(current_user.email)}).json()
+        message, result, filenames1, filenames2 = None, False, [], []
+        if "message" not in partner:
+            if request.method == 'POST':
+                filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo)
+                message = put(f"{link_website}api/partner/{id}", json={"preferences": form.preferences.data, "name": form.name.data,
+                                                                      "address": form.address.data, "link": form.link.data, "info": form.info.data,
+                                                                      "image": '//'.join(filenames2), "logo": '//'.join(filenames1), "action": "put",
+                                                                      "admin_email": current_user.email,
+                                                                      "admin_password": password_manager.get_password(current_user.email)}).json()
+                if "success" in message:
+                    filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{id}/logo", filenames1), \
+                                             transport_images(cont_name_image, f"partner/partner_{id}/image", filenames2)
+                    m = put(f"{link_website}api/partner/{id}", json={"image": '//'.join(filenames2), "action": "put",
+                                                                    "admin_email": current_user.email, "logo": '//'.join(filenames1),
+                                                                    "admin_password": password_manager.get_password(current_user.email)}).json()
+                    result = True
+                    set_other_params()
+                message = list(message.values())[-1]
+            else:
+                form.preferences.data = partner["preferences"]
+                form.address.data = partner["address"]
+                form.name.data = partner["name"]
+                form.info.data = partner["info"]
+                form.link.data = partner["link"]
+                filenames1 = copy_files(f"partner/partner_{id}/logo", cont_name_logo, partner["logo"].split("//"))
+                filenames2 = copy_files(f"partner/partner_{id}/image", cont_name_image, partner["image"].split("//"))
+                containerManager.add_container(cont_name_image, filenames2)
+                containerManager.add_container(cont_name_logo, filenames1)
+        else:
+            message = list(partner.values())[-1]
+        return render_template('form/admin-form-partner.html', title='Редактирование партнёра', message=message,
+                               form=form, result=result, flag=False, filenames1=filenames1, filenames2=filenames2, image_len=len(filenames2) + 1,
+                               special_params=get_special_params())
+    return you_dont_have_permission()
+
+
+@application.route("/admin-delete-partner/<int:id>", methods=['GET', 'POST'])
+@login_required
+def admin_delete_partner(id):
+    if check_user():
+        return redirect("/login")
+    if current_user.status > 0:
+        form = DeleteForm()
+        message, name, result = "", "сотрудник не найден", False
+        partner = put(f"{link_website}api/partner/{id}", json={"admin_email": current_user.email, "action": "get",
+                                                             "admin_password": password_manager.get_password(current_user.email)}).json()
+        if "message" not in partner:
+            name = "сотрудник " + partner['name']
+            if request.method == 'POST':
+                message = put(f"{link_website}api/partner/{id}", json={"admin_email": current_user.email, "action": "delete",
+                                                                      "admin_password": password_manager.get_password(current_user.email)}).json()
+                if "success" in message:
+                    result = True
+                    delete_folder(f"partner/partner_{id}/image")
+                    delete_folder(f"partner/partner_{id}/logo")
+                    delete_folder(f"partner/partner_{id}")
+                    containerManager.delete_container(f"partner  _{id}")
                     set_other_params()
                 message = list(message.values())[-1]
         return render_template('form/admin-form-delete.html', title='Удаление участника', message=message, form=form,
-                               result=result, name=name, link_back="/admin-list-member", special_params=get_special_params())
+                               result=result, name=name, link_back="/admin-list-partner", special_params=get_special_params())
     return you_dont_have_permission()
 
 
@@ -1855,7 +1855,8 @@ def partners():
     page = get(f"{link_website}api/smartpage/3").json()
     content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
-    return render_template('partners.html', title=page["heading"], page=page, content=content, special_params=get_special_params(), flag_map=flag_map)
+    return render_template('partners.html', title=page["heading"], page=page, content=content,
+                           special_params=get_special_params(), flag_map=flag_map)
 
 
 @application.route("/all_news")
@@ -1863,7 +1864,8 @@ def all_news():
     page = get(f"{link_website}api/smartpage/4").json()
     content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
-    return render_template('all_news.html', title=page["heading"], page=page, content=content, special_params=get_special_params(), flag_map=flag_map)
+    return render_template('all_news.html', title=page["heading"], page=page, content=content,
+                           special_params=get_special_params(), flag_map=flag_map)
 
 
 @application.route("/team")
@@ -1871,7 +1873,8 @@ def team():
     page = get(f"{link_website}api/smartpage/5").json()
     content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
-    return render_template('team.html', title=page["heading"], page=page, content=content, special_params=get_special_params(), flag_map=flag_map)
+    return render_template('team.html', title=page["heading"], page=page, content=content,
+                           special_params=get_special_params(), flag_map=flag_map)
 
 
 @application.route("/")
@@ -1879,7 +1882,8 @@ def website_main():
     page = get(f"{link_website}api/smartpage/1").json()
     content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
-    return render_template('main-page.html', len=len(get_special_params()["text"]), title=page["heading"], page=page, content=content, special_params=get_special_params(), flag_map=flag_map)
+    return render_template('main-page.html', len=len(get_special_params()["text"]), title=page["heading"], page=page,
+                           content=content, special_params=get_special_params(), flag_map=flag_map)
 
 
 @application.route("/page/<string:link>")
@@ -1916,9 +1920,7 @@ def news_page(link):
 
 @application.route("/partner-page/<int:id>")
 def partner_page(id):
-    partner = get(f"{link_website}api/member/{id}").json()
-    print(get(f"{link_website}api/member").json())
-    print(partner)
+    partner = get(f"{link_website}api/partner/{id}").json()
     if "message" in partner:
         return page_not_found()
     return render_template('partner.html', title=partner["name"], partner=partner, special_params=get_special_params())
@@ -1926,10 +1928,9 @@ def partner_page(id):
 
 @application.route("/member-page/<int:id>")
 def member_page(id):
-    member = get(f"{link_website}api/partner/{id}").json()
+    member = get(f"{link_website}api/member/{id}").json()
     if "message" in member:
         return page_not_found()
-    print(member)
     return render_template('member.html', title=member["name"], member=member, special_params=get_special_params())
 
 

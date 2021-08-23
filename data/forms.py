@@ -48,7 +48,7 @@ class SmartpageForm(StartForm):
     heading = StringField('Заголовок', validators=[DataRequired()])
 
 
-class PartnerForm(StartForm):
+class MemberForm(StartForm):
     name = StringField('Название', validators=[DataRequired()])
     text = StringField('О партнёре', validators=[DataRequired()])
     address = StringField("Адрес", validators=[DataRequired()])
@@ -97,7 +97,7 @@ class SeoForm(StartForm):
     set_standard_image = SubmitField("Сохранить новое изображение по умолчанию")
 
 
-class MemberForm(StartForm):
+class PartnerForm(StartForm):
     image = StringField("Логотип", validators=[DataRequired()])
     name = StringField("Название", validators=[DataRequired()])
     info = StringField("Краткая информация", validators=[DataRequired()])

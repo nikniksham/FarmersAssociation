@@ -13,6 +13,8 @@
             {% endif %}
             {% endif %}
 
+            {{ form.hidden_tag() }}
+
             {{ form.name.label }}<br>
             {{ form.name(class="form-control") }}<br>
             {% for error in form.name.errors %}
@@ -21,25 +23,9 @@
             </div>
             {% endfor %}
 
-            {{ form.text.label }}<br>
-            {{ form.text(class="form-control") }}<br>
-            {% for error in form.text.errors %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
-            {% endfor %}
-
-            {{ form.occupation.label }}<br>
-            {{ form.occupation(class="form-control") }}<br>
-            {% for error in form.occupation.errors %}
-            <div class="alert alert-danger" role="alert">
-                {{ error }}
-            </div>
-            {% endfor %}
-
-            {{ form.address.label }}<br>
-            {{ form.address(class="form-control") }}<br>
-            {% for error in form.address.errors %}
+            {{ form.info.label }}<br>
+            {{ form.info(class="form-control") }}<br>
+            {% for error in form.info.errors %}
             <div class="alert alert-danger" role="alert">
                 {{ error }}
             </div>
@@ -53,7 +39,23 @@
             </div>
             {% endfor %}
 
-            <p>Логотип</p>
+            {{ form.address.label }}<br>
+            {{ form.address(class="form-control") }}<br>
+            {% for error in form.address.errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endfor %}
+
+            {{ form.preferences.label }}<br>
+            {{ form.preferences(class="form-control") }}<br>
+            {% for error in form.preferences.errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endfor %}
+
+             <p>Логотип</p>
             <div class="input-file-row-1">
                 <div class="upload-file-container">
                     {% if filenames1 == [] %}

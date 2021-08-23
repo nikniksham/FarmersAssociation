@@ -1,12 +1,15 @@
 from flask_restful import reqparse
 
 parser_member = reqparse.RequestParser()
+parser_member.add_argument('id', type=int)
+parser_member.add_argument('name', type=str)
 parser_member.add_argument('logo', type=str)
 parser_member.add_argument('image', type=str)
-parser_member.add_argument('name', type=str)
-parser_member.add_argument('info', type=str)
-parser_member.add_argument('preferences', type=str)
+parser_member.add_argument('text', type=str)
 parser_member.add_argument('address', type=str)
+parser_member.add_argument('coord', type=str)
+parser_member.add_argument('province', type=str)
+parser_member.add_argument('occupation', type=str)
 parser_member.add_argument('link', type=str)
 parser_member.add_argument('admin_email', type=str)
 parser_member.add_argument('action', type=str)
