@@ -1,3 +1,4 @@
+
 {% extends "admin-panel.html" %}
 
 {% block head %}
@@ -45,16 +46,20 @@
 {% endblock %}
 
 {% block pageblock %}
+{% block fortext %}
 <div class="header-carousel">
     {% for src in page['image'].split('//') %}
     <div class="carousel-head">
         <div class="carousel-head-div">
             <img class="carousel-head-img need-change" src="/static/img/{{src}}" alt="">
+            <div class="carousel-head-title-div">
+                <h1>Новости</h1>
+            </div>
         </div>
     </div>
     {% endfor %}
 </div>
-{% block fortext %}{% endblock %}
+{% endblock %}
 <div class="container">
     {% for block in content %}
     {% if block['type'] == "News" %}
