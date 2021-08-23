@@ -16,7 +16,7 @@ from data.API.ContentAPI.ContentResource import CreateContentResource, ContentRe
     ContentListRecourseId
 from data.API.FeedbackAPI.FeedbackResource import FeedbackResource, CreateFeedbackResource, FeedbackTransportImage
 from data.API.NewspageAPI.NewspageResource import NewspageResource, NewspageListRecourse, CreateNewspageResource, \
-    NewspageResourceUsual, NewspageListRecourseId, NewspageResourceLink
+    NewspageResourceUsual, NewspageListRecourseId, NewspageResourceLink, NewspageListRecourseTags
 from data.API.PartnerAPI.PartnerResource import PartnerResource, PartnerResourceUsual, PartnerListRecourse, \
     CreatePartnerResource
 from data.API.SmartpageAPI.SmartpageResource import CreateSmartpageResource, SmartpageResource, SmartpageListRecourse, \
@@ -66,6 +66,7 @@ api.add_resource(NewspageResourceUsual, "/api/newspage/<int:newspage_id>")
 api.add_resource(NewspageListRecourseId, "/api/newspage/<int:start_id>/<int:end_id>")
 api.add_resource(NewspageListRecourse, "/api/newspage")
 api.add_resource(NewspageResourceLink, "/api/newspage/<string:link>")
+api.add_resource(NewspageListRecourseTags, "/api/newspage/<string:tags>/<int:start_id>/<int:end_id>")
 
 # SmartpageApi
 api.add_resource(CreateSmartpageResource, "/api/smartpage")
@@ -881,7 +882,7 @@ def admin_create_news():
             text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
             if form.submit.data:
                 if text_trans[:5] != "Error":
-                    message = post(f"{link_website}api/newspage", json={"heading": form.heading.data, "text": form.text.data,
+                    message = post(f"{link_website}api/newspage", json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data,
                                    "image": "//".join(filenames), "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
                     if "success" in message:
                         filenames = transport_images(f"tmp/news/news_{current_user.email}", f"news/news_{message['id']}", filenames)
@@ -920,7 +921,7 @@ def admin_edit_news(id):
                 if form.submit.data:
                     if text_trans[:5] != "Error":
                         message = put(f"{link_website}api/newspage/{id}", json={"heading": form.heading.data, "text": form.text.data,
-                                      "image": "//".join(filenames), "admin_email": current_user.email, "action": "put",
+                                      "image": "//".join(filenames), "admin_email": current_user.email, "action": "put", "tags": form.tags.data,
                                       "admin_password": password_manager.get_password(current_user.email)}).json()
                         if "success" in message:
                             result = True
@@ -937,6 +938,7 @@ def admin_edit_news(id):
             else:
                 form.heading.data = news["heading"]
                 form.text.data = news["text"]
+                form.tags.data = news["tags"]
                 if containerManager.get_container(f"tmp/news/news_{current_user.email}") != {}:
                     filenames = containerManager.get_container(f"tmp/news/news_{current_user.email}").values()
                 else:
@@ -1903,6 +1905,30 @@ def page_by_link(link):
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('generated-page.html', title=page["heading"], page=page, content=content,
                            special_params=get_special_params(), flag_map=flag_map)
+
+
+@application.route("/news-page/<string:link>")
+def news_page(link):
+    news = get(f"{link_website}api/newspage/{link}").json()
+    if "message" in news:
+        return page_not_found()
+    return render_template('news.html', title=news["heading"], news=news, special_params=get_special_params())
+
+
+@application.route("/partner-page/<int:id>")
+def partner_page(id):
+    partner = get(f"{link_website}api/member/{id}").json()
+    if "message" in partner:
+        return page_not_found()
+    return render_template('partner.html', title=partner["name"], partner=partner)
+
+
+@application.route("/member-page/<int:id>")
+def partner_page(id):
+    member = get(f"{link_website}api/partner/{id}").json()
+    if "message" in member:
+        return page_not_found()
+    return render_template('partner.html', title=member["name"], member=member)
 
 
 @application.route("/news-page/<string:link>")

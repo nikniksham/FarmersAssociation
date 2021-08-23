@@ -104,3 +104,7 @@ class MemberForm(StartForm):
     link = StringField("Ссылка", validators=[DataRequired()])
     preferences = StringField("Преференции", validators=[DataRequired()])
     address = StringField("Адрес", validators=[DataRequired()])
+
+
+class FindNews(FlaskForm):
+    text = StringField("Текст", validators=[DataRequired()])
