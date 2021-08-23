@@ -68,7 +68,7 @@ a {
 .navigation-hrefs a {
     padding: 10px;
     color: white;
-    font-size: 24px;
+    font-size: 21px;
 }
 
 .navigation-hrefs a:hover {
@@ -160,6 +160,7 @@ header img {
 @media (max-width: 767px) {
     .main-news-text p:first-child {font-size: 28px;}
     .main-news-text p:last-child {font-size: 18px;}
+    .navigation-hrefs a { font-size: 24px; }
 }
 
 .partner-item {
