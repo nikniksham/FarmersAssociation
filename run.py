@@ -1930,14 +1930,6 @@ def member_page(id):
     return render_template('partner.html', title=member["name"], member=member)
 
 
-@application.route("/news-page/<string:link>")
-def news_page(link):
-    news = get(f"{link_website}api/newspage/{link}").json()
-    if "message" in news:
-        return page_not_found()
-    return render_template('news.html', title=news["heading"], news=news, special_params=get_special_params())
-
-
 @application.route('/logout')
 @login_required
 def logout():
