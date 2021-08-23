@@ -4,8 +4,10 @@
 {% endblock %}
 
 {% block pageblockext %}
-    <input name="text" class="findtext">
-    <input type="submit" onclick="searching_text()">
+    <div class="search">
+        <input name="text" class="findtext">
+        <input type="button" class="search-button" onclick="searching_text()">
+    </div>
     <div class="row" id="news">
         {% for news in special_params["news"] %}
         <div class="col-sm-12 col-md-6 col-lg-4">
@@ -24,7 +26,7 @@
         {% endfor %}
     </div>
     <div class="more-news">
-        <a onclick="add_news()">
+        <a class="load-news" onclick="add_news()">
             <button>Больше новостей</button>
         </a>
     </div>

@@ -2,6 +2,7 @@ var loaded_news = 9
 var load_news = 9
 var link_website = ""
 var search_text = ""
+var delete_load_button = false
 
 function add_news() {
     var req = link_website+"api/newspage/"+loaded_news+"/"+(loaded_news + load_news);
@@ -19,7 +20,14 @@ function add_news() {
             document.getElementById("news").append(block)
         }
         if (data.length < load_news) {
-            $('.more-news').remove()
+            console.log(document.getElementsByClassName("more-news")[0])
+            document.getElementsByClassName("more-news")[0].innerHTML = ''
+            console.log(document.getElementsByClassName("more-news")[0])
+            delete_load_button = true
+        } else if (delete_load_button) {
+            console.log("add")
+            document.getElementsByClassName("more-news")[0].innerHTML = '<a class="load-news" onclick="add_news()"><button>Больше новостей</button></a>'
+            delete_load_button = false
         }
     });
 }
