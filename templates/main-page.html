@@ -4,14 +4,25 @@
 {% endblock %}
 
 {% block fortext %}
-<div class="header-carousel-text">
-    {% for text in special_params["text"] %}
-    <div class="main-news-item">
-        <div class="main-news-container">
-            <img class="d-none d-md-block" src="/static/img/logo.png">
-            <div class="main-news-text">
-                <p>{{text["heading"]}}</p>
-                <p>{{text["description"]}}</p>
+<div class="header-carousel">
+    {% for src in page['image'].split('//') %}
+    <div class="carousel-head">
+        <div class="carousel-head-div">
+            <img class="carousel-head-img need-change" src="/static/img/{{src}}" alt="">
+            <div class="carousel-head-title-div">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-2 d-none d-md-block">
+                            <img class="main-page-head-img" src="/static/img/logo.png">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="main-news-text">
+                                <p>{{special_params["text"][loop.index % len]["heading"]}}</p>
+                                <p>{{special_params["text"][loop.index % len]["description"]}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

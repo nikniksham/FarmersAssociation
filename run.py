@@ -1878,7 +1878,7 @@ def website_main():
     page = get(f"{link_website}api/smartpage/1").json()
     content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
-    return render_template('main-page.html', title=page["heading"], page=page, content=content, special_params=get_special_params(), flag_map=flag_map)
+    return render_template('main-page.html', len=len(get_special_params()["text"]), title=page["heading"], page=page, content=content, special_params=get_special_params(), flag_map=flag_map)
 
 
 @application.route("/page/<string:link>")

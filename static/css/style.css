@@ -136,7 +136,10 @@ header img {
 }
 
 .main-news-text {
-    padding-left: 30px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     color: white;
 }
 
@@ -509,4 +512,8 @@ footer p {
 .carousel-head-title-div h1 {
     font-size: 60px;
     font-family: 'Oswald', sans-serif;
+}
+
+.main-page-head-img {
+    width: 100%;
 }
