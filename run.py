@@ -1923,7 +1923,7 @@ def partner_page(id):
 
 
 @application.route("/member-page/<int:id>")
-def partner_page(id):
+def member_page(id):
     member = get(f"{link_website}api/partner/{id}").json()
     if "message" in member:
         return page_not_found()
