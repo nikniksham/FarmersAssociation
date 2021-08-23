@@ -111,7 +111,9 @@
         <div class="col-sm-12 col-md-6 col-lg-4 col-xl-3 partner-align">
             <div class="partner-item" onclick="openPopUp({{partner['id']}})">
                 <div>
-                    <img class="partner-item-image" src="/static/img/{{partner['logo']}}" alt={{partner['name']}}>
+                    <div class="partner-item-image-block">
+                        <img class="partner-item-image" src="/static/img/{{partner['logo']}}" alt={{partner['name']}}>
+                    </div>
                     <p class="partner-item-text">{{partner['name']}}</p>
                 </div>
             </div>

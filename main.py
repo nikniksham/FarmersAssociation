@@ -260,7 +260,7 @@ def mini_text(text):  # Я не знаю, как это работает, это
     for word in res.split():
         if len(word) > 20:
             word = word[:17] + "..."
-        if len((tmp + " " + word).strip()) > 200:
+        if len((tmp + " " + word).strip()) > 100:
             break
         tmp += " " + word
     return tmp.strip()

@@ -68,7 +68,7 @@ a {
 .navigation-hrefs a {
     padding: 10px;
     color: white;
-    font-size: 18px;
+    font-size: 24px;
 }
 
 .navigation-hrefs a:hover {
@@ -145,7 +145,7 @@ header img {
 
 .main-news-text p:first-child {
     font-size: 36px;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
     font-family: 'Oswald';
     font-width: 400;
     letter-spacing: 2px;
@@ -179,7 +179,6 @@ header img {
     display: inline-block;
     width: 75px;
     border-radius: 10px;
-    margin-right: 10px;
 }
 
 .partner-item-text {
@@ -516,4 +515,21 @@ footer p {
 
 .main-page-head-img {
     width: 100%;
+}
+
+@media (min-width: 768px) {
+    .partner-item-text, .news-title { font-size: 28px; }
+    .news-text { font-size: 21px; }
+}
+
+div.partner-item-image-block {
+    margin-right: 10px;
+    width: 75px;
+    height: 75px;
+}
+
+div.partner-item-image-block img {
+    object-fit: contain;
+    width: 100%;
+    height: 100%;
 }
