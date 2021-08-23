@@ -1917,9 +1917,11 @@ def news_page(link):
 @application.route("/partner-page/<int:id>")
 def partner_page(id):
     partner = get(f"{link_website}api/member/{id}").json()
+    print(get(f"{link_website}api/member").json())
+    print(partner)
     if "message" in partner:
         return page_not_found()
-    return render_template('partner.html', title=partner["name"], partner=partner)
+    return render_template('partner.html', title=partner["name"], partner=partner, special_params=get_special_params())
 
 
 @application.route("/member-page/<int:id>")
@@ -1927,7 +1929,8 @@ def member_page(id):
     member = get(f"{link_website}api/partner/{id}").json()
     if "message" in member:
         return page_not_found()
-    return render_template('partner.html', title=member["name"], member=member)
+    print(member)
+    return render_template('member.html', title=member["name"], member=member, special_params=get_special_params())
 
 
 @application.route('/logout')

@@ -116,3 +116,67 @@
     height: calc(100% + 50px);
     width: 10000px;
 }
+
+.member-header {
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+}
+
+.member-header img {
+    height: 150px;
+    width: 150px;
+    margin-right: 15px;
+    object-fit: contain;
+}
+
+.member-header p {
+    font-size: 28px;
+}
+
+
+.image-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.on-nushen {
+    height: 100%;
+}
+
+.image-container img {
+    border-radius: 15px;
+    width: 60%;
+}
+
+.carousel .slick-track {
+    display: flex;
+    align-items: center;
+}
+
+.member-text {
+    font-size: 21px;
+}
+
+.member-link {
+    margin: 15px 0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.member-link a {
+    text-decoration: underline;
+    color: #eca137;
+    font-size: 21px;
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 300;
+    letter-spacing: 1px;
+    font-weight: bold;
+}
+
+a.dont-blue:hover {
+    color: inherit;
+}

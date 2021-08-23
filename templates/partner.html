@@ -1,10 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "admin-panel.html" %}
 
-</body>
-</html>
+{% block head %}
+<link href="/static/css/slick.css" rel="stylesheet">
+<link href="/static/css/subpages.css" rel="stylesheet">
+{% endblock %}
+
+{% block pageblock %}
+<div class="container">
+    <div class="member-header">
+        <img src="/static/img/{{partner['logo']}}" alt="">
+        <p>{{partner['name']}}</p>
+    </div>
+    <div class="carousel image-block">
+        {% for src in partner['image'].split('//') %}
+            <div class="on-nushen">
+                <div class="image-container">
+                    <img src="/static/img/{{src}}">
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <p class="member-text">{{partner["text"]}}</p>
+    <p class="member-text"><b>Преференции:</b> {{partner["preferences"]}}</p>
+    <div class="member-link"><a href={{partner["link"]}}>На страничку фермы</a></div>
+</div>
+{% endblock %}
+
+{% block end %}
+<script src="/static/js/slick.js"></script>
+<script src="/static/js/subpages-carousel.js"></script>
+{% endblock %}
