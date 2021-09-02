@@ -44,7 +44,7 @@ class PartnerResource(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         partner, session = find_by_id(partner_id, session)
         if args['action'] == "get":
-            return jsonify(partner.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link')))
+            return jsonify(partner.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link', "socialmedia")))
         elif args['action'] == 'delete':
             session.delete(partner)
             session.commit()
@@ -66,13 +66,15 @@ class PartnerResource(Resource):
                     partner.preferences = args["preferences"]
                 if key == "link":
                     partner.link = args["link"]
+                if key == "socialmedia":
+                    partner.socialmedia = args["socialmedia"]
                 if key == "address":
                     partner.address = args["address"]
                 if key == 'logo':
                     partner.logo = args['logo']
             if count == 0:
                 return raise_error("Пустой запрос")
-            part_dict_2 = partner.to_dict(only=('image', 'logo', 'name', 'info', 'preferences', 'address', 'link'))
+            part_dict_2 = partner.to_dict(only=('image', 'logo', 'name', 'info', 'preferences', 'address', 'link', "socialmedia"))
             list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key not in ["image", "logo"] else "изменяет изображения/аватарку" for key in keys]
             session.commit()
             add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет партнёра {name}: {', '.join(list_chang)}",
@@ -85,20 +87,20 @@ class PartnerResourceUsual(Resource):
     def get(self, partner_id):
         session = db_session.create_session()
         partner, session = find_by_id(partner_id, session)
-        return jsonify(partner.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link')))
+        return jsonify(partner.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link', "socialmedia")))
 
 
 class PartnerListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
         partners = session.query(Partner).all()
-        return jsonify([item.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link')) for item in partners])
+        return jsonify([item.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link', "socialmedia")) for item in partners])
 
 
 class CreatePartnerResource(Resource):
     def post(self):
         args = parser_partner.parse_args()
-        if not all(args[key] is not None for key in ['image', 'logo', 'name', 'info', 'preferences', 'address', 'link', 'admin_email', 'admin_password']):
+        if not all(args[key] is not None for key in ['image', 'logo', 'name', 'info', 'preferences', 'address', 'link', "socialmedia", 'admin_email', 'admin_password']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания партнёра')
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         new_partner = Partner()
@@ -109,9 +111,10 @@ class CreatePartnerResource(Resource):
         new_partner.address = args["address"]
         new_partner.info = args["info"]
         new_partner.logo = args['logo']
+        new_partner.socialmedia = args["socialmedia"]
         session.add(new_partner)
         session.commit()
-        params_dict = new_partner.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link'))
+        params_dict = new_partner.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link', "socialmedia"))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание",
                      f"{admin.name} {admin.surname} создаёт партнёра {new_partner.name}: {params_dict}",

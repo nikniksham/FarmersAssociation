@@ -44,14 +44,14 @@ class MemberResource(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         member, session = find_by_id(member_id, session)
         if args['action'] == "get":
-            return jsonify(member.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', 'created_date', 'author_id')))
+            return jsonify(member.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia", 'created_date', 'author_id')))
         elif args['action'] == 'delete':
             session.delete(member)
             session.commit()
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет участника: {member.name}", admin, datetime.datetime.now())
             return jsonify({"success": f"Участник {member.name} успешно удален"})
         elif args['action'] == 'put':
-            part_dict = member.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
+            part_dict = member.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia"))
             keys = list(filter(lambda key: args[key] is not None and key in part_dict.keys() and args[key] != part_dict[key], list(args.keys())))
             name = member.name
             for key in keys:
@@ -66,6 +66,8 @@ class MemberResource(Resource):
                     member.text = args["text"]
                 if key == "link":
                     member.link = args["link"]
+                if key == "socialmedia":
+                    member.socialmedia = args["socialmedia"]
                 if key == "occupation":
                     member.occupation = args["occupation"]
                 if key == "address":
@@ -76,7 +78,7 @@ class MemberResource(Resource):
                     member.province = args["province"]
             if count == 0:
                 return raise_error("Пустой запрос")
-            part_dict_2 = member.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link'))
+            part_dict_2 = member.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia"))
             list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key not in ["image", "logo"] else "изменяет изображения/аватарку" for key in keys]
             session.commit()
             add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет участника {name}: {', '.join(list_chang)}",
@@ -89,20 +91,20 @@ class MemberResourceUsual(Resource):
     def get(self, member_id):
         session = db_session.create_session()
         member, session = find_by_id(member_id, session)
-        return jsonify(member.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link')))
+        return jsonify(member.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia")))
 
 
 class MemberListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
         members = session.query(Member).all()
-        return jsonify([item.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link')) for item in members])
+        return jsonify([item.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia")) for item in members])
 
 
 class CreateMemberResource(Resource):
     def post(self):
         args = parser_member.parse_args()
-        if not all(args[key] is not None for key in ['name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', 'admin_email', 'admin_password']):
+        if not all(args[key] is not None for key in ['name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia", 'admin_email', 'admin_password']):
             raise_error('Пропущены некоторые аргументы, необходимые для создания участника')
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         new_member = Member()
@@ -123,7 +125,7 @@ class CreateMemberResource(Resource):
         admin.member.append(new_member)
         session.merge(admin)
         session.commit()
-        params_dict = new_member.to_dict(only=('id', 'name', 'image', 'text', 'link', 'address', 'coord', 'province', 'occupation', 'created_date', 'author_id'))
+        params_dict = new_member.to_dict(only=('id', 'name', 'image', 'text', 'link', "socialmedia", 'address', 'coord', 'province', 'occupation', 'created_date', 'author_id'))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание",
                      f"{admin.name} {admin.surname} создаёт участника {new_member.name}: {params_dict}",

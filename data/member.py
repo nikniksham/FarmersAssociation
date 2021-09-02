@@ -13,6 +13,7 @@ class Member(SqlAlchemyBase, SerializerMixin):
     image = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     text = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     link = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    socialmedia = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     address = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     coord = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     province = sqlalchemy.Column(sqlalchemy.String, nullable=True)

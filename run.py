@@ -248,7 +248,7 @@ def save_image_multithreading(filename, file):
     file.save(filename)
     image = Image.open(filename)
     if image.size[0] > 1280 or image.size[1] > 720:
-        image.thumbnail((1280, 720))
+        image.thumbnail((1920, 1080))
     split_name = filename.split('.')
     path, format = '.'.join(split_name[:-1]), split_name[-1]
     if format not in ["png", "gif"]:
@@ -276,8 +276,7 @@ def check_user():
 
 
 def clear_folder(folder_name, path=application.config['UPLOAD_FOLDER']):
-    if os.path.exists(path+folder_name):
-        delete_folder(folder_name, path=path)
+    delete_folder(folder_name, path=path)
     os.makedirs(path+folder_name)
 
 
@@ -360,13 +359,13 @@ def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False,
         if logo and len(filenames2) == 0:
             if not os.path.exists(f"{application.config['UPLOAD_FOLDER']}{cont_logo}"):
                 os.makedirs(f"{application.config['UPLOAD_FOLDER']}{cont_logo}")
-            img.save(f"{application.config['UPLOAD_FOLDER']}{cont_logo}/standard.png")
-            filenames2 = [f"{cont_logo}/standard.png"]
+            img.save(f"{application.config['UPLOAD_FOLDER']}{cont_logo}/{create_random_name(50)}.png")
+            filenames2 = [f"{cont_logo}/{create_random_name(50)}.png"]
         if len(filenames) == 0:
             if not os.path.exists(f"{application.config['UPLOAD_FOLDER']}{cont_name}"):
                 os.makedirs(f"{application.config['UPLOAD_FOLDER']}{cont_name}")
-            img.save(f"{application.config['UPLOAD_FOLDER']}{cont_name}/standard.png")
-            filenames = [f"{cont_name}/standard.png"]
+            img.save(f"{application.config['UPLOAD_FOLDER']}{cont_name}/{create_random_name(50)}.png")
+            filenames = [f"{cont_name}/{create_random_name(50)}.png"]
     if logo:
         containerManager.add_container(cont_logo, filenames2, auto_delete)
     containerManager.add_container(cont_name, filenames, auto_delete)
@@ -442,7 +441,7 @@ def login():
         if user and user.check_password(form.password.data):
             password_manager.add_user(form.email.data, form.password.data)
             login_user(user, remember=True)
-            write_log(f"User login {password_manager.user_is_authed(current_user.email)} {current_user.email}")
+            # write_log(f"User login {password_manager.user_is_authed(current_user.email)} {current_user.email}")
             return redirect("/admin")
         return render_template('login.html', message="Неправильный логин или пароль", form=form, special_params=get_special_params())
     return render_template('login.html', title='Авторизация', form=form, special_params=get_special_params())
@@ -945,7 +944,7 @@ def admin_edit_news(id):
                     filenames = copy_files(f"news/news_{id}", f"tmp/news/news_{current_user.email}", news["image"].split("//"))
                 containerManager.add_container(f"tmp/news/news_{current_user.email}", filenames, auto_delete=True)
         else:
-            message = news.values()[0]
+            message = list(news.values())[0]
         return render_template('form/admin-form-news.html', title='Редактирование новости', message=message, result=result,
                                form=form, filenames=filenames, image_len=len(filenames) + 1, preview_text=preview_text,
                                formatting_text_instruction=formatting_text_instruction, special_params=get_special_params())

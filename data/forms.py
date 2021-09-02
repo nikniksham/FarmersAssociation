@@ -54,6 +54,7 @@ class MemberForm(StartForm):
     address = StringField("Адрес", validators=[DataRequired()])
     occupation = StringField("Роды деятельности (через запятую)", validators=[DataRequired()])
     link = StringField('Ссылка', validators=[DataRequired()])
+    socialmedia = StringField("Социальные сети (через пробел)", validators=[DataRequired()])
 
 
 class DeleteForm(FlaskForm):
@@ -100,7 +101,8 @@ class SeoForm(StartForm):
 class PartnerForm(StartForm):
     image = StringField("Логотип", validators=[DataRequired()])
     name = StringField("Название", validators=[DataRequired()])
-    info = StringField("Краткая информация", validators=[DataRequired()])
+    info = TextAreaField("Краткая информация", validators=[DataRequired()])
     link = StringField("Ссылка", validators=[DataRequired()])
-    preferences = StringField("Преференции", validators=[DataRequired()])
+    preferences = TextAreaField("Преференции", validators=[DataRequired()])
     address = StringField("Адрес", validators=[DataRequired()])
+    socialmedia = StringField("Социальные сети (через пробел)", validators=[DataRequired()])

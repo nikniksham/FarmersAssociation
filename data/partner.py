@@ -11,5 +11,6 @@ class Partner(SqlAlchemyBase, SerializerMixin):
     name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     info = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     link = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    socialmedia = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     preferences = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     address = sqlalchemy.Column(sqlalchemy.String, nullable=True)
