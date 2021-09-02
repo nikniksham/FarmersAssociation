@@ -164,7 +164,7 @@
 .member-link {
     margin: 15px 0;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
 }
 
 .member-link a {

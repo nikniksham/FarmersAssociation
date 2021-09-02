@@ -20,9 +20,22 @@
             </div>
         {% endfor %}
     </div>
-    <p class="member-text">{{partner["text"]}}</p>
+    <p class="member-text">
+        {% for line in partner["info"].split() %}
+        {{line}}<br>
+        {% endfor %}
+    </p>
+    <p class="member-text">Адресс: {{partner["adress"]}}</p>
     <p class="member-text"><b>Преференции:</b> {{partner["preferences"]}}</p>
-    <div class="member-link"><a href={{partner["link"]}}>На страничку фермы</a></div>
+    <div class="member-link">
+        <div class="social">
+            <p class="footer-title">Мы в соц. сетях:</p>
+            {% for socialmedia in special_params["socials"] %}
+            <a href="{{socialmedia['link']}}" target="_blank"><img src="/static/img/{{'.'.join(socialmedia['icon_type'].split('.')[:-1])+'BLACK.'+socialmedia['icon_type'].split('.')[-1]}}" alt="facebook"></a>
+            {% endfor %}
+        </div>
+        <a href={{partner["link"]}}>На страничку фермы</a>
+    </div>
 </div>
 {% endblock %}
 
