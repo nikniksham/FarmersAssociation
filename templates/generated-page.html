@@ -135,6 +135,35 @@
         </div>
         {% endfor %}
     </div>
+    {% elif block['type'] == "Member" and block['display_type_member'] == '0' %}
+    <div class="partners-carousel">
+        {% for member in special_params["member"] %}
+        <a class="dont-blue" href="/member-page/{{member['id']}}">
+            <div class="partner-item">
+                <div>
+                    <div class="partner-item-image-block">
+                        <img class="partner-item-image" src="/static/img/{{member['logo']}}" alt={{member['name']}}>
+                    </div>
+                    <p class="partner-item-text">{{member['name']}}</p>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% elif block['type'] == "Member" and block['display_type_member'] == '1' %}
+    <div class="row">
+        {% for member in special_params["member"] %}
+        <div class="col-sm-12 col-md-6 col-lg-4 col-xl-3 partner-align">
+            <a class="dont-blue" href="/member-page/{{member['id']}}">
+                <div class="news">
+                    <div class="news-img"
+                         style="background-image: url('/static/img/{{member['logo']}}');"></div>
+                    <div class="news-title">{{member['name']}}</div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
     {% elif block['type'] == "Map" %}
     <div class="map-block">
         <div class="map-block-settings">
