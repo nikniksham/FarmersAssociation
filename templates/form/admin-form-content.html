@@ -33,10 +33,23 @@
             <div id="partner" class="">
             {% else %}
             <div id="partner" class="hidden">
-            {% endif %}
+                {% endif %}
                 {{ form.display_type.label }}<br>
                 {{ form.display_type(class="form-control") }}<br>
                 {% for error in form.display_type.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                {% endfor %}
+            </div>
+            {% if form.type.data == "Member" %}
+            <div id="member" class="">
+            {% else %}
+            <div id="member" class="hidden">
+                {% endif %}
+                {{ form.display_type_member.label }}<br>
+                {{ form.display_type_member(class="form-control") }}<br>
+                {% for error in form.display_type_member.errors %}
                 <div class="alert alert-danger" role="alert">
                     {{ error }}
                 </div>
@@ -46,7 +59,7 @@
             <div id="text" class="">
             {% else %}
             <div id="text" class="hidden">
-            {% endif %}
+                {% endif %}
                 {{ form.text.label }}<br>
                 {{ form.text(class="form-control") }}<br>
                 {% for error in form.text.errors %}
@@ -57,36 +70,40 @@
             </div>
             {% if form.type.data == "Image" %}
             <div id="images" class="">
-            {% else%}
-            <div id="images" class="hidden">
-            {% endif %}
-                <p>Изображения</p>
-                <div class="settings-images">
-                    <div id="images1">
-                        {% if filenames %}
-                        {% for filename in filenames %}
-                        <div class="input-file-row-1">
-                            <div class="upload-file-container">
-                                <div class="delete-image"></div>
-                                <img id="image{{loop.index}}" class="visible" src="/static/img/{{filename}}" alt="">
-                                <input type=file name=image{{loop.index}} class="photo" id="imgInput{{loop.index}}">
+                {% else%}
+                <div id="images" class="hidden">
+                    {% endif %}
+                    <p>Изображения</p>
+                    <div class="settings-images">
+                        <div id="images1">
+                            {% if filenames %}
+                            {% for filename in filenames %}
+                            <div class="input-file-row-1">
+                                <div class="upload-file-container">
+                                    <div class="delete-image"></div>
+                                    <img id="image{{loop.index}}" class="visible" src="/static/img/{{filename}}"
+                                         alt="">
+                                    <input type=file name=image{{loop.index}} class="photo"
+                                           id="imgInput{{loop.index}}">
+                                </div>
                             </div>
-                        </div>
-                        {% endfor %}
-                        {% endif %}
-                        <div class="input-file-row-1">
-                            <div class="upload-file-container">
-                                <div class="delete-image hidden"></div>
-                                <img id="image{{image_len}}" class="this-is-image" src="#" alt="">
-                                <input type=file name=imgInput{{image_len}} class="photo" id="imgInput{{image_len}}">
+                            {% endfor %}
+                            {% endif %}
+                            <div class="input-file-row-1">
+                                <div class="upload-file-container">
+                                    <div class="delete-image hidden"></div>
+                                    <img id="image{{image_len}}" class="this-is-image" src="#" alt="">
+                                    <input type=file name=imgInput{{image_len}} class="photo"
+                                           id="imgInput{{image_len}}">
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="submit-block">
-                <button class="element-exit"><a href=/admin-list-smartpage/{{page_id}}>Назад</a></button>
-                {{ form.submit(type="submit", class="btn btn-primary submit") }}
+                <div class="submit-block">
+                    <button class="element-exit"><a href=/admin-list-smartpage/{{page_id}}>Назад</a></button>
+                    {{ form.submit(type="submit", class="btn btn-primary submit") }}
+                </div>
             </div>
         </div>
     </form>
@@ -119,7 +136,14 @@
         } else if (this.value === 'Partner' && $('#partner').hasClass('hidden')) {
             $('#partner').removeClass('hidden');
         }
+        if (this.value !== 'Member' && !$('#member').hasClass('hidden')) {
+            $('#member').addClass('hidden');
+        } else if (this.value === 'Member' && $('#member').hasClass('hidden')) {
+            $('#member').removeClass('hidden');
+        }
     });
+
+
 
 </script>
 {% endblock %}

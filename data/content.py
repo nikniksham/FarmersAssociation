@@ -16,6 +16,7 @@ class Content(SqlAlchemyBase, SerializerMixin):
     text = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     tags = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     display_type = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    display_type_member = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.now())
     author_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("user.id"))
     author = orm.relation('User')

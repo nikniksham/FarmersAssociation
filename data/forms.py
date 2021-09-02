@@ -27,10 +27,11 @@ class AdminForm(StartForm):
 
 
 class ContentForm(StartForm):
-    type = SelectField('Тип', choices=[("News", "Новостной"), ("Text", "Текстовый"),
+    type = SelectField('Тип', choices=[("News", "Новостной"), ("Text", "Текстовый"), ("Member", "Члены организации"),
                                        ("Image", "С картинками"), ("Partner", "Партнёры"), ("Map", "Карта")])
     heading = StringField('Название', validators=[DataRequired()])
     display_type = SelectField('Тип отображения партнёров', choices=[("0", "Бегущая строка"), ("1", "Блоки")])
+    display_type_member = SelectField('Тип отображения членов организации', choices=[("0", "Бегущая строка"), ("1", "Блоки")])
     text = TextAreaField('Текст')
 
 

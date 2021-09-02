@@ -55,6 +55,14 @@
             </div>
             {% endfor %}
 
+            {{ form.socialmedia.label }}<br>
+            {{ form.socialmedia(class="form-control") }}<br>
+            {% for error in form.socialmedia.errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endfor %}
+
              <p>Логотип</p>
             <div class="input-file-row-1">
                 <div class="upload-file-container">

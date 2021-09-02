@@ -30,11 +30,13 @@
     <div class="member-link">
         <div class="social">
             <p class="footer-title">Мы в соц. сетях:</p>
-            {% for socialmedia in special_params["socials"] %}
-            <a href="{{socialmedia['link']}}" target="_blank"><img src="/static/img/{{'.'.join(socialmedia['icon_type'].split('.')[:-1])+'BLACK.'+socialmedia['icon_type'].split('.')[-1]}}" alt="facebook"></a>
+            {% for socialmedia in social %}
+            <a href="{{socialmedia['link']}}" target="_blank"><img src="/static/img/{{'.'.join(socialmedia['icon']}}" alt="socialmedia"></a>
             {% endfor %}
         </div>
-        <a href={{member["link"]}}>На страничку фермы</a>
+        {% if member["link"] != "" %}
+        <a href={{member["link"]}}>На сайт фермы</a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

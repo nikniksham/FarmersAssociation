@@ -198,15 +198,28 @@ def crop_center(img):
                      (img_width + min_size) // 2, (img_height + min_size) // 2))
 
 
-def get_image_name(link):
+def get_image_name(link, isBlack=False):
     link = link.split("//")
     images = {"vk.com": "vk.png", "t.me": "telegram.png", "instagram.com": "instagram.png",
-              "facebook.com": "facebook.png", "twitter.com": "twitter.png"}
+              "facebook.com": "facebook.png", "twitter.com": "twitter.png", "tiktok.com": "tiktok.png"}
+    imagesBLACK = {"vk.com": "vkBLACK.png", "t.me": "telegramBLACK.png", "instagram.com": "instagramBLACK.png",
+                   "facebook.com": "facebookBLACK.png", "twitter.com": "twitterBLACK.png", "tiktok.com": "tiktokBLACK.png"}
     if len(link) > 1:
         for key in images.keys():
             if key in link[1]:
-                return f"socialmedia/{images[key]}"
+                if isBlack:
+                    return f"socialmedia/{imagesBLACK[key]}"
+                else:
+                    return f"socialmedia/{images[key]}"
     return "socialmedia/socialmedia.png"
+
+
+def get_icons_links(links):
+    social = []
+    if links:
+        for link in links.split():
+            social.append({"icon": get_image_name(link, True), "link": link})
+    return social
 
 
 @login_manager.user_loader
@@ -1137,6 +1150,7 @@ def admin_list_smartpage(page_id):
     if current_user.status > 0:
         smartpagelist, contentdict = get(f"{link_website}api/smartpage").json(), {}
         contentlist = get(f"{link_website}api/content").json()
+        print(contentlist)
         for page in smartpagelist:
             for content in contentlist:
                 if page["id"] == content["smartpage_id"]:
@@ -1145,7 +1159,7 @@ def admin_list_smartpage(page_id):
                     else:
                         contentdict[page["id"]] = [content]
         return render_template('list/admin-list-smartpage.html', title='Страницы', smartpagelist=smartpagelist,
-                               contentdict=contentdict, types={"News": "Новости", "Image": "Картинки", "Text": "Текст", "Partner": "Партнёры", "Map": "Карта"},
+                               contentdict=contentdict, types={"News": "Новости", "Image": "Картинки", "Text": "Текст", "Partner": "Партнёры", "Map": "Карта", "Member": "Участники"},
                                page_id=page_id, special_params=get_special_params())
     return you_dont_have_permission()
 
@@ -1254,7 +1268,7 @@ def admin_create_content(page_id):
         if request.method == 'POST':
             filenames = save_images(f"tmp/content/content_{current_user.email}", request.files, auto_delete=True, r_img=False)
             image = "" if len(filenames) == 0 else "//".join(filenames)
-            message = post(f"{link_website}api/content", json={"type": form.type.data, "text": form.text.data, "page_id": page_id, "display_type": form.display_type.data,
+            message = post(f"{link_website}api/content", json={"type": form.type.data, "text": form.text.data, "page_id": page_id, "display_type": form.display_type.data, "display_type_member": form.display_type_member.data,
                            "heading": form.heading.data, "image": image, 'admin_email': current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
             if "success" in message:
                 filenames = transport_images(f"tmp/content/content_{current_user.email}", f"content/content_{message['id']}", filenames)
@@ -1317,7 +1331,8 @@ def admin_edit_content(id):
                 filenames = save_images(f"tmp/content/content_{current_user.email}", request.files, auto_delete=True)
                 message = put(f"{link_website}api/content/{id}", json={"type": form.type.data, "text": form.text.data,
                               "heading": form.heading.data, "image": '//'.join(filenames), "action": "put", "display_type": form.display_type.data,
-                              "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
+                              "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email),
+                                                                       "display_type_member": form.display_type_member.data}).json()
                 if "success" in message:
                     filenames = transport_images(f"tmp/content/content_{current_user.email}", f"content/content_{id}", filenames)
                     m = put(f"{link_website}api/content/{id}", json={"image": '//'.join(filenames), "action": "put",
@@ -1329,6 +1344,7 @@ def admin_edit_content(id):
                 form.text.data = content["text"]
                 form.heading.data = content["heading"]
                 form.display_type.data = content["display_type"]
+                form.display_type_member.data = content["display_type_member"]
                 page_id = content["smartpage_id"]
                 if content["image"]:
                     filenames = content["image"].split("//")
@@ -1503,13 +1519,13 @@ def admin_create_member():
         message, result, filenames1, filenames2 = None, False, [], []
         if request.method == 'POST':
             coord = get_coord(form.address.data)
-            filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
             if "success" in coord:
+                filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
                 message = post(f"{link_website}api/member", json={"name": form.name.data, "logo": "//".join(filenames1),
                                "image": "//".join(filenames2), "text": form.text.data, "link": form.link.data,
                                "coord": coord['success'][0], "occupation": "//".join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]),
                                "address": form.address.data, "province": coord["success"][1], "admin_email": current_user.email,
-                                                                   "admin_password": password_manager.get_password(current_user.email)}).json()
+                               "admin_password": password_manager.get_password(current_user.email), "socialmedia": form.socialmedia.data}).json()
                 if "success" in message:
                     filenames1, filenames2 = transport_images(cont_name_logo, f"member/member_{message['id']}/logo", filenames1), \
                                                      transport_images(cont_name_image, f"member/member_{message['id']}/image", filenames2)
@@ -1544,16 +1560,16 @@ def admin_edit_member(id):
         message, result, filenames1, filenames2 = None, False, [], []
         if "message" not in member:
             if request.method == 'POST':
-                filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo)
                 coord = get_coord(form.address.data) if form.address.data != member["address"] else {"success": [None, None]}
                 if "success" in coord:
+                    filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo)
                     if coord["success"] == [None, None]:
                         coord["success"] = [member["coord"], member["province"]]
                     message = put(f"{link_website}api/member/{id}", json={"name": form.name.data, "image": "//".join(filenames2),
                                   "logo": "//".join(filenames1), "text": form.text.data, "link": form.link.data, "address": form.address.data,
                                   "coord": coord["success"][0], "province": coord["success"][1], "admin_email": current_user.email,
                                   "occupation": '//'.join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]), "action": "put",
-                                                                           "admin_password": password_manager.get_password(current_user.email)}).json()
+                                  "admin_password": password_manager.get_password(current_user.email), "socialmedia": form.socialmedia.data}).json()
                     if "success" in message:
                         filenames1, filenames2 = transport_images(cont_name_logo, f"member/member_{id}/logo", filenames1), \
                                                  transport_images(cont_name_image, f"member/member_{id}/image", filenames2)
@@ -1569,6 +1585,7 @@ def admin_edit_member(id):
                 form.name.data = member["name"]
                 form.text.data = member["text"]
                 form.link.data = member["link"]
+                form.socialmedia.data = member["socialmedia"]
                 form.address.data = member["address"]
                 form.occupation.data = ", ".join(member["occupation"].split("//"))
                 filenames1 = copy_files(f"member/member_{id}/logo", cont_name_logo, member["logo"].split("//"))
@@ -1640,7 +1657,8 @@ def admin_create_partner():
             filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
             message = post(f"{link_website}api/partner", json={"name": form.name.data, "image": "//".join(filenames2), "info": form.info.data,
                            "preferences": form.preferences.data, "address": form.address.data, "link": form.link.data, "admin_email": current_user.email,
-                           "logo": "//".join(filenames1), "admin_password": password_manager.get_password(current_user.email)}).json()
+                           "logo": "//".join(filenames1), "admin_password": password_manager.get_password(current_user.email),
+                                                               "socialmedia": form.socialmedia.data}).json()
             if "success" in message:
                 filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{message['id']}/logo", filenames1), \
                                          transport_images(cont_name_image, f"partner/partner_{message['id']}/image", filenames2)
@@ -1673,10 +1691,10 @@ def admin_edit_partner(id):
             if request.method == 'POST':
                 filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo)
                 message = put(f"{link_website}api/partner/{id}", json={"preferences": form.preferences.data, "name": form.name.data,
-                                                                      "address": form.address.data, "link": form.link.data, "info": form.info.data,
-                                                                      "image": '//'.join(filenames2), "logo": '//'.join(filenames1), "action": "put",
-                                                                      "admin_email": current_user.email,
-                                                                      "admin_password": password_manager.get_password(current_user.email)}).json()
+                                                                       "address": form.address.data, "link": form.link.data, "info": form.info.data,
+                                                                       "image": '//'.join(filenames2), "logo": '//'.join(filenames1), "action": "put",
+                                                                       "admin_email": current_user.email,
+                                                                       "admin_password": password_manager.get_password(current_user.email), "socialmedia": form.socialmedia.data}).json()
                 if "success" in message:
                     filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{id}/logo", filenames1), \
                                              transport_images(cont_name_image, f"partner/partner_{id}/image", filenames2)
@@ -1692,6 +1710,7 @@ def admin_edit_partner(id):
                 form.name.data = partner["name"]
                 form.info.data = partner["info"]
                 form.link.data = partner["link"]
+                form.socialmedia.data = partner["socialmedia"]
                 filenames1 = copy_files(f"partner/partner_{id}/logo", cont_name_logo, partner["logo"].split("//"))
                 filenames2 = copy_files(f"partner/partner_{id}/image", cont_name_image, partner["image"].split("//"))
                 containerManager.add_container(cont_name_image, filenames2)
@@ -1922,7 +1941,8 @@ def partner_page(id):
     partner = get(f"{link_website}api/partner/{id}").json()
     if "message" in partner:
         return page_not_found()
-    return render_template('partner.html', title=partner["name"], partner=partner, special_params=get_special_params())
+    return render_template('partner.html', title=partner["name"], partner=partner, special_params=get_special_params(),
+                           social=get_icons_links(partner['socialmedia']))
 
 
 @application.route("/member-page/<int:id>")
@@ -1930,7 +1950,8 @@ def member_page(id):
     member = get(f"{link_website}api/member/{id}").json()
     if "message" in member:
         return page_not_found()
-    return render_template('member.html', title=member["name"], member=member, special_params=get_special_params())
+    return render_template('member.html', title=member["name"], member=member, special_params=get_special_params(),
+                           social=get_icons_links(member['socialmedia']))
 
 
 @application.route('/logout')
