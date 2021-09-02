@@ -325,7 +325,7 @@ def transport_images(old_folder, new_folder, filenames):
         if os.path.exists(path+filename):
             os.replace(path+filename, f'{path}{new_folder}/{filename.split("/")[-1]}')
             new_filenames.append(f'{new_folder}/{filename.split("/")[-1]}')
-    delete_folder(old_folder)
+    # delete_folder(old_folder)
     return new_filenames
 
 
@@ -368,17 +368,18 @@ def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False,
             elif img_list[ind] in cont:
                 filenames.append(cont[img_list[ind]])
     if r_img:
+        r_name = f"{create_random_name(50)}.png"
         img = Image.open(f"{application.config['UPLOAD_FOLDER']}standard.png")
         if logo and len(filenames2) == 0:
             if not os.path.exists(f"{application.config['UPLOAD_FOLDER']}{cont_logo}"):
                 os.makedirs(f"{application.config['UPLOAD_FOLDER']}{cont_logo}")
-            img.save(f"{application.config['UPLOAD_FOLDER']}{cont_logo}/{create_random_name(50)}.png")
-            filenames2 = [f"{cont_logo}/{create_random_name(50)}.png"]
+            img.save(f"{application.config['UPLOAD_FOLDER']}{cont_logo}/{r_name}")
+            filenames2 = [f"{cont_logo}/{r_name}"]
         if len(filenames) == 0:
             if not os.path.exists(f"{application.config['UPLOAD_FOLDER']}{cont_name}"):
                 os.makedirs(f"{application.config['UPLOAD_FOLDER']}{cont_name}")
-            img.save(f"{application.config['UPLOAD_FOLDER']}{cont_name}/{create_random_name(50)}.png")
-            filenames = [f"{cont_name}/{create_random_name(50)}.png"]
+            img.save(f"{application.config['UPLOAD_FOLDER']}{cont_name}/{r_name}")
+            filenames = [f"{cont_name}/{r_name}"]
     if logo:
         containerManager.add_container(cont_logo, filenames2, auto_delete)
     containerManager.add_container(cont_name, filenames, auto_delete)
@@ -1150,7 +1151,6 @@ def admin_list_smartpage(page_id):
     if current_user.status > 0:
         smartpagelist, contentdict = get(f"{link_website}api/smartpage").json(), {}
         contentlist = get(f"{link_website}api/content").json()
-        print(contentlist)
         for page in smartpagelist:
             for content in contentlist:
                 if page["id"] == content["smartpage_id"]:

@@ -31,7 +31,7 @@
         <div class="social">
             <p class="footer-title">Мы в соц. сетях:</p>
             {% for socialmedia in social %}
-            <a href="{{socialmedia['link']}}" target="_blank"><img src="/static/img/{{'.'.join(socialmedia['icon']}}" alt="socialmedia"></a>
+            <a href="{{socialmedia['link']}}" target="_blank"><img src="/static/img/{{'.'.join(socialmedia['icon'])}}" alt="socialmedia"></a>
             {% endfor %}
         </div>
         {% if partner["link"] != "" %}

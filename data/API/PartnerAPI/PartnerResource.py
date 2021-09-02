@@ -61,6 +61,7 @@ class PartnerResource(Resource):
                 if key == "info":
                     partner.info = args["info"]
                 if key == 'image':
+                    print("WHWFAPOASNOPASMFM,ASASC", args["image"])
                     partner.image = args['image']
                 if key == "preferences":
                     partner.preferences = args["preferences"]
