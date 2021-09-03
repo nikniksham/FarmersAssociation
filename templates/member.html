@@ -21,17 +21,20 @@
         {% endfor %}
     </div>
     <p class="member-text">
-        {% for line in member["text"].split() %}
+        {% for line in member["text"].split('\n') %}
         {{line}}<br>
         {% endfor %}
     </p>
     <p class="member-text">Адресс: {{member["adress"]}}</p>
-    <p class="member-text"><b>Преференции:</b> {{member["preferences"]}}</p>
+    <p class="member-text"><b>Преференции:</b> {% for line in member["preferences"].split('\n') %}
+        {{line}}<br>
+        {% endfor %}
+    </p>
     <div class="member-link">
         <div class="social">
             <p class="footer-title">Мы в соц. сетях:</p>
             {% for socialmedia in social %}
-            <a href="{{socialmedia['link']}}" target="_blank"><img src="/static/img/{{'.'.join(socialmedia['icon'])}}" alt="socialmedia"></a>
+            <a href="{{socialmedia['link']}}" target="_blank"><img src="/static/img/{{socialmedia['icon']}}" alt="socialmedia"></a>
             {% endfor %}
         </div>
         {% if member["link"] != "" %}
