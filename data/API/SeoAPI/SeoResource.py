@@ -6,33 +6,23 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.API.SeoAPI.parser_seo import parser_seo
 from data.seo import Seo
-
-
-def raise_error(error):
-    abort(400, message=error)
-
-
-def check_admin_status(email, password, need_status=1):
-    admin, session = check_admin(email, password)
-    if admin.status < need_status:
-        raise_error("У вас недостаточно прав для этого")
-    return admin, session
+from data.API.main_file import raise_error, check_admin_status
 
 
 def check_admin(email, password):
     session = db_session.create_session()
     user = session.query(User).filter(User.email == email).first()
     if not user:
-        raise_error(f"Админ {email} не найден")
+        raise_error(f"Админ {email} не найден", session)
     if not user.check_password(password):
-        raise_error("Неправильный пароль")
+        raise_error("Неправильный пароль", session)
     return user, session
 
 
 def find_by_id(id, session):
     seo = session.query(Seo).get(id)
     if not seo:
-        raise_error(f"Seo настройка не найдена")
+        raise_error(f"Seo настройка не найдена", session)
     return seo, session
 
 
@@ -40,6 +30,7 @@ class SeoGetRecourse(Resource):
     def get(self, seo_id):
         session = db_session.create_session()
         seo, session = find_by_id(seo_id, session)
+        session.close()
         return jsonify(seo.to_dict(only=('id', 'title', 'description', 'tags')))
 
 
@@ -51,6 +42,7 @@ class AdminResourceSeo(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         seo, session = find_by_id(seo_id, session)
         if args['action'] == "get":
+            session.close()
             return jsonify(seo.to_dict(only=('id', 'title', 'description', 'tags')))
         elif args['action'] == 'put':
             seo_dict = seo.to_dict(only=('id', 'title', 'description', 'tags'))
@@ -64,10 +56,11 @@ class AdminResourceSeo(Resource):
                 if key == 'tags':
                     seo.tags = args["tags"]
             if count == 0:
-                return raise_error("Пустой запрос")
+                return raise_error("Пустой запрос", session.close())
             seo_dict_2 = seo.to_dict(only=('id', 'title', 'description', 'tags'))
             list_chang = [f'изменяет {key} с {seo_dict[key]} на {seo_dict_2[key]}' for key in keys]
             session.commit()
+            session.close()
             add_auditlog("Изменение",
                          f"Админ {admin.name} {admin.surname} изменяет настройку seo: {', '.join(list_chang)}",
                          admin, datetime.datetime.now())

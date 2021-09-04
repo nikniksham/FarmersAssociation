@@ -8,10 +8,7 @@ from data.newspage import Newspage
 from data.API.NewspageAPI.parser_newspage import parser_newspage
 from main import mini_text, text_transform
 from config import UPLOAD_FOLDER as path
-
-
-def raise_error(error):
-    abort(400, message=error)
+from data.API.main_file import raise_error, check_admin_status
 
 
 def trans_link(text):
@@ -32,27 +29,20 @@ def trans_link(text):
     return link
 
 
-def check_admin_status(email, password, need_status=1):
-    admin, session = check_admin(email, password)
-    if admin.status < need_status:
-        raise_error("У вас недостаточно прав для этого")
-    return admin, session
-
-
 def check_admin(email, password):
     session = db_session.create_session()
     user = session.query(User).filter(User.email == email).first()
     if not user:
-        raise_error(f"Админ {email} не найден")
+        raise_error(f"Админ {email} не найден", session)
     if not user.check_password(password):
-        raise_error("Неправильный пароль")
+        raise_error("Неправильный пароль", session)
     return user, session
 
 
 def find_by_id(id, session):
     newspage = session.query(Newspage).get(id)
     if not newspage:
-        raise_error(f"Страница не найдена")
+        raise_error(f"Страница не найдена", session)
     return newspage, session
 
 
@@ -64,6 +54,7 @@ class NewspageResource(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         newspage, session = find_by_id(newspage_id, session)
         if args["action"] == "get":
+            session.close()
             news_dict = newspage.to_dict(
                 only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date', 'author_id'))
             news_dict["mini_text"] = mini_text(newspage.text)
@@ -72,6 +63,7 @@ class NewspageResource(Resource):
         elif args["action"] == "delete":
             session.delete(newspage)
             session.commit()
+            session.close()
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет новостную страницу: {newspage.heading}", admin,
                          datetime.datetime.now())
             return jsonify({"success": f"Новостная страница {newspage.heading} успешно удалена"})
@@ -98,21 +90,23 @@ class NewspageResource(Resource):
                 if key == "tags":
                     newspage.tags = args["tags"]
             if count_params == 0:
-                return raise_error("Пустой запрос")
+                return raise_error("Пустой запрос", session)
             page_dict_2 = newspage.to_dict(only=('heading', 'text', 'image', 'tags'))
             list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' if key != "image" else "изменяет изображения" for key in keys]
             session.commit()
+            session.close()
             add_auditlog("Изменение",
                          f"{admin.name} {admin.surname} изменяет новостную страницу {newspage.heading}: {', '.join(list_chang)}",
                          admin, datetime.datetime.now())
             return jsonify({"success": f"Новостная страница {newspage.heading} успешно изменена"})
-        raise_error("Неизвестный метод")
+        raise_error("Неизвестный метод", session)
 
 
 class NewspageResourceUsual(Resource):
     def get(self, newspage_id):
         session = db_session.create_session()
         newspage, session = find_by_id(newspage_id, session)
+        session.close()
         news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
         news_dict["mini_text"] = mini_text(newspage.text)
         news_dict["text_render"] = text_transform(newspage.text, newspage.image.split("//"), path)
@@ -123,6 +117,7 @@ class NewspageResourceLink(Resource):
     def get(self, link):
         session = db_session.create_session()
         newspage = session.query(Newspage).filter(Newspage.link == link).first()
+        session.close()
         if newspage:
             news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
             news_dict["mini_text"] = mini_text(newspage.text)

@@ -6,33 +6,23 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.partner import Partner
 from data.API.PartnerAPI.parser_partner import parser_partner
-
-
-def raise_error(error):
-    abort(400, message=error)
-
-
-def check_admin_status(email, password, need_status=1):
-    admin, session = check_admin(email, password)
-    if admin.status < need_status:
-        raise_error("У вас недостаточно прав для этого")
-    return admin, session
+from data.API.main_file import raise_error, check_admin_status
 
 
 def check_admin(email, password):
     session = db_session.create_session()
     user = session.query(User).filter(User.email == email).first()
     if not user:
-        raise_error(f"Админ {email} не найден")
+        raise_error(f"Админ {email} не найден", session)
     if not user.check_password(password):
-        raise_error("Неправильный пароль")
+        raise_error("Неправильный пароль", session)
     return user, session
 
 
 def find_by_id(id, session):
     partner = session.query(Partner).get(id)
     if not partner:
-        raise_error(f"Партнёр не найден")
+        raise_error(f"Партнёр не найден", session)
     return partner, session
 
 
@@ -44,10 +34,12 @@ class PartnerResource(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         partner, session = find_by_id(partner_id, session)
         if args['action'] == "get":
+            session.close()
             return jsonify(partner.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link', "socialmedia")))
         elif args['action'] == 'delete':
             session.delete(partner)
             session.commit()
+            session.close()
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет партнёра: {partner.name}", admin, datetime.datetime.now())
             return jsonify({"success": f"Партнёр {partner.name} успешно удален"})
         elif args['action'] == 'put':
@@ -74,20 +66,22 @@ class PartnerResource(Resource):
                 if key == 'logo':
                     partner.logo = args['logo']
             if count == 0:
-                return raise_error("Пустой запрос")
+                return raise_error("Пустой запрос", session)
             part_dict_2 = partner.to_dict(only=('image', 'logo', 'name', 'info', 'preferences', 'address', 'link', "socialmedia"))
             list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key not in ["image", "logo"] else "изменяет изображения/аватарку" for key in keys]
             session.commit()
+            session.close()
             add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет партнёра {name}: {', '.join(list_chang)}",
                          admin, datetime.datetime.now())
             return jsonify({"success": f"Партнёр {name} успешно изменен"})
-        raise_error("Неизвестный метод")
+        raise_error("Неизвестный метод", session)
 
 
 class PartnerResourceUsual(Resource):
     def get(self, partner_id):
         session = db_session.create_session()
         partner, session = find_by_id(partner_id, session)
+        session.close()
         return jsonify(partner.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link', "socialmedia")))
 
 
@@ -95,6 +89,7 @@ class PartnerListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
         partners = session.query(Partner).all()
+        session.close()
         return jsonify([item.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link', "socialmedia")) for item in partners])
 
 
@@ -115,6 +110,7 @@ class CreatePartnerResource(Resource):
         new_partner.socialmedia = args["socialmedia"]
         session.add(new_partner)
         session.commit()
+        session.close()
         params_dict = new_partner.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link', "socialmedia"))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание",

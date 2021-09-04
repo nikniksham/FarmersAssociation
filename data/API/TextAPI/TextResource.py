@@ -7,33 +7,23 @@ from data.user import User
 from data.API.TextAPI.parser_text import parser_text
 from data.text import Text
 from main import write_log
-
-
-def raise_error(error):
-    abort(400, message=error)
-
-
-def check_admin_status(text, password, need_status=1):
-    admin, session = check_admin(text, password)
-    if admin.status < need_status:
-        raise_error("У вас недостаточно прав для этого")
-    return admin, session
+from data.API.main_file import raise_error, check_admin_status
 
 
 def check_admin(email, password):
     session = db_session.create_session()
     user = session.query(User).filter(User.email == email).first()
     if not user:
-        raise_error(f"Админ {email} не найден")
+        raise_error(f"Админ {email} не найден", session)
     if not user.check_password(password):
-        raise_error("Неправильный пароль")
+        raise_error("Неправильный пароль", session)
     return user, session
 
 
 def find_by_id(id, session):
     text = session.query(Text).get(id)
     if not text:
-        raise_error(f"Текст не найден")
+        raise_error(f"Текст не найден", session)
     return text, session
 
 
@@ -41,6 +31,7 @@ class TextListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
         texts = session.query(Text).all()
+        session.close()
         return jsonify([item.to_dict(only=('id', 'heading', 'description')) for item in texts])
 
 
@@ -52,10 +43,12 @@ class AdminResourceText(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         text, session = find_by_id(text_id, session)
         if args['action'] == "get":
+            session.close()
             return jsonify(text.to_dict(only=('id', 'heading', 'description')))
         elif args['action'] == 'delete':
             session.delete(text)
             session.commit()
+            session.close()
             add_auditlog("Удаление", f"Админ {admin.name} {admin.surname} удаляет текст на главной странице {text.heading}",
                          admin, datetime.datetime.now())
             return jsonify({"success": f"Текст на главной странице {text.heading} успешно удален"})
@@ -70,14 +63,15 @@ class AdminResourceText(Resource):
                 if key == 'description':
                     text.description = args["description"]
             if count == 0:
-                return raise_error("Пустой запрос")
+                return raise_error("Пустой запрос", session)
             text_dict_2 = text.to_dict(only=('heading', 'description'))
             list_chang = [f'изменяет {key} с {text_dict[key]} на {text_dict_2[key]}' for key in keys]
             session.commit()
+            session.close()
             add_auditlog("Изменение", f"Админ {admin.name} {admin.surname} изменяет текст на главной странице {text.heading}:"
                                       f" {', '.join(list_chang)}", admin, datetime.datetime.now())
             return jsonify({"success": f"Текст на главной странице {text.heading} успешно изменен"})
-        raise_error("Неизвестный метод")
+        raise_error("Неизвестный метод", session)
 
 
 class CreateTextResource(Resource):
@@ -92,6 +86,7 @@ class CreateTextResource(Resource):
         new_text.heading = args["heading"]
         session.add(new_text)
         session.commit()
+        session.close()
         add_auditlog("Создание", f"Админ {admin.name} {admin.surname} добавляет новый текстна сайт {new_text.heading}: "
                                  f"{new_text.to_dict(only=('id', 'heading', 'description'))}", admin, datetime.datetime.now())
         return jsonify({'success': f'Новый текст {new_text.heading} добавлен'})

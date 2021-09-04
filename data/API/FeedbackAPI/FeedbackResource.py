@@ -9,44 +9,34 @@ from data.confirmationcode import ConfirmationCode
 from data.API.FeedbackAPI.parser_feedback import parser_feedback
 from main import text_transform
 from config import UPLOAD_FOLDER as path
-
-
-def raise_error(error):
-    abort(400, message=error)
+from data.API.main_file import raise_error, check_admin_status
 
 
 def check_code(session, email, code):
     ch_code = session.query(ConfirmationCode).filter(ConfirmationCode.email == email).first()
     if not ch_code:
-        raise_error("Срок действия кода истёк")
+        raise_error("Срок действия кода истёк", session)
     if (datetime.datetime.now() - ch_code.created_date).total_seconds() > 180:
-        raise_error("Срок действия кода истёк")
+        raise_error("Срок действия кода истёк", session)
     if not ch_code.check_code(code):
-        raise_error("Проверьте правильность написания кода")
+        raise_error("Проверьте правильность написания кода", session)
     return ch_code
-
-
-def check_admin_status(email, password, need_status=1):
-    admin, session = check_admin(email, password)
-    if admin.status < need_status:
-        raise_error("У вас недостаточно прав для этого")
-    return admin, session
 
 
 def check_admin(email, password):
     session = db_session.create_session()
     user = session.query(User).filter(User.email == email).first()
     if not user:
-        raise_error(f"Админ {email} не найден")
+        raise_error(f"Админ {email} не найден", session)
     if not user.check_password(password):
-        raise_error("Неправильный пароль")
+        raise_error("Неправильный пароль", session)
     return user, session
 
 
 def find_by_id(id, session):
     feedback = session.query(Feedback).get(id)
     if not feedback:
-        raise_error(f"Отзыв не найден")
+        raise_error(f"Отзыв не найден", session)
     return feedback, session
 
 
@@ -60,9 +50,11 @@ class FeedbackResource(Resource):
             feedback, session = find_by_id(args["feedback_id"], session)
             news_dict = feedback.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
             news_dict["text_render"] = text_transform(feedback.text, feedback.image.split("//"), path)
+            session.close()
             return jsonify(news_dict)
         elif args['action'] == "getlist":
             feedbacks, dict_list = session.query(Feedback).all()[::-1], []
+            session.close()
             for feedback in feedbacks:
                 news_dict = feedback.to_dict(
                     only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
@@ -73,10 +65,11 @@ class FeedbackResource(Resource):
             feedback, session = find_by_id(args["feedback_id"], session)
             session.delete(feedback)
             session.commit()
+            session.close()
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет отзыв {feedback.heading} от пользователя {feedback.fullname}",
                          admin, datetime.datetime.now())
             return jsonify({"success": f"Отзыв {feedback.heading} от пользователя {feedback.fullname} успешно удален"})
-        raise_error("Неизвестный метод")
+        raise_error("Неизвестный метод", session)
 
 
 class FeedbackTransportImage(Resource):
@@ -84,9 +77,9 @@ class FeedbackTransportImage(Resource):
         session = db_session.create_session()
         feedback, session = find_by_id(feedback_id, session)
         if not feedback.code:
-            return raise_error("невозмоно менять повторно")
+            return raise_error("невозмоно менять повторно", session)
         if feedback.code != code:
-            return raise_error("неизвестный код")
+            return raise_error("неизвестный код", session)
         feedback.code = None
         args = parser_feedback.parse_args()
         print(args)
@@ -94,6 +87,7 @@ class FeedbackTransportImage(Resource):
             feedback.image = args["image"]
         print(feedback.image)
         session.commit()
+        session.close()
         return jsonify({"success": "картинки успешно изменены"})
 
 
@@ -102,7 +96,7 @@ class CreateFeedbackResource(Resource):
         session = db_session.create_session()
         args = parser_feedback.parse_args()
         if not all(args[key] is not None for key in ['fullname', 'heading', 'email', 'text', 'code']):
-            raise_error('Пропущены некоторые аргументы, необходимые для оставления отзыва')
+            raise_error('Пропущены некоторые аргументы, необходимые для оставления отзыва', session)
         ch_code = check_code(session, args["email"], args["code"])
         new_feedback = Feedback()
         new_feedback.code = args["code"]
@@ -115,6 +109,7 @@ class CreateFeedbackResource(Resource):
         session.add(new_feedback)
         session.delete(ch_code)
         session.commit()
+        session.close()
         # f'кол-во картинок: ' + str(len(new_feedback.image.split('//')))
         params_dict = new_feedback.to_dict(only=('fullname', 'heading', 'email', 'text', 'created_date'))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//")) if args["image"] else 0}'
