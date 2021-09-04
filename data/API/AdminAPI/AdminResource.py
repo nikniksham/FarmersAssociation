@@ -1,14 +1,10 @@
 import datetime
 from flask import jsonify
-from flask_restful import Resource, abort
-from data import db_session
+from flask_restful import Resource
 from data.user import User
 from data.API.AdminAPI.parser_admin import parser_admin
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
-
-
-def raise_error(error):
-    abort(400, message=error)
+from data.API.main_file import raise_error, check_admin_status, check_admin
 
 
 def check_password(password):
@@ -23,29 +19,12 @@ def check_password(password):
     return True
 
 
-def check_admin_status(email, password, need_status=1):
-    admin, session = check_admin(email, password)
-    if admin.status < need_status:
-        raise_error("У вас недостаточно прав для этого")
-    return admin, session
-
-
-def check_admin(email, password):
-    session = db_session.create_session()
-    user = session.query(User).filter(User.email == email).first()
-    if not user:
-        raise_error(f"Админ {email} не найден")
-    if not user.check_password(password):
-        raise_error("Неправильный пароль")
-    return user, session
-
-
 def find_by_id(id, session, status=0):
     user = session.query(User).get(id)
     if not user:
-        raise_error(f"Пользователь не найден")
+        raise_error(f"Пользователь не найден", session)
     if user.status >= status or status < 1:
-        raise_error("У вас недостаточно прав для этого")
+        raise_error("У вас недостаточно прав для этого", session)
     return user, session
 
 
@@ -56,9 +35,11 @@ class AdminResource(Resource):
             raise_error("Отсутствуют важные параметры")
         admin, session = check_admin(args['admin_email'], args["admin_password"])
         if args["action"] == "get":
+            session.close()
             return jsonify(admin.to_dict(only=('id', 'name', 'surname', 'status', 'email')))
         elif args["action"] == "get_list":
             admins = session.query(User).all()
+            session.close()
             return jsonify([item.to_dict(only=('id', 'surname', 'name', 'status', 'email', 'created_date')) for item in admins])
         elif args["action"] == "delete":
             pass
@@ -69,7 +50,7 @@ class AdminResource(Resource):
                 count += 1
                 if key == 'email':
                     if session.query(User).filter(User.id == args["email"]).first():
-                        raise_error("Этот email уже занят")
+                        raise_error("Этот email уже занят", session)
                     admin.email = args['email']
                 if key == 'name':
                     admin.name = args["name"]
@@ -77,12 +58,12 @@ class AdminResource(Resource):
                     admin.surname = args["surname"]
             if args["change_password"]:
                 if not admin.check_password(args["check_admin_password"]):
-                    raise_error("Пароль не совпадает с текущим паролем")
+                    raise_error("Пароль не совпадает с текущим паролем", session)
                 check_password(args['new_admin_password'])
                 admin.set_password(args['new_admin_password'])
                 f, count = True, count + 1
             if count == 0:
-                return raise_error("Пустой запрос")
+                return raise_error("Пустой запрос", session)
             admin_dict_2 = admin.to_dict(only=('name', 'surname', 'status', 'email'))
             list_chang = [f'изменяет {key} с {admin_dict[key]} на {admin_dict_2[key]}' for key in keys]
             if f:
@@ -90,8 +71,10 @@ class AdminResource(Resource):
             session.commit()
             add_auditlog("Изменение", f"Пользователь {admin.name} {admin.surname} изменяет сам себя: {', '.join(list_chang)}", admin,
                          datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Пользователь {admin.name} {admin.surname} успешно изменён"})
-        raise_error("Неизвестный запрос")
+        session.close()
+        raise_error("Неизвестный запрос", session)
 
 
 class UserResourceAdmin(Resource):
@@ -102,10 +85,12 @@ class UserResourceAdmin(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"], 1)
         user, session = find_by_id(user_id, session, admin.status)
         if args["action"] == "get":
+            session.close()
             return jsonify(user.to_dict(only=('id', 'surname', 'name', 'status', 'email', 'created_date')))
         elif args["action"] == "delete":
             session.delete(user)
             session.commit()
+            session.close()
             add_auditlog("Удаление", f"Админ {admin.name} {admin.surname} удаляет админа {user.name} {user.surname}",
                          admin, datetime.datetime.now())
             return jsonify({"success": f"Пользователь {user.name} {user.surname} успешно удалён"})
@@ -117,7 +102,7 @@ class UserResourceAdmin(Resource):
                     count += 1
                     if key == 'email':
                         if session.query(User).filter(User.id == args["email"]).first():
-                            raise_error("Этот email уже занят")
+                            raise_error("Этот email уже занят", session)
                         user.email = args['email']
                     if key == 'name':
                         user.name = args["name"]
@@ -125,16 +110,16 @@ class UserResourceAdmin(Resource):
                         user.surname = args["surname"]
                     if key == 'status':
                         if admin.status < args['status']:
-                            raise_error("У вас недостаточно прав для этого")
+                            raise_error("У вас недостаточно прав для этого", session)
                         user.status = args["status"]
             if args["change_password"]:
                 if not admin.check_password(args["check_admin_password"]):
-                    raise_error("Пароль не совпадает с текущим паролем")
+                    raise_error("Пароль не совпадает с текущим паролем", session)
                 check_password(args['new_admin_password'])
                 user.set_password(args['new_admin_password'])
                 f, count = True, count + 1
             if count == 0:
-                return raise_error("Пустой запрос")
+                return raise_error("Пустой запрос", session)
             user_dict_2 = user.to_dict(only=('id', 'name', 'surname', 'status', 'email'))
             list_chang = [f'изменяет {key} с {user_dict[key]} на {user_dict_2[key]}' for key in keys]
             if f:
@@ -143,7 +128,9 @@ class UserResourceAdmin(Resource):
             add_auditlog("Изменение",
                          f"Админ {admin.name} {admin.surname} изменяет пользователя {user.name} {user.surname}: {', '.join(list_chang)}",
                          admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Пользователь {user.name} {user.surname} успешно изменён"})
+        session.close()
         raise_error("Неизвестный запрос")
 
 
@@ -154,7 +141,7 @@ class CreateAdminResource(Resource):
             raise_error('Пропущены некоторые аргументы, необходимые для создания пользователя')
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         if session.query(User).filter(User.email == args['email']).first():
-            raise_error("Этот email уже занят")
+            raise_error("Этот email уже занят", session)
         check_password(args["new_admin_password"])
         new_admin = User()
         new_admin.name = args["name"]
@@ -163,13 +150,13 @@ class CreateAdminResource(Resource):
         new_admin.set_password(args["new_admin_password"])
         if args["id"] is not None:
             if session.query(User).get(args["id"]) is not None:
-                raise_error("Этот id уже занят")
+                raise_error("Этот id уже занят", session)
             new_admin.id = args["id"]
         if args['status'] is not None:
             if admin.status > args['status']:
                 new_admin.status = args['status']
             else:
-                raise_error("Слишком высокий статус нового админа")
+                raise_error("Слишком высокий статус нового админа", session)
         else:
             new_admin.status = 0
         new_admin.created_date = datetime.datetime.now()
@@ -178,4 +165,5 @@ class CreateAdminResource(Resource):
         add_auditlog("Создание",
                      f"Админ {admin.name} {admin.surname} создаёт админа {new_admin.name} {new_admin.surname}: {new_admin.to_dict(only=('id', 'name', 'surname', 'status', 'email'))}",
                      admin, datetime.datetime.now())
+        session.close()
         return jsonify({'success': f'Пользователь {new_admin.name} {new_admin.surname} создан'})

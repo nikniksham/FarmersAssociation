@@ -26,10 +26,6 @@
         {% endfor %}
     </p>
     <p class="member-text">Адресс: {{member["adress"]}}</p>
-    <p class="member-text"><b>Преференции:</b> {% for line in member["preferences"].split('\n') %}
-        {{line}}<br>
-        {% endfor %}
-    </p>
     <div class="member-link">
         <div class="social">
             <p class="footer-title">Мы в соц. сетях:</p>

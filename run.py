@@ -125,7 +125,6 @@ api.add_resource(PhoneListRecourse, "/api/phone")
 api.add_resource(AdminResourceSocialmedia, "/api/socialmedia/<int:socialmedia_id>")
 api.add_resource(CreateSocialmediaResource, "/api/socialmedia")
 api.add_resource(SocialmediaListRecourse, "/api/socialmedia")
-db_session.global_init("db/FarmersAssociation.sqlite")
 
 # SeoApi
 api.add_resource(AdminResourceSeo, "/api/seo/<int:seo_id>")
@@ -136,6 +135,7 @@ api.add_resource(TextListRecourse, "/api/text")
 api.add_resource(CreateTextResource, "/api/text")
 api.add_resource(AdminResourceText, "/api/text/<int:text_id>")
 
+db_session.global_init("db/FarmersAssociation.sqlite")
 login_manager = LoginManager()
 login_manager.init_app(application)
 code_helper = CodeForConfirmation()
@@ -148,6 +148,7 @@ formatting_text_instruction = \
      "<image id> Вставляет на этом месте картинку из поля загрузки картинок (нумерация изображений идёт с 1)"]
 formatting_text_instruction_usual = \
     ["<image id> Вставляет на этом месте картинку из поля загрузки картинок (нумерация изображений идёт с 1)"]
+saving_images = {}
 special_params = {}
 
 
@@ -225,7 +226,9 @@ def get_icons_links(links):
 @login_manager.user_loader
 def load_user(user_id):
     session = db_session.create_session()
-    return session.query(User).get(user_id)
+    a = session.query(User).get(user_id)
+    session.close()
+    return a
 
 
 def create_random_name(name_len):
@@ -327,6 +330,23 @@ def transport_images(old_folder, new_folder, filenames):
             new_filenames.append(f'{new_folder}/{filename.split("/")[-1]}')
     # delete_folder(old_folder)
     return new_filenames
+
+
+def save_image_test(files):
+    # print(files, list(files), dict(files))
+    print(saving_images)
+    print(files)
+    for elem in files:
+        print(elem)
+    print(list(files))
+    for elem in list(files):
+        print(elem)
+    print(dict(files))
+    for elem in dict(files):
+        print(elem)
+    for elem in dict(files):
+        print(files[elem])
+    print(saving_images)
 
 
 def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False, logo=False, cont_logo=None, gif=True, icon=False, feedback=False):
@@ -892,6 +912,7 @@ def admin_create_news():
         message, result, preview_text = None, False, None
         if request.method == 'POST':
             filenames = save_images(f"tmp/news/news_{current_user.email}", request.files, auto_delete=True, r_img=False)
+            save_image_test(request.files)
             text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
             if form.submit.data:
                 if text_trans[:5] != "Error":
