@@ -124,10 +124,10 @@
 }
 
 .member-header img {
-    height: 150px;
-    width: 150px;
-    margin-right: 15px;
+    border-radius: 15px;
     object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .member-header p {
@@ -136,8 +136,9 @@
 
 
 .image-container {
-    height: 100%;
-    width: 100%;
+    height: 405px;
+    max-width: 720px;
+    margin: auto;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -149,7 +150,9 @@
 
 .image-container img {
     border-radius: 15px;
-    width: 60%;
+    object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .carousel .slick-track {
@@ -179,4 +182,10 @@
 
 a.dont-blue:hover {
     color: inherit;
+}
+
+.member-header-logo {
+    height: 150px;
+    width: 150px;
+    display: flex;
 }
