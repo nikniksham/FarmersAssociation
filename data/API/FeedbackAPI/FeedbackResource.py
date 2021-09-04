@@ -1,6 +1,6 @@
 import datetime
 from flask import jsonify
-from flask_restful import Resource, abort
+from flask_restful import Resource
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
@@ -54,20 +54,20 @@ class FeedbackResource(Resource):
             return jsonify(news_dict)
         elif args['action'] == "getlist":
             feedbacks, dict_list = session.query(Feedback).all()[::-1], []
-            session.close()
             for feedback in feedbacks:
                 news_dict = feedback.to_dict(
                     only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
                 news_dict["text_render"] = text_transform(feedback.text, feedback.image.split("//"), path)
                 dict_list.append(news_dict)
+            session.close()
             return jsonify(dict_list)
         elif args['action'] == 'delete':
             feedback, session = find_by_id(args["feedback_id"], session)
             session.delete(feedback)
             session.commit()
-            session.close()
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет отзыв {feedback.heading} от пользователя {feedback.fullname}",
                          admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Отзыв {feedback.heading} от пользователя {feedback.fullname} успешно удален"})
         raise_error("Неизвестный метод", session)
 
@@ -109,10 +109,10 @@ class CreateFeedbackResource(Resource):
         session.add(new_feedback)
         session.delete(ch_code)
         session.commit()
-        session.close()
         # f'кол-во картинок: ' + str(len(new_feedback.image.split('//')))
         params_dict = new_feedback.to_dict(only=('fullname', 'heading', 'email', 'text', 'created_date'))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//")) if args["image"] else 0}'
         add_auditlog("Создание",
                      f"{args['fullname']} оставляет отзыв: {params_dict}", None, datetime.datetime.now())
+        session.close()
         return jsonify({'success': f'{new_feedback.fullname} оставил отзыв', 'id': new_feedback.id})

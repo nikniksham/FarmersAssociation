@@ -1,6 +1,6 @@
 import datetime
 from flask import jsonify
-from flask_restful import Resource, abort
+from flask_restful import Resource
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
@@ -39,8 +39,8 @@ class WorkerResource(Resource):
         elif args['action'] == 'delete':
             session.delete(worker)
             session.commit()
-            session.close()
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет сотрудника: {worker.name}", admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Сотрудник {worker.name} успешно удален"})
         elif args['action'] == 'put':
             work_dict = worker.to_dict(only=('image', 'name', 'profession', 'phone', 'email'))
@@ -63,10 +63,10 @@ class WorkerResource(Resource):
             work_dict_2 = worker.to_dict(only=('image', 'name', 'profession', 'phone', 'email'))
             list_chang = [f'изменяет {key} с {work_dict[key]} на {work_dict_2[key]}' if key not in ["image"] else "изменяет изображения" for key in keys]
             session.commit()
-            session.close()
             add_auditlog("Изменение",
                          f"{admin.name} {admin.surname} изменяет сотрудника {name}: {', '.join(list_chang)}", admin,
                          datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Сотрудник {name} успешно изменен"})
         raise_error("Неизвестный метод", session)
 
@@ -107,10 +107,9 @@ class CreateWorkerResource(Resource):
             new_worker.id = args["id"]
         session.add(new_worker)
         session.commit()
-        session.close()
         params_dict = new_worker.to_dict(only=('id', 'image', 'name', 'profession', 'phone', 'email', 'created_date'))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание", f"{admin.name} {admin.surname} создаёт сотрудника {new_worker.name}: {params_dict}",
                      admin, datetime.datetime.now())
-        print(new_worker.id)
+        session.close()
         return jsonify({'success': f'Сотрудник {new_worker.name} создан', 'id': new_worker.id})

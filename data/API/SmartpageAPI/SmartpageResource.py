@@ -1,6 +1,6 @@
 import datetime
 from flask import jsonify
-from flask_restful import Resource, abort
+from flask_restful import Resource
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
@@ -49,8 +49,8 @@ class SmartpageResource(Resource):
             heading = smartpage.heading
             session.delete(smartpage)
             session.commit()
-            session.close()
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет страницу: {heading}", admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Страница {heading} успешно удалена"})
         elif args['action'] == 'put':
             page_dict = smartpage.to_dict(only=('heading', 'image', 'created_date'))
@@ -76,9 +76,9 @@ class SmartpageResource(Resource):
             page_dict_2 = smartpage.to_dict(only=('heading', 'image', 'created_date', 'author_id'))
             list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' if key != "image" else "изменяет изображения" for key in keys]
             session.commit()
-            session.close()
             add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет страницу {smartpage.heading}: {', '.join(list_chang)}",
                          admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Страница {smartpage.heading} успешно изменена"})
         raise_error("Неизвестный метод", session)
 
@@ -137,10 +137,10 @@ class CreateSmartpageResource(Resource):
         admin.smartpage.append(new_smartpage)
         session.merge(admin)
         session.commit()
-        session.close()
         params_dict = new_smartpage.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id'))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание",
                      f"{admin.name} {admin.surname} создаёт страницу {new_smartpage.heading}: {params_dict}",
                      admin, datetime.datetime.now())
+        session.close()
         return jsonify({'success': f'Страница {new_smartpage.heading} создана', "id": new_smartpage.id})

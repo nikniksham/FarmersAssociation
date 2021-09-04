@@ -1,6 +1,6 @@
 import datetime
 from flask import jsonify
-from flask_restful import Resource, abort
+from flask_restful import Resource
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
@@ -47,9 +47,9 @@ class AdminResourceEmail(Resource):
         elif args['action'] == 'delete':
             session.delete(email)
             session.commit()
-            session.close()
             add_auditlog("Удаление", f"Админ {admin.name} {admin.surname} удаляет электронную почту {email.email_address}",
                          admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Электроная почта {email.email_address} успешно удалена"})
         elif args['action'] == 'put':
             email, session = find_by_id(email_id, session)
@@ -66,9 +66,9 @@ class AdminResourceEmail(Resource):
             email_dict_2 = email.to_dict(only=('email_address',))
             list_chang = [f'изменяет {key} с {email_dict[key]} на {email_dict_2[key]}' for key in keys]
             session.commit()
-            session.close()
             add_auditlog("Изменение", f"Админ {admin.name} {admin.surname} изменяет электронную почту {email.email_address}:"
                                       f" {', '.join(list_chang)}", admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Электронная почта {email.email_address} успешно изменена"})
         raise_error("Неизвестный метод", session)
 
@@ -85,7 +85,7 @@ class CreateEmailResource(Resource):
         new_email.email_address = args["email_address"]
         session.add(new_email)
         session.commit()
-        session.close()
         add_auditlog("Создание", f"Админ {admin.name} {admin.surname} добавляет почтовый адрес {new_email.email_address}: {new_email.to_dict(only=('id', 'email_address'))}",
                      admin, datetime.datetime.now())
+        session.close()
         return jsonify({'success': f'Почтовый адрес {new_email.email_address} создан'})

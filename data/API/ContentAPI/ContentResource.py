@@ -1,6 +1,6 @@
 import datetime
 from flask import jsonify
-from flask_restful import Resource, abort
+from flask_restful import Resource
 from data import db_session
 from data.user import User
 from data.content import Content
@@ -45,9 +45,9 @@ class ContentResource(Resource):
             for block in blocks:
                 block.position, c_pos = c_pos, c_pos + 1
             session.commit()
-            session.close()
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет блок контента {content.heading}, "
                                      f"с типом данных: {content.type}", admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Блок контента {content.heading} успешно удален"})
         elif args["action"] == "put":
             cont_dict = content.to_dict(only=('position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags', "display_type", "display_type_member"))
@@ -88,16 +88,17 @@ class ContentResource(Resource):
                 if key == "display_type_member":
                     content.display_type_member = args["display_type_member"]
             if count == 0:
-                raise_error("Пустой запрос", session.close())
+                raise_error("Пустой запрос", session)
             cont_dict_2 = content.to_dict(only=('position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags', "display_type", "display_type_member"))
             list_chang = [
                 f'изменяет {key} с {cont_dict[key]} на {cont_dict_2[key]}' if key != "image" else "изменяет изображения" for
                 key in keys]
             session.commit()
-            session.close()
             add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет блок контента: {', '.join(list_chang)}",
                          admin, datetime.datetime.now())
-            return jsonify({"success": f"Блок контента на позиции {content.position} успешно изменен"})
+            position = content.position
+            session.close()
+            return jsonify({"success": f"Блок контента на позиции {position} успешно изменен"})
         raise_error("Неизвестный метод", session)
 
 
@@ -164,10 +165,10 @@ class CreateContentResource(Resource):
         admin.content.append(new_content)
         session.merge(admin)
         session.commit()
-        session.close()
         params_dict = new_content.to_dict(
             only=('id', 'position', 'type', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id', 'heading', "display_type", "display_type_member"))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//")) if args["image"] else 0}'
         add_auditlog("Создание", f"{admin.name} {admin.surname} создаёт блок контента с параметрами: {params_dict}",
                      admin, datetime.datetime.now())
+        session.close()
         return jsonify({'success': f'Блок контента на позиции {new_content.position} создан', 'id': new_content.id})

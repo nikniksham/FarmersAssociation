@@ -73,7 +73,6 @@ class AdminResource(Resource):
                          datetime.datetime.now())
             session.close()
             return jsonify({"success": f"Пользователь {admin.name} {admin.surname} успешно изменён"})
-        session.close()
         raise_error("Неизвестный запрос", session)
 
 
@@ -90,9 +89,9 @@ class UserResourceAdmin(Resource):
         elif args["action"] == "delete":
             session.delete(user)
             session.commit()
-            session.close()
             add_auditlog("Удаление", f"Админ {admin.name} {admin.surname} удаляет админа {user.name} {user.surname}",
                          admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Пользователь {user.name} {user.surname} успешно удалён"})
         elif args["action"] == "put":
             user_dict = user.to_dict(only=('id', 'name', 'surname', 'status', 'email'))

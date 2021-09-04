@@ -47,9 +47,9 @@ class AdminResourceSocialmedia(Resource):
         elif args['action'] == 'delete':
             session.delete(socialmedia)
             session.commit()
-            session.close()
             add_auditlog("Удаление", f"Админ {admin.name} {admin.surname} удаляет ссылку на соцсеть {socialmedia.link}",
                          admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Ссылка на соцсеть {socialmedia.link} успешно удалена"})
         elif args['action'] == 'put':
             args, count = parser_socialmedia.parse_args(), 0
@@ -68,9 +68,9 @@ class AdminResourceSocialmedia(Resource):
             socialmedia_dict_2 = socialmedia.to_dict(only=('icon_type', "link"))
             list_chang = [f'изменяет {key} с {socialmedia_dict[key]} на {socialmedia_dict_2[key]}' for key in keys]
             session.commit()
-            session.close()
             add_auditlog("Изменение", f"Админ {admin.name} {admin.surname} изменяет ссылку на соцсеть {socialmedia.link}:"
                                       f" {', '.join(list_chang)}", admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Ссылка на соцсеть {socialmedia.link} успешно изменена"})
         raise_error("Неизвестный метод", session)
 
@@ -88,7 +88,7 @@ class CreateSocialmediaResource(Resource):
         new_socialmedia.link = args["link"]
         session.add(new_socialmedia)
         session.commit()
-        session.close()
         add_auditlog("Создание", f"Админ {admin.name} {admin.surname} добавляет ссылку на соцсеть {new_socialmedia.link}: "
                                  f"{new_socialmedia.to_dict(only=('id', 'icon_type', 'link'))}", admin, datetime.datetime.now())
+        session.close()
         return jsonify({'success': f'Ссылка на соцсеть {new_socialmedia.link} создана'})

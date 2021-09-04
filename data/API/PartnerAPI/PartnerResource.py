@@ -1,6 +1,6 @@
 import datetime
 from flask import jsonify
-from flask_restful import Resource, abort
+from flask_restful import Resource
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
@@ -39,8 +39,8 @@ class PartnerResource(Resource):
         elif args['action'] == 'delete':
             session.delete(partner)
             session.commit()
-            session.close()
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет партнёра: {partner.name}", admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Партнёр {partner.name} успешно удален"})
         elif args['action'] == 'put':
             part_dict = partner.to_dict(only=('image', 'logo', 'name', 'info', 'preferences', 'address', 'link'))
@@ -70,9 +70,9 @@ class PartnerResource(Resource):
             part_dict_2 = partner.to_dict(only=('image', 'logo', 'name', 'info', 'preferences', 'address', 'link', "socialmedia"))
             list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key not in ["image", "logo"] else "изменяет изображения/аватарку" for key in keys]
             session.commit()
-            session.close()
             add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет партнёра {name}: {', '.join(list_chang)}",
                          admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Партнёр {name} успешно изменен"})
         raise_error("Неизвестный метод", session)
 
@@ -110,10 +110,10 @@ class CreatePartnerResource(Resource):
         new_partner.socialmedia = args["socialmedia"]
         session.add(new_partner)
         session.commit()
-        session.close()
         params_dict = new_partner.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link', "socialmedia"))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание",
                      f"{admin.name} {admin.surname} создаёт партнёра {new_partner.name}: {params_dict}",
                      admin, datetime.datetime.now())
+        session.close()
         return jsonify({'success': f'Партнёр {new_partner.name} создан', 'id': new_partner.id})

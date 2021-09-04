@@ -1,22 +1,11 @@
 import datetime
 from flask import jsonify
-from flask_restful import Resource, abort
+from flask_restful import Resource
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
-from data.user import User
 from data.API.PhoneAPI.parser_phone import parser_phone
 from data.phone import Phone
 from data.API.main_file import raise_error, check_admin_status
-
-
-def check_admin(email, password):
-    session = db_session.create_session()
-    user = session.query(User).filter(User.email == email).first()
-    if not user:
-        raise_error(f"Админ {email} не найден", session)
-    if not user.check_password(password):
-        raise_error("Неправильный пароль", session)
-    return user, session
 
 
 def find_by_id(id, session):
@@ -47,9 +36,9 @@ class AdminResourcePhone(Resource):
         elif args['action'] == 'delete':
             session.delete(phone)
             session.commit()
-            session.close()
             add_auditlog("Удаление", f"Админ {admin.name} {admin.surname} удаляет номер телефона {phone.number}", admin,
                          datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Номер телефона {phone.number} успешно удалён"})
         elif args['action'] == 'put':
             args, count = parser_phone.parse_args(), 0
@@ -66,10 +55,11 @@ class AdminResourcePhone(Resource):
             phone_dict_2 = phone.to_dict(only=('number',))
             list_chang = [f'изменяет {key} с {phone_dict[key]} на {phone_dict_2[key]}' for key in keys]
             session.commit()
-            session.close()
             add_auditlog("Изменение", f"Админ {admin.name} {admin.surname} изменяет номер телефона {phone.number}:"
                                       f" {', '.join(list_chang)}", admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Номер телефона {phone.number} успешно изменён"})
+        session.close()
         raise_error("Неизвестный метод")
 
 
@@ -79,13 +69,15 @@ class CreatePhoneResource(Resource):
         if not all(args[key] is not None for key in ['number', 'admin_email', 'admin_password']):
             raise_error('Пропущены некоторые аргументы, необходимые для добавления нового номера телефона')
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
+        print(admin)
         if session.query(Phone).filter(Phone.number == args['number']).first():
             raise_error("Этот номер телефона уже существует", session)
         new_phone = Phone()
         new_phone.number = args["number"]
         session.add(new_phone)
         session.commit()
-        session.close()
+        print(admin)
         add_auditlog("Создание", f"Админ {admin.name} {admin.surname} добавляет номер телефона {new_phone.number}: {new_phone.to_dict(only=('id', 'number'))}",
                      admin, datetime.datetime.now())
+        session.close()
         return jsonify({'success': f'Номер телефона {new_phone.number} создан'})

@@ -1,6 +1,6 @@
 import datetime
 from flask import jsonify
-from flask_restful import Resource, abort
+from flask_restful import Resource
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
@@ -60,8 +60,8 @@ class AdminResourceSeo(Resource):
             seo_dict_2 = seo.to_dict(only=('id', 'title', 'description', 'tags'))
             list_chang = [f'изменяет {key} с {seo_dict[key]} на {seo_dict_2[key]}' for key in keys]
             session.commit()
-            session.close()
             add_auditlog("Изменение",
                          f"Админ {admin.name} {admin.surname} изменяет настройку seo: {', '.join(list_chang)}",
                          admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Seo настройка успешно изменена"})

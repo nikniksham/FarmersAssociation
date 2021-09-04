@@ -1,6 +1,6 @@
 import datetime
 from flask import jsonify
-from flask_restful import Resource, abort
+from flask_restful import Resource
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
@@ -48,9 +48,9 @@ class AdminResourceText(Resource):
         elif args['action'] == 'delete':
             session.delete(text)
             session.commit()
-            session.close()
             add_auditlog("Удаление", f"Админ {admin.name} {admin.surname} удаляет текст на главной странице {text.heading}",
                          admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Текст на главной странице {text.heading} успешно удален"})
         elif args['action'] == 'put':
             args, count = parser_text.parse_args(), 0
@@ -67,9 +67,9 @@ class AdminResourceText(Resource):
             text_dict_2 = text.to_dict(only=('heading', 'description'))
             list_chang = [f'изменяет {key} с {text_dict[key]} на {text_dict_2[key]}' for key in keys]
             session.commit()
-            session.close()
             add_auditlog("Изменение", f"Админ {admin.name} {admin.surname} изменяет текст на главной странице {text.heading}:"
                                       f" {', '.join(list_chang)}", admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Текст на главной странице {text.heading} успешно изменен"})
         raise_error("Неизвестный метод", session)
 
@@ -86,7 +86,7 @@ class CreateTextResource(Resource):
         new_text.heading = args["heading"]
         session.add(new_text)
         session.commit()
-        session.close()
         add_auditlog("Создание", f"Админ {admin.name} {admin.surname} добавляет новый текстна сайт {new_text.heading}: "
                                  f"{new_text.to_dict(only=('id', 'heading', 'description'))}", admin, datetime.datetime.now())
+        session.close()
         return jsonify({'success': f'Новый текст {new_text.heading} добавлен'})

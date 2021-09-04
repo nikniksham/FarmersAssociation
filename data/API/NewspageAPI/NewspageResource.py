@@ -1,6 +1,6 @@
 import datetime
 from flask import jsonify
-from flask_restful import Resource, abort
+from flask_restful import Resource
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
@@ -54,18 +54,18 @@ class NewspageResource(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         newspage, session = find_by_id(newspage_id, session)
         if args["action"] == "get":
-            session.close()
             news_dict = newspage.to_dict(
                 only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date', 'author_id'))
             news_dict["mini_text"] = mini_text(newspage.text)
             news_dict["text_render"] = text_transform(newspage.text, newspage.image.split("//"), path)
+            session.close()
             return jsonify(news_dict)
         elif args["action"] == "delete":
             session.delete(newspage)
             session.commit()
-            session.close()
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет новостную страницу: {newspage.heading}", admin,
                          datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Новостная страница {newspage.heading} успешно удалена"})
         elif args["action"] == "put":
             page_dict = newspage.to_dict(only=('heading', 'text', 'image', 'tags'))
@@ -94,10 +94,10 @@ class NewspageResource(Resource):
             page_dict_2 = newspage.to_dict(only=('heading', 'text', 'image', 'tags'))
             list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' if key != "image" else "изменяет изображения" for key in keys]
             session.commit()
-            session.close()
             add_auditlog("Изменение",
                          f"{admin.name} {admin.surname} изменяет новостную страницу {newspage.heading}: {', '.join(list_chang)}",
                          admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Новостная страница {newspage.heading} успешно изменена"})
         raise_error("Неизвестный метод", session)
 
@@ -130,6 +130,7 @@ class NewspageListRecourseId(Resource):
     def get(self, start_id, end_id):
         session = db_session.create_session()
         newspages = session.query(Newspage).order_by(Newspage.created_date)[::-1]
+        session.close()
         if start_id > len(newspages):
             return jsonify([])
         if end_id > len(newspages):
@@ -147,6 +148,7 @@ class NewspageListRecourseTags(Resource):
     def get(self, start_id, end_id, text):
         session = db_session.create_session()
         pages, newspages = session.query(Newspage).order_by(Newspage.created_date)[::-1], []
+        session.close()
         if text is None:
             text = ""
         find_text = text.replace("<", "").replace(">", "").replace("/", "").lower().rstrip()
@@ -178,6 +180,7 @@ class NewspageListRecourse(Resource):
             news_dict["mini_text"] = mini_text(item.text)
             news_dict["text_render"] = text_transform(item.text, item.image.split("//"), path)
             news_list.append(news_dict)
+        session.close()
         return jsonify(news_list)
 
 
@@ -213,4 +216,5 @@ class CreateNewspageResource(Resource):
         add_auditlog("Создание",
                      f"{admin.name} {admin.surname} создаёт новостную страницу {new_newspage.heading}: {params_dict}",
                      admin, datetime.datetime.now())
+        session.close()
         return jsonify({'success': f'Новостная страница {new_newspage.heading} создана', 'id': new_newspage.id})

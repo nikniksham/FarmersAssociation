@@ -1,6 +1,6 @@
 import datetime
 from flask import jsonify
-from flask_restful import Resource, abort
+from flask_restful import Resource
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
@@ -39,8 +39,8 @@ class MemberResource(Resource):
         elif args['action'] == 'delete':
             session.delete(member)
             session.commit()
-            session.close()
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет участника: {member.name}", admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Участник {member.name} успешно удален"})
         elif args['action'] == 'put':
             part_dict = member.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia"))
@@ -73,9 +73,9 @@ class MemberResource(Resource):
             part_dict_2 = member.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia"))
             list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key not in ["image", "logo"] else "изменяет изображения/аватарку" for key in keys]
             session.commit()
-            session.close()
             add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет участника {name}: {', '.join(list_chang)}",
                          admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Участник {name} успешно изменен"})
         raise_error("Неизвестный метод", session)
 
@@ -120,10 +120,10 @@ class CreateMemberResource(Resource):
         admin.member.append(new_member)
         session.merge(admin)
         session.commit()
-        session.close()
         params_dict = new_member.to_dict(only=('id', 'name', 'image', 'text', 'link', "socialmedia", 'address', 'coord', 'province', 'occupation', 'created_date', 'author_id'))
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
         add_auditlog("Создание",
                      f"{admin.name} {admin.surname} создаёт участника {new_member.name}: {params_dict}",
                      admin, datetime.datetime.now())
+        session.close()
         return jsonify({'success': f'Участник {new_member.name} создан', 'id': new_member.id})
