@@ -148,7 +148,6 @@ formatting_text_instruction = \
      "<image id> Вставляет на этом месте картинку из поля загрузки картинок (нумерация изображений идёт с 1)"]
 formatting_text_instruction_usual = \
     ["<image id> Вставляет на этом месте картинку из поля загрузки картинок (нумерация изображений идёт с 1)"]
-saving_images = {}
 special_params = {}
 
 
@@ -332,21 +331,22 @@ def transport_images(old_folder, new_folder, filenames):
     return new_filenames
 
 
-def save_image_test(files):
+def save_image_test(files, old_files, path):  # teleport
     # print(files, list(files), dict(files))
-    print(saving_images)
+    new_files = []
+    print(new_files)
     print(files)
-    for elem in files:
-        print(elem)
-    print(list(files))
-    for elem in list(files):
-        print(elem)
-    print(dict(files))
-    for elem in dict(files):
-        print(elem)
-    for elem in dict(files):
+    for elem in list(files)[:-1]:
         print(files[elem])
-    print(saving_images)
+        ind = int("".join(list(filter(lambda x: x.isdigit(), list(elem))))) - 1
+        print(files[elem].filename)
+        if files[elem].filename != "":
+            print("add new image")
+            new_files.append(files[elem].filename)
+        elif ind < len(old_files):
+            print("add old file")
+            new_files.append(old_files[ind])
+    print([path+"/"+i for i in new_files])
 
 
 def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False, logo=False, cont_logo=None, gif=True, icon=False, feedback=False):
@@ -903,7 +903,7 @@ def admin_list_news():
 
 @application.route("/admin-create-news", methods=['GET', 'POST'])
 @login_required
-def admin_create_news():
+def admin_create_news():  # teleport
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
@@ -911,8 +911,9 @@ def admin_create_news():
         form = NewspageForm()
         message, result, preview_text = None, False, None
         if request.method == 'POST':
+            path = f"tmp/news/news_{current_user.email}"
             filenames = save_images(f"tmp/news/news_{current_user.email}", request.files, auto_delete=True, r_img=False)
-            save_image_test(request.files)
+            save_image_test(request.files, os.listdir(application.config["UPLOAD_FOLDER"]+path), path)
             text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
             if form.submit.data:
                 if text_trans[:5] != "Error":
