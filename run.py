@@ -148,6 +148,8 @@ formatting_text_instruction = \
      "<image id> Вставляет на этом месте картинку из поля загрузки картинок (нумерация изображений идёт с 1)"]
 formatting_text_instruction_usual = \
     ["<image id> Вставляет на этом месте картинку из поля загрузки картинок (нумерация изображений идёт с 1)"]
+admin_images = {}
+admin_logos = {}
 special_params = {}
 
 
@@ -272,6 +274,13 @@ def save_image_multithreading(filename, file):
         image.save(filename)
 
 
+def get_files_from(folder, path=application.config["UPLOAD_FOLDER"]):
+    files = []
+    if os.path.exists(application.config["UPLOAD_FOLDER"]+folder):
+        files = os.listdir(application.config["UPLOAD_FOLDER"]+folder)
+    return files
+
+
 def save_image(filename, file):
     t1 = threading.Thread(target=save_image_multithreading, args=(os.path.join(application.config["UPLOAD_FOLDER"], filename), file))
     t1.start()
@@ -320,8 +329,8 @@ def copy_files(old_folder, new_folder, filenames):
     return new_filenames
 
 
-def transport_images(old_folder, new_folder, filenames):
-    new_filenames, path = [], application.config['UPLOAD_FOLDER']
+def transport_images(filenames, new_folder, path=application.config['UPLOAD_FOLDER']):
+    new_filenames = []
     clear_folder(new_folder)
     for filename in filenames:
         if os.path.exists(path+filename):
@@ -331,22 +340,44 @@ def transport_images(old_folder, new_folder, filenames):
     return new_filenames
 
 
-def save_image_test(files, old_files, path):  # teleport
+def save_image_test(files, path, email, r_img=False):  # teleport
     # print(files, list(files), dict(files))
-    new_files = []
-    print(new_files)
-    print(files)
+    old_files, new_files = [], []
+    if email in admin_images:
+        old_files = admin_images[email]
+    # print(old_files)
     for elem in list(files)[:-1]:
-        print(files[elem])
-        ind = int("".join(list(filter(lambda x: x.isdigit(), list(elem))))) - 1
-        print(files[elem].filename)
+        # print(files[elem])
+        ind, file = int("".join(list(filter(lambda x: x.isdigit(), list(elem))))) - 1, files[elem]
+        # print(files[elem].filename)
         if files[elem].filename != "":
-            print("add new image")
-            new_files.append(files[elem].filename)
+            gif_i = True if file.filename.split(".")[-1] == "gif" else False
+            mp4 = True if file.filename.split(".")[-1] == "mp4" else False
+            # print("add new image", f"gif: {gif_i} mp4: {mp4}")
+            if gif_i:
+                filename = secure_filename(create_new_image_name(gif=gif_i))
+            else:
+                filename = secure_filename(create_new_image_name())
+            # print(filename)
+            save_image(f"{path}/"+filename, file)
+            new_files.append(filename)
         elif ind < len(old_files):
-            print("add old file")
+            # print("add old file")
             new_files.append(old_files[ind])
-    print([path+"/"+i for i in new_files])
+    for file in old_files:
+        if file not in new_files:
+            # print("delete file:", file)
+            delete_img(file)
+    if len(new_files) == 0 and r_img:
+        r_name = f"{create_random_name(50)}.jpg"
+        img = Image.open(f"{application.config['UPLOAD_FOLDER']}standard.png")
+        img.save(f"{application.config['UPLOAD_FOLDER']}{path}/{r_name}")
+        new_files.append(r_name)
+    admin_images[email] = new_files
+    new_files = [f"{path}/"+_ for _ in new_files]
+    delete_everything_except(path, new_files)
+    # print(new_files)
+    return new_files
 
 
 def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False, logo=False, cont_logo=None, gif=True, icon=False, feedback=False):
@@ -894,8 +925,7 @@ def admin_list_news():
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
-        containerManager.delete_container(f"tmp/news/news_{current_user.email}")
-        delete_folder(f"tmp/news/news_{current_user.email}")
+        delete_folder(f"tmp/{current_user.email}")
         newslist = get(f"{link_website}api/newspage").json()
         return render_template('list/admin-list-news.html', title='Новости', newslist=newslist, special_params=get_special_params())
     return you_dont_have_permission()
@@ -907,20 +937,18 @@ def admin_create_news():  # teleport
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
-        # containerManager.delete_container(f"tmp/news/news_{current_user.email}")
         form = NewspageForm()
         message, result, preview_text = None, False, None
         if request.method == 'POST':
-            path = f"tmp/news/news_{current_user.email}"
-            filenames = save_images(f"tmp/news/news_{current_user.email}", request.files, auto_delete=True, r_img=False)
-            save_image_test(request.files, os.listdir(application.config["UPLOAD_FOLDER"]+path), path)
+            path = f"tmp/{current_user.email}"
+            filenames = save_image_test(request.files, path, current_user.email, r_img=True)
             text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
             if form.submit.data:
                 if text_trans[:5] != "Error":
                     message = post(f"{link_website}api/newspage", json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data,
                                    "image": "//".join(filenames), "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
                     if "success" in message:
-                        filenames = transport_images(f"tmp/news/news_{current_user.email}", f"news/news_{message['id']}", filenames)
+                        filenames = transport_images(filenames, f"news/news_{message['id']}")
                         m = put(f"{link_website}api/newspage/{message['id']}", json={"image": "//".join(filenames),
                                 'admin_email': current_user.email, "action": "put", "admin_password": password_manager.get_password(current_user.email)}).json()
                         result = True
@@ -1171,6 +1199,7 @@ def admin_list_smartpage(page_id):
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
+        delete_folder(f"tmp/{current_user.email}")
         smartpagelist, contentdict = get(f"{link_website}api/smartpage").json(), {}
         contentlist = get(f"{link_website}api/content").json()
         for page in smartpagelist:
@@ -1412,6 +1441,7 @@ def admin_list_worker():
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
+        delete_folder(f"tmp/{current_user.email}")
         workerlist = get(f"{link_website}api/worker").json()
         return render_template('list/admin-list-worker.html', title='Сотрудники', workerlist=workerlist,
                                special_params=get_special_params())
@@ -1523,6 +1553,7 @@ def admin_list_member():
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
+        delete_folder(f"tmp/{current_user.email}")
         memberlist = get(f"{link_website}api/member").json()
         return render_template('list/admin-list-member.html', title='Участники', memberlist=memberlist, special_params=get_special_params())
     return you_dont_have_permission()
@@ -1658,6 +1689,7 @@ def admin_list_partner():
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
+        delete_folder(f"tmp/{current_user.email}")
         partnerlist = get(f"{link_website}api/partner").json()
         return render_template('list/admin-list-partner.html', title='Партнёры', partnerlist=partnerlist,
                                special_params=get_special_params())
