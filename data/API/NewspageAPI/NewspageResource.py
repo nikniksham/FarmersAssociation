@@ -135,6 +135,7 @@ class NewspageListRecourseId(Resource):
 
 class NewspageListRecourseTags(Resource):
     def get(self, start_id, end_id, text):
+        """
         session = db_session.create_session()
         pages, newspages = session.query(Newspage).order_by(Newspage.created_date)[::-1], []
         session.close()
@@ -152,6 +153,48 @@ class NewspageListRecourseTags(Resource):
         if end_id > len(newspages):
             end_id = len(newspages)
         newspages, news_list = newspages[start_id:end_id], []
+        for item in newspages:
+            news_dict = item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
+            news_dict["mini_text"] = mini_text(item.text)
+            news_dict["text_render"] = text_transform(item.text, item.image.split("//"), path)
+            news_list.append(news_dict)
+        """
+        dick = {}
+        session = db_session.create_session()
+        news_pages = session.query(Newspage).order_by(Newspage.created_date)
+        if text:
+            for news_page in news_pages:
+                for word in text.split():
+                    if news_page.tags and word.lower() in news_page.tags.lower():
+                        if news_page in dick:
+                            dick[news_page] += 10
+                        else:
+                            dick[news_page] = 10
+                    if news_page.heading and word.lower() in news_page.heading.lower():
+                        if news_page in dick:
+                            dick[news_page] += 4
+                        else:
+                            dick[news_page] = 4
+                    if news_page.text and word.lower() in news_page.text.lower():
+                        if news_page in dick:
+                            dick[news_page] += 1
+                        else:
+                            dick[news_page] = 1
+            news_list = []
+            for compare in list(set(dick.values())):
+                a = []  # тут у ники случился инсульт жопы
+                for key in dick.keys():
+                    if dick[key] == compare:
+                        a.append(key)
+                a.sort(key=lambda x: x.created_date, reverse=True)
+                news_list.extend(a)
+        else:
+            news_list = news_pages
+        if start_id > len(news_list):
+            return jsonify([])
+        if end_id > len(news_list):
+            end_id = len(news_list)
+        newspages, news_list = news_list[start_id:end_id], []
         for item in newspages:
             news_dict = item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
             news_dict["mini_text"] = mini_text(item.text)
