@@ -40,7 +40,8 @@ from werkzeug.utils import secure_filename
 from PIL import Image
 import config
 import shutil
-
+from data.inner.NewspageInnerAPI import get_newspage_list, get_newspage_link, get_newspage_find, get_newspage_from_to, \
+    get_newspage_ususal, edit_newspage, create_newspage
 load_new_footer_params, load_new_params, load_seo_params = True, True, True
 link_website = "http://127.0.0.1:8000/"
 link_website_heroku = "https://farmersassociation.herokuapp.com/"
@@ -182,7 +183,7 @@ def set_seo_params():
 
 
 def set_other_params():
-    special_params["news"] = get(f"{link_website}api/newspage/0/9").json()
+    special_params["news"] = get_newspage_from_to(0, 9)
     members = get(f"{link_website}api/member").json()
     for ind, member in enumerate(members):
         members[ind]["ratio"] = get_ratio(member['logo'].split("//")[0])
@@ -925,7 +926,7 @@ def admin_list_news():
         return redirect("/login")
     if current_user.status > 0:
         delete_folder(f"tmp/{current_user.email}")
-        newslist = get(f"{link_website}api/newspage").json()
+        newslist = get_newspage_list()
         return render_template('list/admin-list-news.html', title='Новости', newslist=newslist, special_params=get_special_params())
     return you_dont_have_permission()
 
@@ -944,12 +945,12 @@ def admin_create_news():  # teleport
             text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
             if form.submit.data:
                 if text_trans[:5] != "Error":
-                    message = post(f"{link_website}api/newspage", json={"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data,
-                                   "image": "//".join(filenames), "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
+                    message = create_newspage({"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data,
+                                   "image": "//".join(filenames), "admin_email": current_user.email})
                     if "success" in message:
                         filenames = transport_images(filenames, f"news/news_{message['id']}")
-                        m = put(f"{link_website}api/newspage/{message['id']}", json={"image": "//".join(filenames),
-                                'admin_email': current_user.email, "action": "put", "admin_password": password_manager.get_password(current_user.email)}).json()
+                        m = edit_newspage(message['id'], {"image": "//".join(filenames),
+                                                          'admin_email': current_user.email, "action": "put"})
                         result = True
                         set_other_params()
                     message = list(message.values())[-1]
@@ -973,8 +974,7 @@ def admin_edit_news(id):
     if current_user.status > 0:
         form = NewspageForm()
         message, result, filenames, preview_text = None, False, [], None
-        news = put(f"{link_website}api/newspage/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                             "admin_password": password_manager.get_password(current_user.email)}).json()
+        news = edit_newspage(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in list(news):
             if request.method == 'POST':
                 path = f"tmp/{current_user.email}"
@@ -982,14 +982,12 @@ def admin_edit_news(id):
                 text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
                 if form.submit.data:
                     if text_trans[:5] != "Error":
-                        message = put(f"{link_website}api/newspage/{id}", json={"heading": form.heading.data, "text": form.text.data,
-                                      "image": "//".join(filenames), "admin_email": current_user.email, "action": "put", "tags": form.tags.data,
-                                      "admin_password": password_manager.get_password(current_user.email)}).json()
+                        message = edit_newspage(id, {"heading": form.heading.data, "text": form.text.data, "image": "//".join(filenames),
+                                                     "admin_email": current_user.email, "action": "put", "tags": form.tags.data})
                         if "success" in message:
                             result = True
                             filenames = transport_images(filenames, f"news/news_{id}")
-                            m = put(f"{link_website}api/newspage/{id}", json={"image": "//".join(filenames),
-                                    "action": "put", "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
+                            m = edit_newspage(id, {"image": "//".join(filenames), 'admin_email': current_user.email, "action": "put"})
                             set_other_params()
                         message = list(message.values())[0]
                     else:
@@ -1021,13 +1019,11 @@ def admin_delete_news(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, result, name = None, False, "новость не найдена"
-        news = put(f"{link_website}api/newspage/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                             "admin_password": password_manager.get_password(current_user.email)}).json()
+        news = edit_newspage(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in news:
             name = "новость " + news["heading"]
             if request.method == 'POST':
-                message = put(f"{link_website}api/newspage/{id}", json={"admin_email": current_user.email, "action": "delete",
-                                                                        "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = edit_newspage(id, {"admin_email": current_user.email, "action": "delete"})
                 if "success" in message:
                     result = True
                     delete_folder(f"news/news_{id}")
@@ -1981,7 +1977,7 @@ def page_by_link(link):
 
 @application.route("/news-page/<string:link>")
 def news_page(link):
-    news = get(f"{link_website}api/newspage/{link}").json()
+    news = get_newspage_link(link)
     if "message" in news:
         return page_not_found()
     return render_template('news.html', title=news["heading"], news=news, special_params=get_special_params())
