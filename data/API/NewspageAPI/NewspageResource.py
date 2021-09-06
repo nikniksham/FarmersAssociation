@@ -3,7 +3,6 @@ from flask import jsonify
 from flask_restful import Resource
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
-from data.user import User
 from data.newspage import Newspage
 from data.API.NewspageAPI.parser_newspage import parser_newspage
 from main import mini_text, text_transform
@@ -27,16 +26,6 @@ def trans_link(text):
         elif letter.lower() in eng_letter:
             link += letter
     return link
-
-
-def check_admin(email, password):
-    session = db_session.create_session()
-    user = session.query(User).filter(User.email == email).first()
-    if not user:
-        raise_error(f"Админ {email} не найден", session)
-    if not user.check_password(password):
-        raise_error("Неправильный пароль", session)
-    return user, session
 
 
 def find_by_id(id, session):

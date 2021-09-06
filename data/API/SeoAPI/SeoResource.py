@@ -3,20 +3,9 @@ from flask import jsonify
 from flask_restful import Resource
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
-from data.user import User
 from data.API.SeoAPI.parser_seo import parser_seo
 from data.seo import Seo
 from data.API.main_file import raise_error, check_admin_status
-
-
-def check_admin(email, password):
-    session = db_session.create_session()
-    user = session.query(User).filter(User.email == email).first()
-    if not user:
-        raise_error(f"Админ {email} не найден", session)
-    if not user.check_password(password):
-        raise_error("Неправильный пароль", session)
-    return user, session
 
 
 def find_by_id(id, session):
