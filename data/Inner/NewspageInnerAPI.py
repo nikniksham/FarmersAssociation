@@ -4,7 +4,7 @@ from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.newspage import Newspage
 from main import mini_text, text_transform
 from config import UPLOAD_FOLDER as path
-from data.inner.main_file import raise_error, check_admin_status
+from data.Inner.main_file import raise_error, check_admin_status
 
 
 def trans_link(text):

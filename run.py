@@ -40,7 +40,7 @@ from werkzeug.utils import secure_filename
 from PIL import Image
 import config
 import shutil
-from data.inner.NewspageInnerAPI import get_newspage_list, get_newspage_link, get_newspage_find, get_newspage_from_to, \
+from data.Inner.NewspageInnerAPI import get_newspage_list, get_newspage_link, get_newspage_find, get_newspage_from_to, \
     get_newspage_ususal, edit_newspage, create_newspage
 load_new_footer_params, load_new_params, load_seo_params = True, True, True
 link_website = "http://127.0.0.1:8000/"
