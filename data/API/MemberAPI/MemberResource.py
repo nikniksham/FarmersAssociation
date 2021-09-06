@@ -1,38 +1,28 @@
 import datetime
 from flask import jsonify
-from flask_restful import Resource, abort
+from flask_restful import Resource
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.user import User
 from data.member import Member
 from data.API.MemberAPI.parser_member import parser_member
-
-
-def raise_error(error):
-    abort(400, message=error)
-
-
-def check_admin_status(email, password, need_status=1):
-    admin, session = check_admin(email, password)
-    if admin.status < need_status:
-        raise_error("У вас недостаточно прав для этого")
-    return admin, session
+from data.API.main_file import raise_error, check_admin_status
 
 
 def check_admin(email, password):
     session = db_session.create_session()
     user = session.query(User).filter(User.email == email).first()
     if not user:
-        raise_error(f"Админ {email} не найден")
+        raise_error(f"Админ {email} не найден", session)
     if not user.check_password(password):
-        raise_error("Неправильный пароль")
+        raise_error("Неправильный пароль", session)
     return user, session
 
 
 def find_by_id(id, session):
     member = session.query(Member).get(id)
     if not member:
-        raise_error(f"Участник не найден")
+        raise_error(f"Участник не найден", session)
     return member, session
 
 
@@ -44,11 +34,13 @@ class MemberResource(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         member, session = find_by_id(member_id, session)
         if args['action'] == "get":
+            session.close()
             return jsonify(member.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia", 'created_date', 'author_id')))
         elif args['action'] == 'delete':
             session.delete(member)
             session.commit()
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет участника: {member.name}", admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Участник {member.name} успешно удален"})
         elif args['action'] == 'put':
             part_dict = member.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia"))
@@ -77,20 +69,22 @@ class MemberResource(Resource):
                 if key == "province":
                     member.province = args["province"]
             if count == 0:
-                return raise_error("Пустой запрос")
+                return raise_error("Пустой запрос", session)
             part_dict_2 = member.to_dict(only=('name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia"))
             list_chang = [f'изменяет {key} с {part_dict[key]} на {part_dict_2[key]}' if key not in ["image", "logo"] else "изменяет изображения/аватарку" for key in keys]
             session.commit()
             add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет участника {name}: {', '.join(list_chang)}",
                          admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Участник {name} успешно изменен"})
-        raise_error("Неизвестный метод")
+        raise_error("Неизвестный метод", session)
 
 
 class MemberResourceUsual(Resource):
     def get(self, member_id):
         session = db_session.create_session()
         member, session = find_by_id(member_id, session)
+        session.close()
         return jsonify(member.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia")))
 
 
@@ -98,6 +92,7 @@ class MemberListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
         members = session.query(Member).all()
+        session.close()
         return jsonify([item.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia")) for item in members])
 
 
@@ -120,7 +115,7 @@ class CreateMemberResource(Resource):
         new_member.created_date = datetime.datetime.now()
         if args["id"] is not None:
             if session.query(Member).get(args["id"]) is not None:
-                raise_error("Этот id уже занят")
+                raise_error("Этот id уже занят", session)
             new_member.id = args["id"]
         admin.member.append(new_member)
         session.merge(admin)
@@ -130,4 +125,5 @@ class CreateMemberResource(Resource):
         add_auditlog("Создание",
                      f"{admin.name} {admin.surname} создаёт участника {new_member.name}: {params_dict}",
                      admin, datetime.datetime.now())
+        session.close()
         return jsonify({'success': f'Участник {new_member.name} создан', 'id': new_member.id})

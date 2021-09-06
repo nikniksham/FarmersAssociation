@@ -33,12 +33,15 @@ class CodeForConfirmation:
             new_code.created_date = datetime.datetime.now()
             session.add(new_code)
             session.commit()
+            session.close()
             return 'Код успешно создан'
+        session.close()
         return "Проверьте правильность написания почты"
 
     def send_message(self, email, code):
         session = db_session.create_session()
         bot = session.query(Bot).get(1)
+        session.close()
         self.smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
         msg = MIMEMultipart()  # Создаем сообщение
         msg['From'] = bot.email  # Адресат
@@ -93,4 +96,5 @@ class CodeForConfirmation:
                 d_codes.append(code.email)
                 session.delete(code)
         session.commit()
+        session.close()
         return f'Удалены коды {d_codes}'

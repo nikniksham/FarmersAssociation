@@ -1,39 +1,29 @@
 import datetime
 from flask import jsonify
-from flask_restful import Resource, abort
+from flask_restful import Resource
 from data import db_session
 from data.user import User
 from data.content import Content
 from data.API.ContentAPI.parser_content import parser_content
 from data.smartpage import Smartpage
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
-
-
-def raise_error(error):
-    abort(400, message=error)
-
-
-def check_admin_status(email, password, need_status=1):
-    admin, session = check_admin(email, password)
-    if admin.status < need_status:
-        raise_error("У вас недостаточно прав для этого")
-    return admin, session
+from data.API.main_file import raise_error, check_admin_status
 
 
 def check_admin(email, password):
     session = db_session.create_session()
     user = session.query(User).filter(User.email == email).first()
     if not user:
-        raise_error(f"Админ {email} не найден")
+        raise_error(f"Админ {email} не найден", session)
     if not user.check_password(password):
-        raise_error("Неправильный пароль")
+        raise_error("Неправильный пароль", session)
     return user, session
 
 
 def find_by_id(id, session):
     content = session.query(Content).get(id)
     if not content:
-        raise_error(f"Блок контента не найден")
+        raise_error(f"Блок контента не найден", session)
     return content, session
 
 
@@ -45,6 +35,7 @@ class ContentResource(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         content, session = find_by_id(content_id, session)
         if args['action'] == "get":
+            session.close()
             return jsonify(content.to_dict(only=('id', 'position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id', "display_type", "display_type_member")))
         elif args["action"] == "delete":
             c_pos = 1
@@ -56,6 +47,7 @@ class ContentResource(Resource):
             session.commit()
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет блок контента {content.heading}, "
                                      f"с типом данных: {content.type}", admin, datetime.datetime.now())
+            session.close()
             return jsonify({"success": f"Блок контента {content.heading} успешно удален"})
         elif args["action"] == "put":
             cont_dict = content.to_dict(only=('position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags', "display_type", "display_type_member"))
@@ -96,7 +88,7 @@ class ContentResource(Resource):
                 if key == "display_type_member":
                     content.display_type_member = args["display_type_member"]
             if count == 0:
-                return raise_error("Пустой запрос")
+                raise_error("Пустой запрос", session)
             cont_dict_2 = content.to_dict(only=('position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags', "display_type", "display_type_member"))
             list_chang = [
                 f'изменяет {key} с {cont_dict[key]} на {cont_dict_2[key]}' if key != "image" else "изменяет изображения" for
@@ -104,14 +96,17 @@ class ContentResource(Resource):
             session.commit()
             add_auditlog("Изменение", f"{admin.name} {admin.surname} изменяет блок контента: {', '.join(list_chang)}",
                          admin, datetime.datetime.now())
-            return jsonify({"success": f"Блок контента на позиции {content.position} успешно изменен"})
-        raise_error("Неизвестный метод")
+            position = content.position
+            session.close()
+            return jsonify({"success": f"Блок контента на позиции {position} успешно изменен"})
+        raise_error("Неизвестный метод", session)
 
 
 class ContentListRecourse(Resource):
     def get(self):
         session = db_session.create_session()
         contents = session.query(Content).order_by(Content.position).all()
+        session.close()
         return jsonify([item.to_dict(
             only=('id', 'position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id', "display_type", "display_type_member"))
             for item in contents])
@@ -121,6 +116,7 @@ class ContentListRecourseId(Resource):
     def get(self, smartpage_id):
         session = db_session.create_session()
         contents = session.query(Content).filter(Content.smartpage_id == smartpage_id).order_by(Content.position).all()
+        session.close()
         return jsonify([item.to_dict(
             only=('id', 'position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id', "display_type", "display_type_member"))
             for item in contents])
@@ -134,7 +130,7 @@ class CreateContentResource(Resource):
         admin, session = check_admin_status(args['admin_email'], args["admin_password"])
         page = session.query(Smartpage).get(args["page_id"])
         if page is None:
-            raise_error(f"Страница с id {args['page_id']} не найдена")
+            raise_error(f"Страница с id {args['page_id']} не найдена", session)
         new_content = Content()
         elem = session.query(Content).filter(Content.smartpage_id == args['page_id']).filter(
             Content.position == args["position"]).first()
@@ -164,7 +160,7 @@ class CreateContentResource(Resource):
         new_content.smartpage = page
         if args["id"] is not None:
             if session.query(Content).get(args["id"]) is not None:
-                raise_error("Этот id уже занят")
+                raise_error("Этот id уже занят", session)
             new_content.id = args["id"]
         admin.content.append(new_content)
         session.merge(admin)
@@ -174,4 +170,5 @@ class CreateContentResource(Resource):
         params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//")) if args["image"] else 0}'
         add_auditlog("Создание", f"{admin.name} {admin.surname} создаёт блок контента с параметрами: {params_dict}",
                      admin, datetime.datetime.now())
+        session.close()
         return jsonify({'success': f'Блок контента на позиции {new_content.position} создан', 'id': new_content.id})
