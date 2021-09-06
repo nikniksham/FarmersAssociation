@@ -441,7 +441,6 @@ def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False,
 
 def get_special_params():
     global load_new_footer_params, load_new_params, load_seo_params
-    containerManager.clear_container(application.config['UPLOAD_FOLDER'])
     if load_new_footer_params:
         load_new_footer_params = False
         set_footer_params()
