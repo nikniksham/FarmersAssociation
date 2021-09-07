@@ -198,7 +198,7 @@ def set_other_params():
     special_params["smartpages"] = get(f"{link_website}api/smartpage").json()
     special_params["worker"] = get(f"{link_website}api/worker").json()
     special_params["text"] = get(f"{link_website}api/text").json()
-    special_params["partner"] = get(f"{link_website}api/partner").json()
+    special_params["partner"] = get(f"{link_website}api/partner").json()  # teleport
     set_map_params()
 
 
@@ -951,11 +951,10 @@ def admin_create_news():  # teleport
             if form.submit.data:
                 if text_trans[:5] != "Error":
                     message = create_newspage({"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data,
-                                   "image": "//".join(filenames), "admin_email": current_user.email})
+                                   "image": "//".join(filenames), "admin_email": current_user.email}) # teleport
                     if "success" in message:
                         filenames = transport_images(filenames, f"news/news_{message['id']}")
-                        m = edit_newspage(message['id'], {"image": "//".join(filenames),
-                                                          'admin_email': current_user.email, "action": "put"})
+                        m = edit_newspage(message['id'], {"image": "//".join(filenames), 'admin_email': current_user.email, "action": "put"}) # teleport
                         result = True
                         set_other_params()
                     message = list(message.values())[-1]
@@ -979,7 +978,7 @@ def admin_edit_news(id):
     if current_user.status > 0:
         form = NewspageForm()
         message, result, filenames, preview_text = None, False, [], None
-        news = edit_newspage(id, {"admin_email": current_user.email, "action": "get"})
+        news = edit_newspage(id, {"admin_email": current_user.email, "action": "get"}) # teleport
         path = get_path()
         if "message" not in list(news):
             if request.method == 'POST':
@@ -988,11 +987,11 @@ def admin_edit_news(id):
                 if form.submit.data:
                     if text_trans[:5] != "Error":
                         message = edit_newspage(id, {"heading": form.heading.data, "text": form.text.data, "image": "//".join(filenames),
-                                                     "admin_email": current_user.email, "action": "put", "tags": form.tags.data})
+                                                     "admin_email": current_user.email, "action": "put", "tags": form.tags.data}) # teleport
                         if "success" in message:
                             result = True
                             filenames = transport_images(filenames, f"news/news_{id}")
-                            m = edit_newspage(id, {"image": "//".join(filenames), 'admin_email': current_user.email, "action": "put"})
+                            m = edit_newspage(id, {"image": "//".join(filenames), 'admin_email': current_user.email, "action": "put"}) # teleport
                             set_other_params()
                         message = list(message.values())[0]
                     else:
