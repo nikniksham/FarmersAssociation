@@ -35,7 +35,9 @@ def edit_content(content_id, args):
         session.close()
         return {"success": f"Блок контента {content.heading} успешно удален"}
     elif args["action"] == "put":
-        cont_dict = content.to_dict(only=('position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags', "display_type", "display_type_member"))
+        # Вызывать тут
+        # Передаёшь args + список параметров, получаешь args, проверяешь по списку параметры, если параметр не существует - его надо создать со значением None
+        cont_dict = content.to_dict(only=('position', 'heading', 'type', 'image', 'text', "display_type", "display_type_member"))
         keys = list(filter(lambda key: args[key] is not None and key in list(cont_dict.keys()) and args[key] != cont_dict[key], list(args.keys())))
         for key in keys:
             count += 1
@@ -60,12 +62,8 @@ def edit_content(content_id, args):
                 content.type = args["type"]
             if key == 'image':
                 content.image = args['image']
-            if key == 'animation_type':
-                content.animation_type = args["animation_type"]
             if key == "text":
                 content.text = args["text"]
-            if key == "tags":
-                content.tags = args["tags"]
             if key == "heading":
                 content.heading = args["heading"]
             if key == "display_type":
@@ -74,7 +72,7 @@ def edit_content(content_id, args):
                 content.display_type_member = args["display_type_member"]
         if count == 0:
             raise_error("Пустой запрос", session)
-        cont_dict_2 = content.to_dict(only=('position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags', "display_type", "display_type_member"))
+        cont_dict_2 = content.to_dict(only=('position', 'heading', 'type', 'image', 'text', "display_type", "display_type_member"))
         list_chang = [
             f'изменяет {key} с {cont_dict[key]} на {cont_dict_2[key]}' if key != "image" else "изменяет изображения" for
             key in keys]
@@ -87,7 +85,7 @@ def edit_content(content_id, args):
     raise_error("Неизвестный метод", session)
 
 
-def get_content_list(self):
+def get_content_list():
     session = db_session.create_session()
     contents = session.query(Content).order_by(Content.position).all()
     session.close()
@@ -106,43 +104,28 @@ def get_content_usual(smartpage_id):
 
 
 def create_content(args):
-    if not all(args[key] is not None for key in ['type', 'page_id', 'heading', 'admin_email']):
+    if not all(args[key] is not None for key in ['type', 'page_id', 'heading', "image", "text", "display_type_member", "display_type", 'admin_email']):
         raise_error('Пропущены некоторые аргументы, необходимые для создания страницы')
     admin, session = check_admin_status(args['admin_email'])
     page = session.query(Smartpage).get(args["page_id"])
     if page is None:
         raise_error(f"Страница с id {args['page_id']} не найдена", session)
     new_content = Content()
-    elem = session.query(Content).filter(Content.smartpage_id == args['page_id']).filter(
-        Content.position == args["position"]).first()
-    if elem is not None:
-        blocks = session.query(Content).filter(Content.smartpage_id == args['page_id']).order_by(
-            Content.position).all()
-        pos = args["position"] if args["position"] else blocks[-1]["position"] + 1
-        new_content.position = pos
-        for block in blocks:
-            if block.position == pos:
-                pos += 1
-                block.position = pos
-    else:
-        i = session.query(Content).filter(Content.smartpage_id == args['page_id']).order_by(Content.position).all()
-        i = i[-1].position + 1 if i else 1
-        new_content.position = i
-
+    blocks = session.query(Content).filter(Content.smartpage_id == args['page_id']).order_by(Content.position).all()
+    pos = blocks[-1].position + 1
+    new_content.position = pos
+    for block in blocks:
+        if block.position == pos:
+            pos += 1
+            block.position = pos
     new_content.heading = args['heading']
     new_content.type = args["type"]
     new_content.image = args['image']
-    new_content.animation_type = args["animation_type"]
     new_content.text = args["text"]
-    new_content.tags = args["tags"]
     new_content.display_type = args["display_type"]
     new_content.display_type_member = args["display_type_member"]
     new_content.created_date = datetime.datetime.now()
     new_content.smartpage = page
-    if args["id"] is not None:
-        if session.query(Content).get(args["id"]) is not None:
-            raise_error("Этот id уже занят", session)
-        new_content.id = args["id"]
     admin.content.append(new_content)
     session.merge(admin)
     session.commit()

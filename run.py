@@ -43,6 +43,7 @@ import shutil
 
 from data.Inner.NewspageInnerAPI import get_newspage_list, get_newspage_link, get_newspage_find, get_newspage_from_to, \
     get_newspage_ususal, edit_newspage, create_newspage
+from data.Inner.ContentInnerAPI import edit_content, create_content, get_content_list, get_content_usual
 from data.Inner.AddressInnerAPI import get_address_list, edit_address
 load_new_footer_params, load_new_params, load_seo_params = True, True, True
 link_website = "http://127.0.0.1:8000/"
@@ -154,6 +155,10 @@ formatting_text_instruction_usual = \
 admin_images = {}
 admin_logos = {}
 special_params = {}
+
+
+def get_path():
+    return f"tmp/{current_user.email}"
 
 
 def set_map_params():
@@ -940,7 +945,7 @@ def admin_create_news():  # teleport
         form = NewspageForm()
         message, result, preview_text = None, False, None
         if request.method == 'POST':
-            path = f"tmp/{current_user.email}"
+            path = get_path()
             filenames = save_image_test(request.files, path, current_user.email)
             text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
             if form.submit.data:
@@ -975,7 +980,7 @@ def admin_edit_news(id):
         form = NewspageForm()
         message, result, filenames, preview_text = None, False, [], None
         news = edit_newspage(id, {"admin_email": current_user.email, "action": "get"})
-        path = f"tmp/{current_user.email}"
+        path = get_path()
         if "message" not in list(news):
             if request.method == 'POST':
                 filenames = save_image_test(request.files, path, current_user.email)
@@ -1194,7 +1199,7 @@ def admin_list_smartpage(page_id):
     if current_user.status > 0:
         delete_folder(f"tmp/{current_user.email}")
         smartpagelist, contentdict = get(f"{link_website}api/smartpage").json(), {}
-        contentlist = get(f"{link_website}api/content").json()
+        contentlist = get_content_list()
         for page in smartpagelist:
             for content in contentlist:
                 if page["id"] == content["smartpage_id"]:
@@ -1217,7 +1222,7 @@ def admin_create_smartpage():
         form = SmartpageForm()
         message, result, filenames = None, False, []
         if request.method == 'POST':
-            path = f"tmp/{current_user.email}"
+            path = get_path()
             filenames = save_image_test(request.files, path, current_user.email, r_img=True)
             message = post(f"{link_website}api/smartpage", json={"heading": form.heading.data, "image": "//".join(filenames),
                                                                  "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
@@ -1242,11 +1247,10 @@ def admin_edit_smartpage(id):
         form = SmartpageForm()
         smartpage = put(f"{link_website}api/smartpage/{id}", json={"admin_email": current_user.email, "action": "get",
                                                                    "admin_password": password_manager.get_password(current_user.email)}).json()
-        path = f"tmp/{current_user.email}"
+        path = get_path()
         message, result, filenames = None, False, []
         if "message" not in smartpage:
             if request.method == 'POST':
-                path = f"tmp/{current_user.email}"
                 filenames = save_image_test(request.files, path, current_user.email, r_img=True)
                 message = put(f"{link_website}api/smartpage/{id}", json={"heading": form.heading.data, "image": "//".join(filenames),
                               "admin_email": current_user.email, "action": "put", "admin_password": password_manager.get_password(current_user.email)}).json()
@@ -1286,7 +1290,7 @@ def admin_delete_smartpage(id):
         if "message" not in smartpage:
             name = "страница " + smartpage['heading']
             if request.method == 'POST':
-                content_list = get(f"{link_website}api/content/{smartpage['id']}").json()
+                content_list = get_content_usual(id)
                 for content in content_list:
                     delete_folder(f"content/content_{content['id']}")
                 message = put(f"{link_website}api/smartpage/{id}", json={"admin_email": current_user.email, "action": "delete",
@@ -1308,17 +1312,19 @@ def admin_create_content(page_id):
         return redirect("/login")
     if current_user.status > 0:
         form = ContentForm()
-        path = f"tmp/{current_user.email}"
+        path = get_path()
         message, result, filenames, filename = None, False, [], None
         if request.method == 'POST':
             filenames = save_image_test(request.files, path, current_user.email)
             image = "" if len(filenames) == 0 else "//".join(filenames)
-            message = post(f"{link_website}api/content", json={"type": form.type.data, "text": form.text.data, "page_id": page_id, "display_type": form.display_type.data, "display_type_member": form.display_type_member.data,
-                           "heading": form.heading.data, "image": image, 'admin_email': current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
+            message = create_content({"type": form.type.data, "text": form.text.data, "page_id": page_id, "display_type":
+                                      form.display_type.data, "display_type_member": form.display_type_member.data, "heading": form.heading.data,
+                                      "image": image, 'admin_email': current_user.email})
             if "success" in message:
                 filenames = transport_images(filenames, f"content/content_{message['id']}")
-                m = put(f"{link_website}api/content/{message['id']}", json={"image": "//".join(filenames), "action": "put",
-                                                                            "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
+                if filenames != []:
+                    m = edit_content(message['id'], {"image": "//".join(filenames), "action": "put", "admin_email": current_user.email})
+
                 delete_folder(path)
                 result = True
             message = list(message.values())[-1]
@@ -1334,11 +1340,9 @@ def admin_content_move_up(id):
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
-        content, page_id = put(f"{link_website}api/content/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                                        "admin_password": password_manager.get_password(current_user.email)}).json(), 0
+        content, page_id = edit_content(id, {"admin_email": current_user.email, "action": "get"}), 0
         if "message" not in content:
-            put(f"{link_website}api/content/{id}", json={"position": content["position"] - 1, "action": "put",
-                                                         "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)})
+            m = edit_content(id, {"position": content["position"] - 1, "action": "put", "admin_email": current_user.email})
             page_id = content['smartpage_id']
         return redirect(f"/admin-list-smartpage/{page_id}")
     return you_dont_have_permission()
@@ -1350,11 +1354,9 @@ def admin_content_move_down(id):
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
-        content, page_id = put(f"{link_website}api/content/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                                        "admin_password": password_manager.get_password(current_user.email)}).json(), 0
+        content, page_id = edit_content(id, {"admin_email": current_user.email, "action": "get"}), 0
         if "message" not in content:
-            put(f"{link_website}api/content/{id}", json={"position": content["position"] + 1, "action": "put",
-                                                         "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)})
+            m = edit_content(id, {"position": content["position"] - 1, "action": "put", "admin_email": current_user.email})
             page_id = content["smartpage_id"]
         return redirect(f"/admin-list-smartpage/{page_id}")
     return you_dont_have_permission()
@@ -1367,22 +1369,20 @@ def admin_edit_content(id):
         return redirect("/login")
     if current_user.status > 0:
         form = ContentForm()
-        content = put(f"{link_website}api/content/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                               "admin_password": password_manager.get_password(current_user.email)}).json()
-        path = f"tmp/{current_user.email}"
+        content = edit_content(id, {"admin_email": current_user.email, "action": "get"})
+        path = get_path()
         message, result, filenames, page_id = None, False, [], 0
         if "message" not in content:
             page_id = content["smartpage_id"]
             if request.method == 'POST':
                 filenames = save_image_test(request.files, path, current_user.email)
-                message = put(f"{link_website}api/content/{id}", json={"type": form.type.data, "text": form.text.data,
-                              "heading": form.heading.data, "image": '//'.join(filenames), "action": "put", "display_type": form.display_type.data,
-                              "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email),
-                                                                       "display_type_member": form.display_type_member.data}).json()
+                message = edit_content(id, {"type": form.type.data, "text": form.text.data, "heading": form.heading.data,
+                                            "image": '//'.join(filenames), "action": "put", "display_type": form.display_type.data,
+                                            "admin_email": current_user.email, "display_type_member": form.display_type_member.data})
                 if "success" in message:
                     filenames = transport_images(filenames, f"content/content_{id}")
-                    m = put(f"{link_website}api/content/{id}", json={"image": '//'.join(filenames), "action": "put",
-                                                                     "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
+                    if filenames != []:
+                        m = edit_content(id, {"image": "//".join(filenames), "action": "put", "admin_email": current_user.email})
                     result = True
                 message = list(message.values())[-1]
             else:
@@ -1410,14 +1410,12 @@ def admin_delete_content(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result, page_id = "", "контент не найден", False, 0
-        content = put(f"{link_website}api/content/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                               "admin_password": password_manager.get_password(current_user.email)}).json()
+        content = edit_content(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in content:
             page_id = content["smartpage_id"]
             name = "контент " + content['heading']
             if request.method == 'POST':
-                message = put(f"{link_website}api/content/{id}", json={"action": "delete",
-                                                                       "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = edit_content(id, {"action": "delete", "admin_email": current_user.email})
                 if "success" in message:
                     result = True
                     delete_folder(f"content/content_{id}")
@@ -1889,7 +1887,7 @@ def write_feedback(code):
     else:
         filenames = containerManager.get_container(f"feedback_{code}").values()
     page = get(f"{link_website}api/smartpage/6").json()
-    content = get(f"{link_website}api/content/{page['id']}").json()
+    content = get_content_usual(page['id'])
     return render_template('write-feedback.html', title="Отзыв", page=page, content=content,
                            result=result, flag=True, message=message, form=form, preview_text=preview_text,
                            filenames=filenames, image_len=len(filenames) + 1, special_params=get_special_params(),
@@ -1899,7 +1897,7 @@ def write_feedback(code):
 @application.route("/contacts")
 def contacts():
     page = get(f"{link_website}api/smartpage/6").json()
-    content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
+    content, flag_map = get_content_usual(page['id']), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('contacts.html', title=page["heading"], page=page, content=content, code=create_random_name(15),
                            special_params=get_special_params(), flag_map=flag_map, contacts=True)
@@ -1908,7 +1906,7 @@ def contacts():
 @application.route("/agro_and_agro-tourism_sector")
 def agro_and_agro_tourism_sector():
     page = get(f"{link_website}api/smartpage/2").json()
-    content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
+    content, flag_map = get_content_usual(page['id']), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('agro_and_agro_tourism_sector.html', title=page["heading"], page=page, content=content,
                            special_params=get_special_params(), flag_map=flag_map)
@@ -1917,7 +1915,7 @@ def agro_and_agro_tourism_sector():
 @application.route("/partners")
 def partners():
     page = get(f"{link_website}api/smartpage/3").json()
-    content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
+    content, flag_map = get_content_usual(page['id']), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('partners.html', title=page["heading"], page=page, content=content,
                            special_params=get_special_params(), flag_map=flag_map)
@@ -1926,7 +1924,7 @@ def partners():
 @application.route("/all_news")
 def all_news():
     page = get(f"{link_website}api/smartpage/4").json()
-    content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
+    content, flag_map = get_content_usual(page['id']), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('all_news.html', title=page["heading"], page=page, content=content,
                            special_params=get_special_params(), flag_map=flag_map)
@@ -1935,7 +1933,7 @@ def all_news():
 @application.route("/team")
 def team():
     page = get(f"{link_website}api/smartpage/5").json()
-    content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
+    content, flag_map = get_content_usual(page['id']), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('team.html', title=page["heading"], page=page, content=content,
                            special_params=get_special_params(), flag_map=flag_map)
@@ -1944,7 +1942,7 @@ def team():
 @application.route("/")
 def website_main():
     page = get(f"{link_website}api/smartpage/1").json()
-    content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
+    content, flag_map = get_content_usual(page['id']), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('main-page.html', len=len(get_special_params()["text"]), title=page["heading"], page=page,
                            content=content, special_params=get_special_params(), flag_map=flag_map)
@@ -1968,7 +1966,7 @@ def page_by_link(link):
     page = get(f"{link_website}api/smartpage/{link}").json()
     if "message" in page:
         return page_not_found()
-    content, flag_map = get(f"{link_website}api/content/{page['id']}").json(), False
+    content, flag_map = get_content_usual(page['id']), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('generated-page.html', title=page["heading"], page=page, content=content,
                            special_params=get_special_params(), flag_map=flag_map)
