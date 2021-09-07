@@ -59,8 +59,7 @@ class AdminResourcePhone(Resource):
                                       f" {', '.join(list_chang)}", admin, datetime.datetime.now())
             session.close()
             return jsonify({"success": f"Номер телефона {phone.number} успешно изменён"})
-        session.close()
-        raise_error("Неизвестный метод")
+        raise_error("Неизвестный метод", session)
 
 
 class CreatePhoneResource(Resource):
