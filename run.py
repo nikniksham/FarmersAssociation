@@ -40,8 +40,10 @@ from werkzeug.utils import secure_filename
 from PIL import Image
 import config
 import shutil
+
 from data.Inner.NewspageInnerAPI import get_newspage_list, get_newspage_link, get_newspage_find, get_newspage_from_to, \
     get_newspage_ususal, edit_newspage, create_newspage
+from data.Inner.AddressInnerAPI import get_address_list, edit_address
 load_new_footer_params, load_new_params, load_seo_params = True, True, True
 link_website = "http://127.0.0.1:8000/"
 link_website_heroku = "https://farmersassociation.herokuapp.com/"
@@ -171,7 +173,7 @@ def set_footer_params():
     special_params["numbers"] = get(f"{link_website}api/phone").json()
     special_params["socials"] = get(f"{link_website}api/socialmedia").json()
     special_params["emails"] = get(f"{link_website}api/email").json()
-    special_params["address"] = get(f"{link_website}api/address").json()
+    special_params["address"] = get_address_list()
     special_params["link"] = link_website
     special_params['our_coord'] = get_coord(special_params["address"][0]["place"])["success"][0]
 
@@ -893,17 +895,15 @@ def admin_edit_address(id):
     if current_user.status > 0:
         form = AddressForm()
         message, result = None, False
-        address = put(f"{link_website}api/address/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                               "admin_password": password_manager.get_password(current_user.email)}).json()
+        address = edit_address(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in address:
             if request.method == 'POST':
                 if form.submit.data:
                     res = get_coord(form.address.data)
                     if "success" in res:
                         special_params["our_coord"] = res
-                        message = put(f"{link_website}api/address/{id}", json={"coord": res["success"][0], "admin_email": current_user.email,
-                                                                               "action": "put", "admin_password": password_manager.get_password(current_user.email),
-                                                                               "place": form.address.data}).json()
+                        message = edit_address(id, {"coord": res["success"][0], "admin_email": current_user.email,
+                                                    "action": "put", "admin_password": password_manager.get_password(current_user.email), "place": form.address.data})
                         if "success" in message:
                             result = True
                             set_footer_params()

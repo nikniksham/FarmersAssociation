@@ -11,4 +11,4 @@ import re
 import smtplib
 from data.bot import Bot
 
-сложна
+# сложна

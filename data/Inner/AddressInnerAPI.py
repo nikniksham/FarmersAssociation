@@ -1,9 +1,8 @@
 import datetime
-from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
-from data.API.AddressAPI.parser_address import parser_address
 from data.address import Address
-from data.Inner.main_file import raise_error, check_admin_status, check_admin
+from data import db_session
+from data.Inner.main_file import raise_error, check_admin_status
 
 
 def find_by_id(id, session):
@@ -13,7 +12,7 @@ def find_by_id(id, session):
     return address, session
 
 
-def edit_address(args):
+def edit_address(address_id, args):
     count = 0
     if not all(args[key] is not None for key in ['admin_email', 'action']):
         raise_error('Пропущены некоторые важные аргументы')
@@ -41,3 +40,10 @@ def edit_address(args):
                      admin, datetime.datetime.now())
         session.close()
         return {"success": f"Адрес {address.name} успешно изменён"}
+
+
+def get_address_list():
+    session = db_session.create_session()
+    addresss = session.query(Address).all()
+    session.close()
+    return [item.to_dict(only=('id', 'name', 'place')) for item in addresss]
