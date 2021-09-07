@@ -975,9 +975,9 @@ def admin_edit_news(id):
         form = NewspageForm()
         message, result, filenames, preview_text = None, False, [], None
         news = edit_newspage(id, {"admin_email": current_user.email, "action": "get"})
+        path = f"tmp/{current_user.email}"
         if "message" not in list(news):
             if request.method == 'POST':
-                path = f"tmp/{current_user.email}"
                 filenames = save_image_test(request.files, path, current_user.email)
                 text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
                 if form.submit.data:
@@ -999,7 +999,7 @@ def admin_edit_news(id):
                 form.text.data = news["text"]
                 form.tags.data = news["tags"]
                 if get_files_from(f"tmp/{current_user.email}") == []:
-                    filenames = copy_files(f"news/news_{id}", f"tmp/{current_user.email}", news["image"].split("//"))
+                    filenames = copy_files(f"news/news_{id}", path, news["image"].split("//"))
                     admin_images[current_user.email] = [_.split("/")[-1] for _ in filenames]
                 else:
                     filenames = get_files_from(f"tmp/{current_user.email}")
@@ -1242,6 +1242,7 @@ def admin_edit_smartpage(id):
         form = SmartpageForm()
         smartpage = put(f"{link_website}api/smartpage/{id}", json={"admin_email": current_user.email, "action": "get",
                                                                    "admin_password": password_manager.get_password(current_user.email)}).json()
+        path = f"tmp/{current_user.email}"
         message, result, filenames = None, False, []
         if "message" not in smartpage:
             if request.method == 'POST':
@@ -1260,7 +1261,7 @@ def admin_edit_smartpage(id):
             else:
                 form.heading.data = smartpage["heading"]
                 if get_files_from(f"tmp/{current_user.email}") == []:
-                    filenames = copy_files(f"smartpage/smartpage_{id}", f"tmp/{current_user.email}", smartpage["image"].split("//"))
+                    filenames = copy_files(f"smartpage/smartpage_{id}", path, smartpage["image"].split("//"))
                     admin_images[current_user.email] = [_.split("/")[-1] for _ in filenames]
                 else:
                     filenames = get_files_from(f"tmp/{current_user.email}")
@@ -1307,19 +1308,19 @@ def admin_create_content(page_id):
         return redirect("/login")
     if current_user.status > 0:
         form = ContentForm()
-        containerManager.delete_container(f"tmp/content/content_{current_user.email}")
+        path = f"tmp/{current_user.email}"
         message, result, filenames, filename = None, False, [], None
         if request.method == 'POST':
-            filenames = save_images(f"tmp/content/content_{current_user.email}", request.files, auto_delete=True, r_img=False)
+            filenames = save_image_test(request.files, path, current_user.email)
             image = "" if len(filenames) == 0 else "//".join(filenames)
             message = post(f"{link_website}api/content", json={"type": form.type.data, "text": form.text.data, "page_id": page_id, "display_type": form.display_type.data, "display_type_member": form.display_type_member.data,
                            "heading": form.heading.data, "image": image, 'admin_email': current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
             if "success" in message:
-                filenames = transport_images(f"tmp/content/content_{current_user.email}", f"content/content_{message['id']}", filenames)
+                filenames = transport_images(filenames, f"content/content_{message['id']}")
                 m = put(f"{link_website}api/content/{message['id']}", json={"image": "//".join(filenames), "action": "put",
                                                                             "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
+                delete_folder(path)
                 result = True
-                containerManager.delete_container(f"tmp/content/content_{current_user.email}")
             message = list(message.values())[-1]
         return render_template('form/admin-form-content.html', title='Создание контента', message=message, form=form,
                                result=result, flag=True, filenames=filenames, image_len=len(filenames) + 1, page_id=page_id,
@@ -1368,17 +1369,18 @@ def admin_edit_content(id):
         form = ContentForm()
         content = put(f"{link_website}api/content/{id}", json={"admin_email": current_user.email, "action": "get",
                                                                "admin_password": password_manager.get_password(current_user.email)}).json()
+        path = f"tmp/{current_user.email}"
         message, result, filenames, page_id = None, False, [], 0
         if "message" not in content:
             page_id = content["smartpage_id"]
             if request.method == 'POST':
-                filenames = save_images(f"tmp/content/content_{current_user.email}", request.files, auto_delete=True)
+                filenames = save_image_test(request.files, path, current_user.email)
                 message = put(f"{link_website}api/content/{id}", json={"type": form.type.data, "text": form.text.data,
                               "heading": form.heading.data, "image": '//'.join(filenames), "action": "put", "display_type": form.display_type.data,
                               "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email),
                                                                        "display_type_member": form.display_type_member.data}).json()
                 if "success" in message:
-                    filenames = transport_images(f"tmp/content/content_{current_user.email}", f"content/content_{id}", filenames)
+                    filenames = transport_images(filenames, f"content/content_{id}")
                     m = put(f"{link_website}api/content/{id}", json={"image": '//'.join(filenames), "action": "put",
                                                                      "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
                     result = True
@@ -1391,9 +1393,7 @@ def admin_edit_content(id):
                 form.display_type_member.data = content["display_type_member"]
                 page_id = content["smartpage_id"]
                 if content["image"]:
-                    filenames = content["image"].split("//")
-                    filenames = copy_files(f"content/content_{id}", f"tmp/content/content_{current_user.email}", filenames)
-                containerManager.add_container(f"tmp/content/content_{current_user.email}", filenames, auto_delete=True)
+                    filenames = copy_files(f"content/content_{id}", path, content["image"].split("//"))
         else:
             message = list(content.values())[-1]
         return render_template('form/admin-form-content.html', title='Редактирование контента', message=message, form=form,
@@ -1421,7 +1421,6 @@ def admin_delete_content(id):
                 if "success" in message:
                     result = True
                     delete_folder(f"content/content_{id}")
-                    containerManager.delete_container(f"content/content_{id}")
                 message = list(message.values())[0]
         return render_template('form/admin-form-delete.html', title='Удаление контента', message=message, form=form,
                                result=result, name=name, link_back=f"/admin-list-smartpage/{page_id}", special_params=get_special_params())
