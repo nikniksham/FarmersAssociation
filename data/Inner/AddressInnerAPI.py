@@ -8,16 +8,18 @@ from data.Inner.main_file import raise_error, check_admin_status
 def find_by_id(id, session):
     address = session.query(Address).get(id)
     if not address:
-        raise_error(f"Адрес не найден", session)
+        return raise_error(f"Адрес не найден", session), 1
     return address, session
 
 
 def edit_address(address_id, args):
     count = 0
     if not all(args[key] is not None for key in ['admin_email', 'action']):
-        raise_error('Пропущены некоторые важные аргументы')
+        return raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args["admin_email"], 1)
     address, session = find_by_id(address_id, session)
+    if type(address) == dict:
+        return address
     if args['action'] == "get":
         session.close()
         return address.to_dict(only=('id', 'name', 'place'))

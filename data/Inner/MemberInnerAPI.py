@@ -8,16 +8,18 @@ from data.Inner.main_file import raise_error, check_admin_status
 def find_by_id(id, session):
     member = session.query(Member).get(id)
     if not member:
-        raise_error(f"Участник не найден", session)
+        return raise_error(f"Участник не найден", session), 1
     return member, session
 
 
 def edit_member(member_id, args):
     count = 0
     if not all(args[key] is not None for key in ['admin_email', 'action']):
-        raise_error('Пропущены некоторые важные аргументы')
+        return raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args['admin_email'])
     member, session = find_by_id(member_id, session)
+    if type(member) == dict:
+        return member
     if args['action'] == "get":
         session.close()
         return member.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia", 'created_date', 'author_id'))
@@ -62,12 +64,14 @@ def edit_member(member_id, args):
                      admin, datetime.datetime.now())
         session.close()
         return {"success": f"Участник {name} успешно изменен"}
-    raise_error("Неизвестный метод", session)
+    return raise_error("Неизвестный метод", session)
 
 
 def get_member_usual(member_id):
     session = db_session.create_session()
     member, session = find_by_id(member_id, session)
+    if type(member) == dict:
+        return member
     session.close()
     return member.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia"))
 
@@ -81,7 +85,7 @@ def get_member_list():
 
 def create_member(args):
     if not all(args[key] is not None for key in ['name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia", 'admin_email']):
-        raise_error('Пропущены некоторые аргументы, необходимые для создания участника')
+        return raise_error('Пропущены некоторые аргументы, необходимые для создания участника')
     admin, session = check_admin_status(args['admin_email'])
     new_member = Member()
     new_member.name = args["name"]

@@ -959,9 +959,12 @@ def admin_create_news():  # teleport
                 if text_trans[:5] != "Error":
                     message = create_newspage({"heading": form.heading.data, "text": form.text.data, "tags": form.tags.data,
                                    "image": "//".join(filenames), "admin_email": current_user.email}) # teleport
+                    print(message)
                     if "success" in message:
                         filenames = transport_images(filenames, f"news/news_{message['id']}")
+                        print(filenames)
                         m = edit_newspage(message['id'], {"image": "//".join(filenames), 'admin_email': current_user.email, "action": "put"}) # teleport
+                        print(m)
                         result = True
                         set_other_params()
                     message = list(message.values())[-1]
@@ -1065,11 +1068,9 @@ def admin_change_password(id):
     if current_user.status > 1:
         form = AdminForm()
         if current_user.id == id:
-            admin = edit_admin({"admin_email": current_user.email, "action": "get",
-                                                          "admin_password": password_manager.get_password(current_user.email)})
+            admin = edit_admin({"admin_email": current_user.email, "action": "get"})
         else:
-            admin = edit_admin_admin(id, {"admin_email": current_user.email, "action": "get",
-                                                               "admin_password": password_manager.get_password(current_user.email)})
+            admin = edit_admin_admin(id, {"admin_email": current_user.email, "action": "get"})
         message, result, name = None, False, ""
         if "message" not in admin:
             name = f'{admin["name"]} {admin["surname"]}'
@@ -1078,12 +1079,10 @@ def admin_change_password(id):
                     if id == current_user.id:
                         message = edit_admin({"admin_email": current_user.email,
                                       "new_admin_password": form.password.data, "action": "put", "change_password": True,
-                                      "admin_password": password_manager.get_password(current_user.email),
                                       "check_admin_password": form.password_current.data})
                     else:
-                        message = edit_admin({"admin_email": current_user.email,
+                        message = edit_admin_admin(id, {"admin_email": current_user.email,
                                       "new_admin_password": form.password.data, "action": "put", "change_password": True,
-                                      "admin_password": password_manager.get_password(current_user.email),
                                       "check_admin_password": form.password_current.data})
                     if "success" in message:
                         password_manager.add_user(admin["email"], form.password.data)

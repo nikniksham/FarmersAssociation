@@ -9,16 +9,18 @@ from data.Inner.main_file import raise_error, check_admin_status
 def find_by_id(id, session):
     content = session.query(Content).get(id)
     if not content:
-        raise_error(f"Блок контента не найден", session)
+        return raise_error(f"Блок контента не найден", session), 1
     return content, session
 
 
 def edit_content(content_id, args):
     count = 0
     if not all(args[key] is not None for key in ['admin_email', 'action']):
-        raise_error('Пропущены некоторые важные аргументы')
+        return raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args['admin_email'])
     content, session = find_by_id(content_id, session)
+    if type(content) == dict:
+        return content
     if args['action'] == "get":
         session.close()
         return content.to_dict(only=('id', 'position', 'heading', 'type', 'image', 'animation_type', 'text', 'tags', 'author_id', 'smartpage_id', "display_type", "display_type_member"))
@@ -71,7 +73,7 @@ def edit_content(content_id, args):
             if key == "display_type_member":
                 content.display_type_member = args["display_type_member"]
         if count == 0:
-            raise_error("Пустой запрос", session)
+            return raise_error("Пустой запрос", session)
         cont_dict_2 = content.to_dict(only=('position', 'heading', 'type', 'image', 'text', "display_type", "display_type_member"))
         list_chang = [
             f'изменяет {key} с {cont_dict[key]} на {cont_dict_2[key]}' if key != "image" else "изменяет изображения" for
@@ -82,7 +84,7 @@ def edit_content(content_id, args):
         position = content.position
         session.close()
         return {"success": f"Блок контента на позиции {position} успешно изменен"}
-    raise_error("Неизвестный метод", session)
+    return raise_error("Неизвестный метод", session)
 
 
 def get_content_list():
@@ -105,14 +107,14 @@ def get_content_usual(smartpage_id):
 
 def create_content(args):
     if not all(args[key] is not None for key in ['type', 'page_id', 'heading', "image", "text", "display_type_member", "display_type", 'admin_email']):
-        raise_error('Пропущены некоторые аргументы, необходимые для создания страницы')
+        return raise_error('Пропущены некоторые аргументы, необходимые для создания страницы')
     admin, session = check_admin_status(args['admin_email'])
     page = session.query(Smartpage).get(args["page_id"])
     if page is None:
-        raise_error(f"Страница с id {args['page_id']} не найдена", session)
+        return raise_error(f"Страница с id {args['page_id']} не найдена", session)
     new_content = Content()
     blocks = session.query(Content).filter(Content.smartpage_id == args['page_id']).order_by(Content.position).all()
-    pos = blocks[-1].position + 1
+    pos = len(blocks) + 1
     new_content.position = pos
     for block in blocks:
         if block.position == pos:
