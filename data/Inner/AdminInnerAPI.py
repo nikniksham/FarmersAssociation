@@ -64,7 +64,7 @@ def edit_admin(args):
         for key in keys:
             count += 1
             if key == 'email':
-                if session.query(User).filter(User.id == args["email"]).first():
+                if session.query(User).filter(User.email == args["email"]).first():
                     raise_error("Этот email уже занят", session)
                 admin.email = args['email']
             if key == 'name':
@@ -159,10 +159,6 @@ def create_admin(args):
     new_admin.surname = args["surname"]
     new_admin.email = args['email']
     new_admin.set_password(args["new_admin_password"])
-    if args["id"] is not None:
-        if session.query(User).get(args["id"]) is not None:
-            raise_error("Этот id уже занят", session)
-        new_admin.id = args["id"]
     if args['status'] is not None:
         if admin.status > args['status']:
             new_admin.status = args['status']

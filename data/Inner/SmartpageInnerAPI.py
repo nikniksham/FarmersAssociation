@@ -109,10 +109,6 @@ def create_smartpage(args):
     new_smartpage.link = link
     new_smartpage.image = args['image'] if args['image'] is not None else "standard.png"
     new_smartpage.created_date = datetime.datetime.now()
-    if args["id"] is not None:
-        if session.query(Smartpage).get(args["id"]) is not None:
-            raise_error("Этот id уже занят", session)
-        new_smartpage.id = args["id"]
     admin.smartpage.append(new_smartpage)
     session.merge(admin)
     session.commit()

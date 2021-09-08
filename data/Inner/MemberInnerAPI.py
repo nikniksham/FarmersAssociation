@@ -94,10 +94,6 @@ def create_member(args):
     new_member.province = args['province']
     new_member.occupation = args["occupation"]
     new_member.created_date = datetime.datetime.now()
-    if args["id"] is not None:
-        if session.query(Member).get(args["id"]) is not None:
-            raise_error("Этот id уже занят", session)
-        new_member.id = args["id"]
     admin.member.append(new_member)
     session.merge(admin)
     session.commit()

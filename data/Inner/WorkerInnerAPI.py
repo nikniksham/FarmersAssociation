@@ -82,10 +82,6 @@ def create_worker(args):
     new_worker.email = args["email"]
     new_worker.profession = args["profession"]
     new_worker.created_date = datetime.datetime.now()
-    if args["id"] is not None:
-        if session.query(Worker).get(args["id"]) is not None:
-            raise_error("Этот id уже занят", session)
-        new_worker.id = args["id"]
     session.add(new_worker)
     session.commit()
     params_dict = new_worker.to_dict(only=('id', 'image', 'name', 'profession', 'phone', 'email', 'created_date'))
