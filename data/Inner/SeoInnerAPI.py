@@ -19,7 +19,7 @@ def get_seo_usual(seo_id):
     return seo.to_dict(only=('id', 'title', 'description', 'tags'))
 
 
-def edit_ser(seo_id, args):
+def edit_seo(seo_id, args):
     count = 0
     if not all(args[key] is not None for key in ['admin_email', 'action']):
         raise_error('Пропущены некоторые важные аргументы')

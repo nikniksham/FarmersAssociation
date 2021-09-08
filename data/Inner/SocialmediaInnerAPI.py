@@ -19,7 +19,7 @@ def get_socialmedia_list():
     return [item.to_dict(only=('id', 'icon_type', 'link')) for item in socialmedias]
 
 
-def edit_cocialmedia(socialmedia_id, args):
+def edit_socialmedia(socialmedia_id, args):
     if not all(args[key] is not None for key in ['admin_email', 'action']):
         raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args['admin_email'])

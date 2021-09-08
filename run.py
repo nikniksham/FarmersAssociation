@@ -46,6 +46,18 @@ from data.Inner.NewspageInnerAPI import get_newspage_list, get_newspage_link, ge
 from data.Inner.ContentInnerAPI import edit_content, create_content, get_content_list, get_content_usual
 from data.Inner.AddressInnerAPI import get_address_list, edit_address
 from data.Inner.SmartpageInnerAPI import edit_smartpage, get_smartpage_list, get_smartpage_usual, get_smartpage_link, create_smartpage
+# from data.Inner.ContentInnerAPI import edit_content, get_content_list, get_content_usual, create_content
+from data.Inner.WorkerInnerAPI import edit_worker, create_worker, get_worker_usual, get_worker_list
+from data.Inner.PartnerInnerAPI import edit_partner, create_partner, get_partner_usual, get_partner_list
+from data.Inner.MemberInnerAPI import edit_member, create_member, get_member_usual, get_member_list
+from data.Inner.FeedbackInnerAPI import edit_feedback, feedback_edit_image, create_feedback
+# from data.Inner.AddressInnerAPI import edit_address, get_address_list
+from data.Inner.EmailInnerAPI import edit_email, create_email, get_email_list
+from data.Inner.PhoneInnerAPI import edit_phone, create_phone, get_phone_list
+from data.Inner.SocialmediaInnerAPI import edit_socialmedia, create_socialmedia, get_socialmedia_list
+from data.Inner.SeoInnerAPI import get_seo_usual, edit_seo
+from data.Inner.TextInnerAPI import edit_text, create_text, get_text_list
+from data.Inner.AdminInnerAPI import edit_admin, create_admin, edit_admin_admin
 load_new_footer_params, load_new_params, load_seo_params = True, True, True
 link_website = "http://127.0.0.1:8000/"
 link_website_heroku = "https://farmersassociation.herokuapp.com/"
@@ -176,31 +188,30 @@ def set_map_params():
 
 
 def set_footer_params():
-    special_params["numbers"] = get(f"{link_website}api/phone").json()
-    special_params["socials"] = get(f"{link_website}api/socialmedia").json()
-    special_params["emails"] = get(f"{link_website}api/email").json()
+    special_params["numbers"] = get_phone_list()
+    special_params["socials"] = get_socialmedia_list()
+    special_params["emails"] = get_email_list()
     special_params["address"] = get_address_list()
     special_params["link"] = link_website
     special_params['our_coord'] = get_coord(special_params["address"][0]["place"])["success"][0]
 
 
 def set_seo_params():
-    seoparams = get(f"{link_website}api/seo/1").json()
+    seoparams = get_seo_usual(1)
     special_params["seo"] = {"icon": "logo.png", "link_icon": "logo-sm.png", "title": seoparams['title'],
                              "description": seoparams["description"], "tags": seoparams["tags"].split(", ")}
 
 
 def set_other_params():
     special_params["news"] = get_newspage_from_to(0, 9)
-    members = get(f"{link_website}api/member").json()
+    members = get_member_list()
     for ind, member in enumerate(members):
         members[ind]["ratio"] = get_ratio(member['logo'].split("//")[0])
     special_params['member'] = members
     special_params["smartpages"] = get_smartpage_list() # abc
-    # special_params["smartpages"] = get(f"{link_website}api/smartpage").json()
-    special_params["worker"] = get(f"{link_website}api/worker").json()
-    special_params["text"] = get(f"{link_website}api/text").json()
-    special_params["partner"] = get(f"{link_website}api/partner").json()  # teleport
+    special_params["worker"] = get_worker_list()
+    special_params["text"] = get_text_list()
+    special_params["partner"] = get_partner_list()
     set_map_params()
 
 
@@ -550,7 +561,7 @@ def admin_seo_settings():
         return redirect("/login")
     if current_user.status > 0:
         form = SeoForm()
-        seoparams = get(f"{link_website}api/seo/1").json()
+        seoparams = get_seo_usual(1)
         message, result, img_list = "", False, list(request.files)
         if request.method == 'POST':
             if form.set_logo.data:
@@ -581,10 +592,9 @@ def admin_seo_settings():
                         else:
                             message = "Файл неподдерживаемемого формата"
             if form.submit.data:
-                message = put(f"{link_website}api/seo/1", json={"admin_email": current_user.email, "action": "put",
+                message = edit_seo(1, {"admin_email": current_user.email, "action": "put",
                                                                 "title": form.title.data, "tags": form.tags.data,
-                                                                "description": form.description.data,
-                                                                "admin_password": password_manager.get_password(current_user.email)}).json()
+                                                                "description": form.description.data})
                 if "success" in message:
                     result = True
                     set_seo_params()
@@ -609,8 +619,8 @@ def admin_create_text():
         if request.method == 'POST':
             if form.submit.data:
                 write_log(f"{current_user.email} {password_manager.user_is_authed(current_user.email)} {password_manager.get_password(current_user.email)} {password_manager}")
-                message = post(f"{link_website}api/text", json={"heading": form.heading.data, "description": form.description.data,
-                                                                "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = create_text({"heading": form.heading.data, "description": form.description.data,
+                                                                "admin_email": current_user.email})
                 if "success" in message:
                     result = True
                     set_other_params()
@@ -628,14 +638,12 @@ def admin_edit_text(id):
     if current_user.status > 0:
         form = TextForm()
         message, result = None, False
-        text = put(f"{link_website}api/text/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                         "admin_password": password_manager.get_password(current_user.email)}).json()
+        text = edit_text(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in text:
             if request.method == 'POST':
                 if form.submit.data:
-                    message = put(f"{link_website}api/text/{id}", json={"heading": form.heading.data, "description": form.description.data,
-                                                                        "admin_email": current_user.email, "action": "put",
-                                                                        "admin_password": password_manager.get_password(current_user.email)}).json()
+                    message = edit_text(id, {"heading": form.heading.data, "description": form.description.data,
+                                                                        "admin_email": current_user.email, "action": "put"})
                     if "success" in message:
                         result = True
                         set_other_params()
@@ -658,13 +666,11 @@ def admin_delete_text(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, result, name = None, False, "текст не найден"
-        text = put(f"{link_website}api/text/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                         "admin_password": password_manager.get_password(current_user.email)}).json()
+        text = edit_text(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in text:
             name = "текст " + text["heading"]
             if request.method == 'POST':
-                message = put(f"{link_website}api/text/{id}", json={"admin_email": current_user.email, "action": "delete",
-                                                                    "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = edit_text(id, {"admin_email": current_user.email, "action": "delete"})
                 if "success" in message:
                     result = True
                     set_other_params()
@@ -684,8 +690,7 @@ def admin_create_phone():
         message, result = None, False
         if request.method == 'POST':
             if form.submit.data:
-                message = post(f"{link_website}api/phone", json={"number": form.number.data, "admin_email": current_user.email,
-                                                                 "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = create_phone({"number": form.number.data, "admin_email": current_user.email})
                 if "success" in message:
                     result = True
                     set_footer_params()
@@ -703,13 +708,11 @@ def admin_edit_phone(id):
     if current_user.status > 0:
         form = PhoneForm()
         message, result = None, False
-        phone = put(f"{link_website}api/phone/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                           "admin_password": password_manager.get_password(current_user.email)}).json()
+        phone = edit_phone(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in phone:
             if request.method == 'POST':
                 if form.submit.data:
-                    message = put(f"{link_website}api/phone/{id}", json={"number": form.number.data, "admin_email": current_user.email, "action": "put",
-                                                                         "admin_password": password_manager.get_password(current_user.email)}).json()
+                    message = edit_phone(id, {"number": form.number.data, "admin_email": current_user.email, "action": "put"})
                     if "success" in message:
                         result = True
                         set_footer_params()
@@ -731,13 +734,11 @@ def admin_delete_phone(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, result, name = None, False, "телефон не найден"
-        phone = put(f"{link_website}api/phone/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                           "admin_password": password_manager.get_password(current_user.email)}).json()
+        phone = edit_phone(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in phone:
             name = "телефон " + phone["number"]
             if request.method == 'POST':
-                message = put(f"{link_website}api/phone/{id}", json={"admin_email": current_user.email, "action": "delete",
-                                                                     "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = edit_phone(id, {"admin_email": current_user.email, "action": "delete"})
                 if "success" in message:
                     result = True
                     set_footer_params()
@@ -757,8 +758,7 @@ def admin_create_email():
         message, result = None, False
         if request.method == 'POST':
             if form.submit.data:
-                message = post(f"{link_website}api/email", json={"email_address": form.email.data, "admin_email": current_user.email,
-                                                                 "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = create_email({"email_address": form.email.data, "admin_email": current_user.email})
                 if "success" in message:
                     result = True
                     set_footer_params()
@@ -776,13 +776,11 @@ def admin_edit_email(id):
     if current_user.status > 0:
         form = EmailForm()
         message, result = None, False
-        email = put(f"{link_website}api/email/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                           "admin_password": password_manager.get_password(current_user.email)}).json()
+        email = edit_email(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in email:
             if request.method == 'POST':
                 if form.submit.data:
-                    message = put(f"{link_website}api/email/{id}", json={"email_address": form.email.data, "admin_email": current_user.email, "action": "put",
-                                                                         "admin_password": password_manager.get_password(current_user.email)}).json()
+                    message = edit_email(id, {"email_address": form.email.data, "admin_email": current_user.email, "action": "put"})
                     if "success" in message:
                         result = True
                         set_footer_params()
@@ -804,13 +802,11 @@ def admin_delete_email(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, result, name = None, False, "почтовый адрес не найден"
-        email = put(f"{link_website}api/email/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                           "admin_password": password_manager.get_password(current_user.email)}).json()
+        email = edit_email(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in email:
             name = "почтовый адрес " + email["email_address"]
             if request.method == 'POST':
-                message = put(f"{link_website}api/email/{id}", json={"admin_email": current_user.email, "action": "delete",
-                                                                     "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = edit_email(id, {"admin_email": current_user.email, "action": "delete"})
                 if "success" in message:
                     result = True
                     set_footer_params()
@@ -830,8 +826,8 @@ def admin_create_socialmedia():
         message, result = None, False
         if request.method == 'POST':
             if form.submit.data:
-                message = post(f"{link_website}api/socialmedia", json={"icon_type": get_image_name(form.link.data), "link": form.link.data,
-                                                                       "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = create_socialmedia({"icon_type": get_image_name(form.link.data), "link": form.link.data,
+                                                                       "admin_email": current_user.email})
                 if "success" in message:
                     result = True
                     set_footer_params()
@@ -849,14 +845,12 @@ def admin_edit_socialmedia(id):
     if current_user.status > 0:
         form = SocialmediaForm()
         message, result = None, False
-        socialmedia = put(f"{link_website}api/socialmedia/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                                       "admin_password": password_manager.get_password(current_user.email)}).json()
+        socialmedia = edit_socialmedia(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in socialmedia:
             if request.method == 'POST':
                 if form.submit.data:
-                    message = put(f"{link_website}api/socialmedia/{id}", json={"admin_email": current_user.email, "action": "put",
-                                                                               "icon_type": get_image_name(form.link.data), "link": form.link.data,
-                                                                               "admin_password": password_manager.get_password(current_user.email)}).json()
+                    message = edit_socialmedia(id, {"admin_email": current_user.email, "action": "put",
+                                                                               "icon_type": get_image_name(form.link.data), "link": form.link.data})
                     if "success" in message:
                         result = True
                         set_footer_params()
@@ -878,13 +872,11 @@ def admin_delete_socialmedia(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, result, name = None, False, "ссылка на соцсеть на найдена"
-        socialmedia = put(f"{link_website}api/socialmedia/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                                       "admin_password": password_manager.get_password(current_user.email)}).json()
+        socialmedia = edit_socialmedia(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in socialmedia:
             name = "почтовый адрес " + socialmedia["link"]
             if request.method == 'POST':
-                message = put(f"{link_website}api/socialmedia/{id}", json={"admin_email": current_user.email, "action": "delete",
-                                                                           "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = edit_socialmedia(id, {"admin_email": current_user.email, "action": "delete"})
                 if "success" in message:
                     result = True
                     set_footer_params()
@@ -1046,7 +1038,7 @@ def admin_list_admin():
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
-        adminlist = put(f"{link_website}api/admin", json={"admin_email": current_user.email, "action": "get_list", "admin_password": password_manager.get_password(current_user.email)}).json()
+        adminlist = edit_admin({"admin_email": current_user.email, "action": "get_list", "admin_password": password_manager.get_password(current_user.email)})
         return render_template('list/admin-list-admin.html', title='Новости', adminlist=adminlist, status=current_user.status,
                                current_id=current_user.id, flag=(current_user.status > 0), special_params=get_special_params())
     return you_dont_have_permission()
@@ -1060,26 +1052,26 @@ def admin_change_password(id):
     if current_user.status > 1:
         form = AdminForm()
         if current_user.id == id:
-            admin = put(f"{link_website}api/admin", json={"admin_email": current_user.email, "action": "get",
-                                                          "admin_password": password_manager.get_password(current_user.email)}).json()
+            admin = edit_admin({"admin_email": current_user.email, "action": "get",
+                                                          "admin_password": password_manager.get_password(current_user.email)})
         else:
-            admin = put(f"{link_website}api/admin/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                               "admin_password": password_manager.get_password(current_user.email)}).json()
+            admin = edit_admin_admin(id, {"admin_email": current_user.email, "action": "get",
+                                                               "admin_password": password_manager.get_password(current_user.email)})
         message, result, name = None, False, ""
         if "message" not in admin:
             name = f'{admin["name"]} {admin["surname"]}'
             if request.method == 'POST':
                 if form.password.data == form.password_again.data:
                     if id == current_user.id:
-                        message = put(f"{link_website}api/admin", json={"admin_email": current_user.email,
+                        message = edit_admin({"admin_email": current_user.email,
                                       "new_admin_password": form.password.data, "action": "put", "change_password": True,
                                       "admin_password": password_manager.get_password(current_user.email),
-                                      "check_admin_password": form.password_current.data}).json()
+                                      "check_admin_password": form.password_current.data})
                     else:
-                        message = put(f"{link_website}api/admin/{id}", json={"admin_email": current_user.email,
+                        message = edit_admin({"admin_email": current_user.email,
                                       "new_admin_password": form.password.data, "action": "put", "change_password": True,
                                       "admin_password": password_manager.get_password(current_user.email),
-                                      "check_admin_password": form.password_current.data}).json()
+                                      "check_admin_password": form.password_current.data})
                     if "success" in message:
                         password_manager.add_user(admin["email"], form.password.data)
                         result = True
@@ -1104,9 +1096,9 @@ def admin_create_admin():
         if request.method == 'POST':
             if form.password.data == form.password_again.data:
                 form.status.data = int(form.status.data)
-                message = post(f"{link_website}api/admin/create", json={"name": form.name.data, "surname": form.surname.data,
+                message = create_admin({"name": form.name.data, "surname": form.surname.data,
                                "email": form.email.data, "status": form.status.data, "admin_email": current_user.email,
-                               "admin_password": password_manager.get_password(current_user.email), "new_admin_password": form.password.data}).json()
+                               "admin_password": password_manager.get_password(current_user.email), "new_admin_password": form.password.data})
                 form.status.data = str(form.status.data)
                 if "success" in message:
                     password_manager.add_user(form.email.data, form.password)
@@ -1129,21 +1121,21 @@ def admin_edit_admin(id):
         form = AdminForm()
         if current_user.id == id:
             f = False
-            admin = put(f"{link_website}api/admin", json={"admin_email": current_user.email, "action": "get", "admin_password": password_manager.get_password(current_user.email)}).json()
+            admin = edit_admin({"admin_email": current_user.email, "action": "get", "admin_password": password_manager.get_password(current_user.email)})
         else:
             f = True
-            admin = put(f"{link_website}api/admin/{id}", json={"admin_email": current_user.email, "action": "get", "admin_password": password_manager.get_password(current_user.email)}).json()
+            admin = edit_admin_admin(id, {"admin_email": current_user.email, "action": "get", "admin_password": password_manager.get_password(current_user.email)})
         form.stat = current_user.status
         message, result, admin_status = None, False, 0
         if "message" not in admin:
             admin_status = admin["status"]
             if request.method == 'POST':
                 if current_user.id == id:
-                    message = put(f"{link_website}api/admin", json={"name": form.name.data, "surname": form.surname.data, "email": form.email.data,
-                                  "admin_email": current_user.email, "action": "put", "admin_password": password_manager.get_password(current_user.email)}).json()
+                    message = edit_admin({"name": form.name.data, "surname": form.surname.data, "email": form.email.data,
+                                  "admin_email": current_user.email, "action": "put", "admin_password": password_manager.get_password(current_user.email)})
                 else:
-                    message = put(f"{link_website}api/admin/{id}", json={"name": form.name.data, "surname": form.surname.data, "email": form.email.data,
-                                  "status": int(form.status.data), "admin_email": current_user.email, "action": "put", "admin_password": password_manager.get_password(current_user.email)}).json()
+                    message = edit_admin_admin(id, {"name": form.name.data, "surname": form.surname.data, "email": form.email.data,
+                                  "status": int(form.status.data), "admin_email": current_user.email, "action": "put", "admin_password": password_manager.get_password(current_user.email)})
                 if "success" in message:
                     if f:
                         admin_status = int(form.status.data)
@@ -1173,13 +1165,13 @@ def admin_delete_admin(id):
     if current_user.status > 1:
         form = DeleteForm()
         message, name, result = None, "пользователь не найден", False
-        admin = put(f"{link_website}api/admin/{id}", json={"admin_email": current_user.email, "action": "get", "admin_password": password_manager.get_password(current_user.email)}).json()
+        admin = edit_admin_admin(id, {"admin_email": current_user.email, "action": "get", "admin_password": password_manager.get_password(current_user.email)})
         if "message" not in admin:
             name = "админа " + f"{admin['name']} {admin['surname']}"
             if admin["status"] < current_user.status:
                 if request.method == 'POST':
-                    message = put(f"{link_website}api/admin/{id}", json={"admin_email": current_user.email,
-                                                                         "action": "delete", "admin_password": password_manager.get_password(current_user.email)}).json()
+                    message = edit_admin_admin(id, {"admin_email": current_user.email,
+                                                                         "action": "delete", "admin_password": password_manager.get_password(current_user.email)})
                     if "success" in message:
                         result = True
                     message = list(message.values())[0]
@@ -1200,7 +1192,6 @@ def admin_list_smartpage(page_id):
     if current_user.status > 0:
         delete_folder(f"tmp/{current_user.email}")
         smartpagelist, contentdict = get_smartpage_list(), {}
-        # smartpagelist, contentdict = get(f"{link_website}api/smartpage").json(), {}
         contentlist = get_content_list()
         for page in smartpagelist:
             for content in contentlist:
@@ -1226,12 +1217,12 @@ def admin_create_smartpage():
         if request.method == 'POST':
             path = get_path()
             filenames = save_image_test(request.files, path, current_user.email, r_img=True)
-            message = post(f"{link_website}api/smartpage", json={"heading": form.heading.data, "image": "//".join(filenames),
-                                                                 "admin_email": current_user.email, "admin_password": password_manager.get_password(current_user.email)}).json()
+            message = create_smartpage({"heading": form.heading.data, "image": "//".join(filenames),
+                                                                 "admin_email": current_user.email})
             if "success" in message:
                 filenames = transport_images(filenames, f"smartpage/smartpage_{message['id']}")
-                m = put(f"{link_website}api/smartpage/{message['id']}", json={"image": "//".join(filenames),
-                        "admin_email": current_user.email, "action": "put", "admin_password": password_manager.get_password(current_user.email)}).json()
+                m = edit_smartpage(message['id'], {"image": "//".join(filenames),
+                        "admin_email": current_user.email, "action": "put"})
                 result = True
                 set_other_params()
             message = list(message.values())[-1]
@@ -1247,19 +1238,18 @@ def admin_edit_smartpage(id):
         return redirect("/login")
     if current_user.status > 0:
         form = SmartpageForm()
-        smartpage = put(f"{link_website}api/smartpage/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                                   "admin_password": password_manager.get_password(current_user.email)}).json()
+        smartpage = edit_smartpage(id, {"admin_email": current_user.email, "action": "get"})
         path = get_path()
         message, result, filenames = None, False, []
         if "message" not in smartpage:
             if request.method == 'POST':
                 filenames = save_image_test(request.files, path, current_user.email, r_img=True)
-                message = put(f"{link_website}api/smartpage/{id}", json={"heading": form.heading.data, "image": "//".join(filenames),
-                              "admin_email": current_user.email, "action": "put", "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = edit_smartpage(id, {"heading": form.heading.data, "image": "//".join(filenames),
+                              "admin_email": current_user.email, "action": "put"})
                 if "success" in message:
                     filenames = transport_images(filenames, f"smartpage/smartpage_{id}")
-                    m = put(f"{link_website}api/smartpage/{id}", json={"image": "//".join(filenames),
-                            "admin_email": current_user.email, "action": "put", "admin_password": password_manager.get_password(current_user.email)}).json()
+                    m = edit_smartpage(id, {"image": "//".join(filenames),
+                            "admin_email": current_user.email, "action": "put"})
                     result = True
                     delete_folder(f"tmp/smartpage/smartpage_{current_user.email}")
                     set_other_params()
@@ -1287,16 +1277,14 @@ def admin_delete_smartpage(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result = "", "страница не найдена", False
-        smartpage = put(f"{link_website}api/smartpage/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                                   "admin_password": password_manager.get_password(current_user.email)}).json()
+        smartpage = edit_smartpage(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in smartpage:
             name = "страница " + smartpage['heading']
             if request.method == 'POST':
                 content_list = get_content_usual(id)
                 for content in content_list:
                     delete_folder(f"content/content_{content['id']}")
-                message = put(f"{link_website}api/smartpage/{id}", json={"admin_email": current_user.email, "action": "delete",
-                                                                         "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = edit_smartpage(id, {"admin_email": current_user.email, "action": "delete"})
                 if "success" in message:
                     result = True
                     delete_folder(f"smartpage/smartpage_{id}")
@@ -1434,7 +1422,7 @@ def admin_list_worker():
         return redirect("/login")
     if current_user.status > 0:
         delete_folder(f"tmp/{current_user.email}")
-        workerlist = get(f"{link_website}api/worker").json()
+        workerlist = get_worker_list()
         return render_template('list/admin-list-worker.html', title='Сотрудники', workerlist=workerlist,
                                special_params=get_special_params())
     return you_dont_have_permission()
@@ -1451,13 +1439,11 @@ def admin_create_worker():
         message, result, filenames = None, False, []
         if request.method == 'POST':
             filenames = save_images(f"tmp/worker/worker_{current_user.email}", request.files, auto_delete=True)
-            message = post(f"{link_website}api/worker", json={"name": form.name.data, "image": "//".join(filenames), "profession": form.profession.data,
-                           "phone": form.phone.data, "email": form.email.data, "admin_email": current_user.email,
-                                                              "admin_password": password_manager.get_password(current_user.email)}).json()
+            message = create_worker({"name": form.name.data, "image": "//".join(filenames), "profession": form.profession.data,
+                           "phone": form.phone.data, "email": form.email.data, "admin_email": current_user.email})
             if "success" in message:
                 filenames = transport_images(f"tmp/worker/worker_{current_user.email}", f"worker/worker_{message['id']}", filenames)
-                m = put(f"{link_website}api/worker/{message['id']}", json={"image": "//".join(filenames), "admin_email": current_user.email, "action": "put",
-                                                                           "admin_password": password_manager.get_password(current_user.email)}).json()
+                m = edit_worker(message['id'], {"image": "//".join(filenames), "admin_email": current_user.email, "action": "put"})
                 result = True
                 delete_folder(f"tmp/worker/worker_{current_user.email}")
                 containerManager.delete_container(f"tmp/worker/worker_{current_user.email}")
@@ -1475,23 +1461,20 @@ def admin_edit_worker(id):
         return redirect("/login")
     if current_user.status > 0:
         form = WorkerForm()
-        worker = put(f"{link_website}api/worker/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                             "admin_password": password_manager.get_password(current_user.email)}).json()
+        worker = edit_worker(id, {"admin_email": current_user.email, "action": "get"})
         message, result, filenames = None, False, []
         if "message" not in worker:
             if request.method == 'POST':
                 filenames = save_images(f"tmp/worker/worker_{current_user.email}", request.files, auto_delete=True)
-                message = put(f"{link_website}api/worker/{id}", json={"profession": form.profession.data, "name": form.name.data,
+                message = edit_worker(id, {"profession": form.profession.data, "name": form.name.data,
                                                                       "email": form.email.data, "phone": form.phone.data,
                                                                       "image": '//'.join(filenames), "action": "put",
-                                                                      "admin_email": current_user.email,
-                                                                      "admin_password": password_manager.get_password(current_user.email)}).json()
+                                                                      "admin_email": current_user.email})
                 if "success" in message:
                     filenames = copy_files(f"tmp/worker/worker_{current_user.email}", f"worker/worker_{id}",
                                                  filenames)
-                    m = put(f"{link_website}api/worker/{id}", json={"image": '//'.join(filenames), "action": "put",
-                                                                    "admin_email": current_user.email,
-                                                                    "admin_password": password_manager.get_password(current_user.email)}).json()
+                    m = edit_worker(id, {"image": '//'.join(filenames), "action": "put",
+                                                                    "admin_email": current_user.email})
                     result = True
                     set_other_params()
                 message = list(message.values())[-1]
@@ -1521,13 +1504,11 @@ def admin_delete_worker(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result = "", "сотрудник не найден", False
-        worker = put(f"{link_website}api/worker/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                             "admin_password": password_manager.get_password(current_user.email)}).json()
+        worker = edit_worker(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in worker:
             name = "сотрудник " + worker['name']
             if request.method == 'POST':
-                message = put(f"{link_website}api/worker/{id}", json={"admin_email": current_user.email, "action": "delete",
-                                                                      "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = edit_worker(id, {"admin_email": current_user.email, "action": "delete"})
                 if "success" in message:
                     result = True
                     containerManager.delete_container(f"worker/worker_{id}")
@@ -1546,7 +1527,7 @@ def admin_list_member():
         return redirect("/login")
     if current_user.status > 0:
         delete_folder(f"tmp/{current_user.email}")
-        memberlist = get(f"{link_website}api/member").json()
+        memberlist = get_member_list()
         return render_template('list/admin-list-member.html', title='Участники', memberlist=memberlist, special_params=get_special_params())
     return you_dont_have_permission()
 
@@ -1566,17 +1547,16 @@ def admin_create_member():
             coord = get_coord(form.address.data)
             if "success" in coord:
                 filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
-                message = post(f"{link_website}api/member", json={"name": form.name.data, "logo": "//".join(filenames1),
+                message = create_member({"name": form.name.data, "logo": "//".join(filenames1),
                                "image": "//".join(filenames2), "text": form.text.data, "link": form.link.data,
                                "coord": coord['success'][0], "occupation": "//".join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]),
                                "address": form.address.data, "province": coord["success"][1], "admin_email": current_user.email,
-                               "admin_password": password_manager.get_password(current_user.email), "socialmedia": form.socialmedia.data}).json()
+                               "socialmedia": form.socialmedia.data})
                 if "success" in message:
                     filenames1, filenames2 = transport_images(cont_name_logo, f"member/member_{message['id']}/logo", filenames1), \
                                                      transport_images(cont_name_image, f"member/member_{message['id']}/image", filenames2)
-                    m = put(f"{link_website}api/member/{message['id']}", json={"image": "//".join(filenames2),
-                            'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put",
-                                                                                "admin_password": password_manager.get_password(current_user.email)}).json()
+                    m = edit_member(message['id'], {"image": "//".join(filenames2),
+                            'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put"})
                     containerManager.delete_container(cont_name_image)
                     containerManager.delete_container(cont_name_logo)
                     delete_folder(f"member/member_{current_user.email}")
@@ -1600,8 +1580,7 @@ def admin_edit_member(id):
     if current_user.status > 0:
         form = MemberForm()
         cont_name_logo, cont_name_image = f"tmp/member/member_{current_user.email}/logo", f"tmp/member/member_{current_user.email}/image"
-        member = put(f"{link_website}api/member/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                               "admin_password": password_manager.get_password(current_user.email)}).json()
+        member = edit_member(id, {"admin_email": current_user.email, "action": "get"})
         message, result, filenames1, filenames2 = None, False, [], []
         if "message" not in member:
             if request.method == 'POST':
@@ -1610,17 +1589,16 @@ def admin_edit_member(id):
                     filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo)
                     if coord["success"] == [None, None]:
                         coord["success"] = [member["coord"], member["province"]]
-                    message = put(f"{link_website}api/member/{id}", json={"name": form.name.data, "image": "//".join(filenames2),
+                    message = edit_member(id, {"name": form.name.data, "image": "//".join(filenames2),
                                   "logo": "//".join(filenames1), "text": form.text.data, "link": form.link.data, "address": form.address.data,
                                   "coord": coord["success"][0], "province": coord["success"][1], "admin_email": current_user.email,
                                   "occupation": '//'.join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]), "action": "put",
-                                  "admin_password": password_manager.get_password(current_user.email), "socialmedia": form.socialmedia.data}).json()
+                                  "socialmedia": form.socialmedia.data})
                     if "success" in message:
                         filenames1, filenames2 = transport_images(cont_name_logo, f"member/member_{id}/logo", filenames1), \
                                                  transport_images(cont_name_image, f"member/member_{id}/image", filenames2)
-                        m = put(f"{link_website}api/member/{id}", json={"image": "//".join(filenames2),
-                                'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put",
-                                                                         "admin_password": password_manager.get_password(current_user.email)}).json()
+                        m = edit_member(id, {"image": "//".join(filenames2),
+                                'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put"})
                         result = True
                         set_other_params()
                     message = list(message.values())[0]
@@ -1653,13 +1631,11 @@ def admin_delete_member(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result = "", "участник не найден", False
-        member = put(f"{link_website}api/member/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                               "admin_password": password_manager.get_password(current_user.email)}).json()
+        member = edit_member(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in member:
             name = "страница " + member['name']
             if request.method == 'POST':
-                message = put(f"{link_website}api/member/{id}", json={"admin_email": current_user.email, "action": "delete",
-                                                                       "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = edit_member(id, {"admin_email": current_user.email, "action": "delete"})
                 if "success" in message:
                     result = True
                     delete_folder(f"member/member_{id}/image")
@@ -1682,7 +1658,7 @@ def admin_list_partner():
         return redirect("/login")
     if current_user.status > 0:
         delete_folder(f"tmp/{current_user.email}")
-        partnerlist = get(f"{link_website}api/partner").json()
+        partnerlist = get_partner_list()
         return render_template('list/admin-list-partner.html', title='Партнёры', partnerlist=partnerlist,
                                special_params=get_special_params())
     return you_dont_have_permission()
@@ -1701,15 +1677,13 @@ def admin_create_partner():
         message, result, filenames2, filenames1 = None, False, [], []
         if request.method == 'POST':
             filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
-            message = post(f"{link_website}api/partner", json={"name": form.name.data, "image": "//".join(filenames2), "info": form.info.data,
+            message = create_partner({"name": form.name.data, "image": "//".join(filenames2), "info": form.info.data,
                            "preferences": form.preferences.data, "address": form.address.data, "link": form.link.data, "admin_email": current_user.email,
-                           "logo": "//".join(filenames1), "admin_password": password_manager.get_password(current_user.email),
-                                                               "socialmedia": form.socialmedia.data}).json()
+                           "logo": "//".join(filenames1), "socialmedia": form.socialmedia.data})
             if "success" in message:
                 filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{message['id']}/logo", filenames1), \
                                          transport_images(cont_name_image, f"partner/partner_{message['id']}/image", filenames2)
-                m = put(f"{link_website}api/partner/{message['id']}", json={"image": "//".join(filenames2), "logo": "//".join(filenames1), "admin_email": current_user.email, "action": "put",
-                                                                           "admin_password": password_manager.get_password(current_user.email)}).json()
+                m = edit_partner(message['id'], {"image": "//".join(filenames2), "logo": "//".join(filenames1), "admin_email": current_user.email, "action": "put"})
                 containerManager.delete_container(cont_name_image)
                 containerManager.delete_container(cont_name_logo)
                 result = True
@@ -1730,23 +1704,21 @@ def admin_edit_partner(id):
     if current_user.status > 0:
         form = PartnerForm()
         cont_name_logo, cont_name_image = f"tmp/partner/partner_{current_user.email}/logo", f"tmp/partner/partner_{current_user.email}/image"
-        partner = put(f"{link_website}api/partner/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                             "admin_password": password_manager.get_password(current_user.email)}).json()
+        partner = edit_partner(id, {"admin_email": current_user.email, "action": "get"})
         message, result, filenames1, filenames2 = None, False, [], []
         if "message" not in partner:
             if request.method == 'POST':
                 filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo)
-                message = put(f"{link_website}api/partner/{id}", json={"preferences": form.preferences.data, "name": form.name.data,
+                message = edit_partner(id, {"preferences": form.preferences.data, "name": form.name.data,
                                                                        "address": form.address.data, "link": form.link.data, "info": form.info.data,
                                                                        "image": '//'.join(filenames2), "logo": '//'.join(filenames1), "action": "put",
                                                                        "admin_email": current_user.email,
-                                                                       "admin_password": password_manager.get_password(current_user.email), "socialmedia": form.socialmedia.data}).json()
+                                                                       "socialmedia": form.socialmedia.data})
                 if "success" in message:
                     filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{id}/logo", filenames1), \
                                              transport_images(cont_name_image, f"partner/partner_{id}/image", filenames2)
-                    m = put(f"{link_website}api/partner/{id}", json={"image": '//'.join(filenames2), "action": "put",
-                                                                    "admin_email": current_user.email, "logo": '//'.join(filenames1),
-                                                                    "admin_password": password_manager.get_password(current_user.email)}).json()
+                    m = edit_partner(id, {"image": '//'.join(filenames2), "action": "put",
+                                                                    "admin_email": current_user.email, "logo": '//'.join(filenames1)})
                     result = True
                     set_other_params()
                 message = list(message.values())[-1]
@@ -1777,13 +1749,11 @@ def admin_delete_partner(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result = "", "сотрудник не найден", False
-        partner = put(f"{link_website}api/partner/{id}", json={"admin_email": current_user.email, "action": "get",
-                                                             "admin_password": password_manager.get_password(current_user.email)}).json()
+        partner = edit_partner(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in partner:
             name = "сотрудник " + partner['name']
             if request.method == 'POST':
-                message = put(f"{link_website}api/partner/{id}", json={"admin_email": current_user.email, "action": "delete",
-                                                                      "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = edit_partner(id, {"admin_email": current_user.email, "action": "delete"})
                 if "success" in message:
                     result = True
                     delete_folder(f"partner/partner_{id}/image")
@@ -1812,8 +1782,7 @@ def admin_auditlog():
 def admin_feedback():
     if check_user():
         return redirect("/login")
-    feedbacks = put(f"{link_website}api/feedback", json={"admin_email": current_user.email, "action": "getlist",
-                                                         "admin_password": password_manager.get_password(current_user.email)}).json()
+    feedbacks = edit_feedback(json={"admin_email": current_user.email, "action": "getlist"})
     return render_template('list/admin-list-feedback.html', title='Отзывы', feedbacks=feedbacks, special_params=get_special_params())
 
 
@@ -1822,8 +1791,7 @@ def admin_feedback():
 def view_feedback(id):
     if check_user():
         return redirect("/login")
-    feedback = put(f"{link_website}api/feedback", json={"admin_email": current_user.email, "action": "get", "feedback_id": id,
-                                                        "admin_password": password_manager.get_password(current_user.email)}).json()
+    feedback = edit_feedback({"admin_email": current_user.email, "action": "get", "feedback_id": id})
     if "message" in feedback:
         return page_not_found()
     return render_template('feedback.html', title=feedback["heading"], feedback=feedback, special_params=get_special_params())
@@ -1837,13 +1805,11 @@ def admin_delete_feedback(id):
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result = "", "отзыв не найден", False
-        feedback = put(f"{link_website}api/feedback", json={"admin_email": current_user.email, "action": "get", "feedback_id": id,
-                                                            "admin_password": password_manager.get_password(current_user.email)}).json()
+        feedback = edit_feedback({"admin_email": current_user.email, "action": "get", "feedback_id": id})
         if "message" not in feedback:
             name = "отзыв " + feedback['heading']
             if request.method == 'POST':
-                message = put(f"{link_website}api/feedback", json={"feedback_id": id, "admin_email": current_user.email, "action": "delete",
-                                                                   "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = edit_feedback({"feedback_id": id, "admin_email": current_user.email, "action": "delete"})
                 if "success" in message:
                     delete_folder(f"feedback/feedback_{feedback['id']}")
                     result = True
@@ -1867,14 +1833,11 @@ def write_feedback(code):
 
         if form.submit.data:
             if text_trans[:5] != "Error":
-                message = post(f"{link_website}api/feedback",
-                               json={"email": form.email.data, "fullname": form.fullname.data, "heading": form.heading.data,
-                                     "image": "//".join(filenames), "text": form.text.data, "code": form.code.data,
-                                     "admin_password": password_manager.get_password(current_user.email)}).json()
+                message = create_feedback({"email": form.email.data, "fullname": form.fullname.data, "heading": form.heading.data,
+                                     "image": "//".join(filenames), "text": form.text.data, "code": form.code.data})
                 if "success" in message:
                     filenames = transport_images(f"tmp/feedback/feedback_{code}", f"feedback/feedback_{message['id']}", filenames)
-                    m = put(f"{link_website}api/feedback/{message['id']}/{form.code.data}", json={"image": "//".join(filenames),
-                                                                                                  "admin_password": password_manager.get_password(current_user.email)}).json()
+                    m = feedback_edit_image(message['id'], form.code.data, {"image": "//".join(filenames)})
                     result = True
                     message = "Спасибо за отзыв"
                     containerManager.delete_container(f"feedback/feedback_{code}")
@@ -1888,7 +1851,7 @@ def write_feedback(code):
             preview_text = Markup(text_trans)
     else:
         filenames = containerManager.get_container(f"feedback_{code}").values()
-    page = get(f"{link_website}api/smartpage/6").json()
+    page = get_smartpage_usual(6)
     content = get_content_usual(page['id'])
     return render_template('write-feedback.html', title="Отзыв", page=page, content=content,
                            result=result, flag=True, message=message, form=form, preview_text=preview_text,
@@ -1898,7 +1861,7 @@ def write_feedback(code):
 
 @application.route("/contacts")
 def contacts():
-    page = get(f"{link_website}api/smartpage/6").json()
+    page = get_smartpage_usual(6)
     content, flag_map = get_content_usual(page['id']), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('contacts.html', title=page["heading"], page=page, content=content, code=create_random_name(15),
@@ -1907,7 +1870,7 @@ def contacts():
 
 @application.route("/agro_and_agro-tourism_sector")
 def agro_and_agro_tourism_sector():
-    page = get(f"{link_website}api/smartpage/2").json()
+    page = get_smartpage_usual(2)
     content, flag_map = get_content_usual(page['id']), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('agro_and_agro_tourism_sector.html', title=page["heading"], page=page, content=content,
@@ -1916,7 +1879,7 @@ def agro_and_agro_tourism_sector():
 
 @application.route("/partners")
 def partners():
-    page = get(f"{link_website}api/smartpage/3").json()
+    page = get_smartpage_usual(3)
     content, flag_map = get_content_usual(page['id']), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('partners.html', title=page["heading"], page=page, content=content,
@@ -1925,7 +1888,7 @@ def partners():
 
 @application.route("/all_news")
 def all_news():
-    page = get(f"{link_website}api/smartpage/4").json()
+    page = get_smartpage_usual(4)
     content, flag_map = get_content_usual(page['id']), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('all_news.html', title=page["heading"], page=page, content=content,
@@ -1934,7 +1897,7 @@ def all_news():
 
 @application.route("/team")
 def team():
-    page = get(f"{link_website}api/smartpage/5").json()
+    page = get_smartpage_usual(5)
     content, flag_map = get_content_usual(page['id']), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('team.html', title=page["heading"], page=page, content=content,
@@ -1943,7 +1906,7 @@ def team():
 
 @application.route("/")
 def website_main():
-    page = get(f"{link_website}api/smartpage/1").json()
+    page = get_smartpage_usual(1)
     content, flag_map = get_content_usual(page['id']), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
     return render_template('main-page.html', len=len(get_special_params()["text"]), title=page["heading"], page=page,
@@ -1952,7 +1915,7 @@ def website_main():
 
 @application.route("/page/<string:link>")
 def page_by_link(link):
-    smartpages = get(f"{link_website}api/smartpage").json()
+    smartpages = get_smartpage_list()
     if link == smartpages[0]["link"]:
         return redirect("/")
     if link == smartpages[1]["link"]:
@@ -1965,7 +1928,7 @@ def page_by_link(link):
         return redirect("/team")
     if link == smartpages[5]["link"]:
         return redirect("/contacts")
-    page = get(f"{link_website}api/smartpage/{link}").json()
+    page = get_smartpage_link(link)
     if "message" in page:
         return page_not_found()
     content, flag_map = get_content_usual(page['id']), False
@@ -1984,7 +1947,7 @@ def news_page(link):
 
 @application.route("/partner-page/<int:id>")
 def partner_page(id):
-    partner = get(f"{link_website}api/partner/{id}").json()
+    partner = get_partner_usual(id)
     if "message" in partner:
         return page_not_found()
     return render_template('partner.html', title=partner["name"], partner=partner, special_params=get_special_params(),
@@ -1993,7 +1956,7 @@ def partner_page(id):
 
 @application.route("/member-page/<int:id>")
 def member_page(id):
-    member = get(f"{link_website}api/member/{id}").json()
+    member = get_member_usual(id)
     if "message" in member:
         return page_not_found()
     return render_template('member.html', title=member["name"], member=member, special_params=get_special_params(),
