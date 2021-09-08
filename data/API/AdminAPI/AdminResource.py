@@ -49,7 +49,7 @@ class AdminResource(Resource):
             for key in keys:
                 count += 1
                 if key == 'email':
-                    if session.query(User).filter(User.id == args["email"]).first():
+                    if session.query(User).filter(User.email == args["email"]).first():
                         raise_error("Этот email уже занят", session)
                     admin.email = args['email']
                 if key == 'name':
