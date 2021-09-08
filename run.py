@@ -170,8 +170,8 @@ admin_logos = {}
 special_params = {}
 
 
-def get_path():
-    return f"tmp/{current_user.email}"
+def get_path(between=""):
+    return f"tmp/{between}{current_user.email}"
 
 
 def set_map_params():
@@ -361,25 +361,38 @@ def transport_images(filenames, new_folder, path=application.config['UPLOAD_FOLD
     return new_filenames
 
 
-def save_image_test(files, path, email, r_img=False):  # teleport
+def save_image_test(files, path, email, r_img=False, gif=True, logo=False, feedback=False):  # teleport
     # print(files, list(files), dict(files))
-    old_files, new_files = [], []
+    old_files, new_files, img_list = [], [], list(files)
     if email in admin_images:
         old_files = admin_images[email]
     # print(old_files)
-    for elem in list(files)[:-1]:
+    for ind, elem in enumerate(list(files)[:-1]):
         # print(files[elem])
         ind, file = int("".join(list(filter(lambda x: x.isdigit(), list(elem))))) - 1, files[elem]
         if files[elem].filename != "":
-            gif_i = True if file.filename.split(".")[-1] == "gif" else False
-            mp4 = True if file.filename.split(".")[-1] == "mp4" else False
-            # print("add new image", f"gif: {gif_i} mp4: {mp4}")
-            if gif_i:
-                filename = secure_filename(create_new_image_name(gif=gif_i))
-            else:
-                filename = secure_filename(create_new_image_name())
-            save_image(f"{path}/"+filename, file)
-            new_files.append(filename)
+            if file and allowed_file(file.filename, feedback):
+                gif_i = True if file.filename.split(".")[-1] == "gif" else False
+                mp4 = True if file.filename.split(".")[-1] == "mp4" else False
+                png = True if file.filename.split(".")[-1] == "png" else False
+                # print("add new image", f"gif: {gif_i} mp4: {mp4} png: {png}")
+                if logo:
+                    if "icon" in img_list[ind]:
+                        filename = secure_filename(create_new_image_name(logo=png))
+                        save_image(f"{path}/" + filename, file)
+                        new_files.append(filename)
+                else:
+                    if mp4:
+                        file.save(f'{application.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
+                        for filename in give_me_gif_filenames(f"tmp/gif_{current_user.email}.mp4", path):
+                            new_files.append(path + "/" + filename)
+                    else:
+                        if gif_i:
+                            filename = secure_filename(create_new_image_name(gif=gif))
+                        else:
+                            filename = secure_filename(create_new_image_name())
+                        save_image(f"{path}/"+filename, file)
+                        new_files.append(filename)
         elif ind < len(old_files):
             # print("add old file")
             new_files.append(old_files[ind])
@@ -490,8 +503,8 @@ def create_new_image_name(logo=False, gif=False):
 
 
 def allowed_file(filename, feedback=False):
-    ALLOWED_EXTENSIONS = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4']
-    ALLOWED_EXTENSIONS_FEEDBACK = ['pdf', 'png', 'jpg', 'jpeg']
+    ALLOWED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'mp4']
+    ALLOWED_EXTENSIONS_FEEDBACK = ['png', 'jpg', 'jpeg']
     if feedback:
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS_FEEDBACK
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

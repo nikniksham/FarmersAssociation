@@ -65,7 +65,7 @@ def edit_member(member_id, args):
     raise_error("Неизвестный метод", session)
 
 
-def get_member_ususal(member_id):
+def get_member_usual(member_id):
     session = db_session.create_session()
     member, session = find_by_id(member_id, session)
     session.close()
