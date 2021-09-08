@@ -19,6 +19,7 @@ from data.Inner.main_file import raise_error, check_admin_status, check_admin
    Не трогай этот файл
    Не трогай этот файл
    Не трогай этот файл
+   ok
 """
 
 
@@ -146,8 +147,7 @@ def edit_admin_admin(user_id, args):
     raise_error("Неизвестный запрос")
 
 
-def create_admin(self):
-    args = parser_admin.parse_args()
+def create_admin(args):
     if not all(args[key] is not None for key in ['surname', 'name', 'email', 'admin_email', 'admin_password']):
         raise_error('Пропущены некоторые аргументы, необходимые для создания пользователя')
     admin, session = check_admin_status(args['admin_email'], args["admin_password"])
