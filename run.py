@@ -166,6 +166,7 @@ formatting_text_instruction = \
 formatting_text_instruction_usual = \
     ["<image id> Вставляет на этом месте картинку из поля загрузки картинок (нумерация изображений идёт с 1)"]
 admin_images = {}
+feedback_images = {}
 admin_logos = {}
 special_params = {}
 
@@ -279,14 +280,15 @@ def give_me_gif_filenames(filename, cont, path="static/img/"):
     return []
 
 
-def save_image_multithreading(filename, file):
+def save_image_multithreading(filename, file, feedback):
+    size = (720, 480) if feedback else (1920, 1080)
     path = "/".join(filename.split("/")[:-1])
     if not os.path.exists(path):
         os.makedirs(path)
     file.save(filename)
     image = Image.open(filename)
-    if image.size[0] > 1280 or image.size[1] > 720:
-        image.thumbnail((1920, 1080))
+    if image.size[0] > size[0] or image.size[1] > size[1]:
+        image.thumbnail(size)
     split_name = filename.split('.')
     path, format = '.'.join(split_name[:-1]), split_name[-1]
     if format not in ["png", "gif"]:
@@ -302,8 +304,8 @@ def get_files_from(folder, path=application.config["UPLOAD_FOLDER"]):
     return files
 
 
-def save_image(filename, file):
-    t1 = threading.Thread(target=save_image_multithreading, args=(os.path.join(application.config["UPLOAD_FOLDER"], filename), file))
+def save_image(filename, file, feedback=False):
+    t1 = threading.Thread(target=save_image_multithreading, args=(os.path.join(application.config["UPLOAD_FOLDER"], filename), file, feedback))
     t1.start()
     t1.join()
 
@@ -361,21 +363,27 @@ def transport_images(filenames, new_folder, path=application.config['UPLOAD_FOLD
     return new_filenames
 
 
-def save_image_test(files, path, email, r_img=False, gif=True, logo=False, feedback=False):  # teleport
+def save_image_test(files, path, email, r_img=False, gif=True, logo=False, feedback=False, max_image=None):  # teleport
     # print(files, list(files), dict(files))
+    print(files)
+    print(list(files))
     old_files, new_files, img_list = [], [], list(files)
-    if email in admin_images:
-        old_files = admin_images[email]
-    # print(old_files)
-    for ind, elem in enumerate(list(files)[:-1]):
-        # print(files[elem])
+    dict = feedback_images if feedback else admin_images
+    if email in dict:
+        old_files = dict[email]
+    print(old_files)
+    for ind, elem in enumerate(list(files) if feedback and len(files) == max_image else list(files)[:-1]):
+        if max_image and ind > max_image:
+            print("А, ок")
+            break
+        print(files[elem], ind)
         ind, file = int("".join(list(filter(lambda x: x.isdigit(), list(elem))))) - 1, files[elem]
         if files[elem].filename != "":
             if file and allowed_file(file.filename, feedback):
                 gif_i = True if file.filename.split(".")[-1] == "gif" else False
                 mp4 = True if file.filename.split(".")[-1] == "mp4" else False
                 png = True if file.filename.split(".")[-1] == "png" else False
-                # print("add new image", f"gif: {gif_i} mp4: {mp4} png: {png}")
+                print("add new image", f"gif: {gif_i} mp4: {mp4} png: {png}")
                 if logo:
                     if "icon" in img_list[ind]:
                         filename = secure_filename(create_new_image_name(logo=png))
@@ -394,11 +402,11 @@ def save_image_test(files, path, email, r_img=False, gif=True, logo=False, feedb
                         save_image(f"{path}/"+filename, file)
                         new_files.append(filename)
         elif ind < len(old_files):
-            # print("add old file")
+            print("add old file")
             new_files.append(old_files[ind])
     for file in old_files:
         if file not in new_files:
-            # print("delete file:", file)
+            print("delete file:", file)
             delete_img(file)
     if len(new_files) == 0 and r_img:
         r_name = f"{create_random_name(50)}.jpg"
@@ -407,10 +415,10 @@ def save_image_test(files, path, email, r_img=False, gif=True, logo=False, feedb
             os.makedirs(f"{application.config['UPLOAD_FOLDER']}{path}")
         img.save(f"{application.config['UPLOAD_FOLDER']}{path}/{r_name}")
         new_files.append(r_name)
-    admin_images[email] = new_files
+    dict[email] = new_files
     new_files = [f"{path}/"+_ for _ in new_files]
     delete_everything_except(path, new_files)
-    # print(new_files)
+    print(new_files)
     return new_files
 
 
@@ -937,7 +945,7 @@ def admin_list_news():
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
-        delete_folder(f"tmp/{current_user.email}")
+        delete_folder(get_path())
         newslist = get_newspage_list()
         return render_template('list/admin-list-news.html', title='Новости', newslist=newslist, special_params=get_special_params())
     return you_dont_have_permission()
@@ -950,9 +958,8 @@ def admin_create_news():  # teleport
         return redirect("/login")
     if current_user.status > 0:
         form = NewspageForm()
-        message, result, preview_text = None, False, None
+        message, result, preview_text, path = None, False, None, get_path()
         if request.method == 'POST':
-            path = get_path()
             filenames = save_image_test(request.files, path, current_user.email)
             text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
             if form.submit.data:
@@ -970,7 +977,7 @@ def admin_create_news():  # teleport
             elif form.preview.data:
                 preview_text = Markup(text_trans)
         else:
-            filenames = get_files_from(f"tmp/{current_user.email}")
+            filenames = get_files_from(path)
         return render_template('form/admin-form-news.html', title='Создание новости', message=message, preview_text=preview_text,
                                form=form, result=result, filenames=filenames, image_len=len(filenames) + 1,
                                formatting_text_instruction=formatting_text_instruction, special_params=get_special_params())
@@ -984,9 +991,8 @@ def admin_edit_news(id):
         return redirect("/login")
     if current_user.status > 0:
         form = NewspageForm()
-        message, result, filenames, preview_text = None, False, [], None
+        message, result, filenames, preview_text, path = None, False, [], None, get_path()
         news = edit_newspage(id, {"admin_email": current_user.email, "action": "get"}) # teleport
-        path = get_path()
         if "message" not in list(news):
             if request.method == 'POST':
                 filenames = save_image_test(request.files, path, current_user.email)
@@ -1009,11 +1015,11 @@ def admin_edit_news(id):
                 form.heading.data = news["heading"]
                 form.text.data = news["text"]
                 form.tags.data = news["tags"]
-                if get_files_from(f"tmp/{current_user.email}") == []:
+                if get_files_from(path) == []:
                     filenames = copy_files(f"news/news_{id}", path, news["image"].split("//"))
                     admin_images[current_user.email] = [_.split("/")[-1] for _ in filenames]
                 else:
-                    filenames = get_files_from(f"tmp/{current_user.email}")
+                    filenames = get_files_from(path)
         else:
             message = list(news.values())[0]
         return render_template('form/admin-form-news.html', title='Редактирование новости', message=message, result=result,
@@ -1203,7 +1209,7 @@ def admin_list_smartpage(page_id):
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
-        delete_folder(f"tmp/{current_user.email}")
+        delete_folder(get_path())
         smartpagelist, contentdict = get_smartpage_list(), {}
         contentlist = get_content_list()
         for page in smartpagelist:
@@ -1252,8 +1258,7 @@ def admin_edit_smartpage(id):
     if current_user.status > 0:
         form = SmartpageForm()
         smartpage = edit_smartpage(id, {"admin_email": current_user.email, "action": "get"})
-        path = get_path()
-        message, result, filenames = None, False, []
+        message, result, filenames, path = None, False, [], get_path()
         if "message" not in smartpage:
             if request.method == 'POST':
                 filenames = save_image_test(request.files, path, current_user.email, r_img=True)
@@ -1269,11 +1274,11 @@ def admin_edit_smartpage(id):
                 message = list(message.values())[0]
             else:
                 form.heading.data = smartpage["heading"]
-                if get_files_from(f"tmp/{current_user.email}") == []:
+                if get_files_from(path) == []:
                     filenames = copy_files(f"smartpage/smartpage_{id}", path, smartpage["image"].split("//"))
                     admin_images[current_user.email] = [_.split("/")[-1] for _ in filenames]
                 else:
-                    filenames = get_files_from(f"tmp/{current_user.email}")
+                    filenames = get_files_from(path)
         else:
             message = list(smartpage.values())[-1]
         return render_template('form/admin-form-smartpage.html', title='Редактирование страницы', message=message, form=form,
@@ -1434,7 +1439,7 @@ def admin_list_worker():
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
-        delete_folder(f"tmp/{current_user.email}")
+        delete_folder(get_path())
         workerlist = get_worker_list()
         return render_template('list/admin-list-worker.html', title='Сотрудники', workerlist=workerlist,
                                special_params=get_special_params())
@@ -1539,7 +1544,7 @@ def admin_list_member():
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
-        delete_folder(f"tmp/{current_user.email}")
+        delete_folder(get_path)
         memberlist = get_member_list()
         return render_template('list/admin-list-member.html', title='Участники', memberlist=memberlist, special_params=get_special_params())
     return you_dont_have_permission()
@@ -1670,7 +1675,7 @@ def admin_list_partner():
     if check_user():
         return redirect("/login")
     if current_user.status > 0:
-        delete_folder(f"tmp/{current_user.email}")
+        delete_folder(get_path)
         partnerlist = get_partner_list()
         return render_template('list/admin-list-partner.html', title='Партнёры', partnerlist=partnerlist,
                                special_params=get_special_params())
@@ -1838,12 +1843,12 @@ def admin_delete_feedback(id):
 @application.route("/write-feedback/<string:code>", methods=['GET', 'POST'])
 def write_feedback(code):
     form = FeedbackForm()
-    message, result, filenames, preview_text = None, False, [], None
+    message, result, filenames, preview_text, path = None, False, [], None, f"tmp/feedback/feedback_{code}"
     if request.method == 'POST':
-        filenames = save_images(f"tmp/feedback/feedback_{code}", request.files, r_img=False, max_image=5, auto_delete=True, gif=False, feedback=True)
-        delete_everything_except(f"tmp/feedback/feedback_{code}", filenames)
+        filenames = save_image_test(request.files, path, code, r_img=False, max_image=5, gif=False, feedback=True)
+        # filenames = save_images(f"tmp/feedback/feedback_{code}", request.files, r_img=False, max_image=5, auto_delete=True, gif=False, feedback=True)
+        # delete_everything_except(f"tmp/feedback/feedback_{code}", filenames)
         text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
-
         if form.submit.data:
             if text_trans[:5] != "Error":
                 message = create_feedback({"email": form.email.data, "fullname": form.fullname.data, "heading": form.heading.data,
@@ -1853,7 +1858,7 @@ def write_feedback(code):
                     m = feedback_edit_image(message['id'], form.code.data, {"image": "//".join(filenames)})
                     result = True
                     message = "Спасибо за отзыв"
-                    containerManager.delete_container(f"feedback/feedback_{code}")
+                    delete_folder(path)
                 else:
                     message = list(message.values())[0]
             else:
@@ -1863,9 +1868,11 @@ def write_feedback(code):
         elif form.preview.data:
             preview_text = Markup(text_trans)
     else:
-        filenames = containerManager.get_container(f"feedback_{code}").values()
+        filenames = get_files_from(path)
     page = get_smartpage_usual(6)
     content = get_content_usual(page['id'])
+    print(filenames)
+    print(len(filenames))
     return render_template('write-feedback.html', title="Отзыв", page=page, content=content,
                            result=result, flag=True, message=message, form=form, preview_text=preview_text,
                            filenames=filenames, image_len=len(filenames) + 1, special_params=get_special_params(),

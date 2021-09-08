@@ -27,27 +27,27 @@ def check_password(password):
     errors = {0: 'Пароль должен быть в длину 8 или более символов', 1: 'Пароль должен содержать хотя бы 1 букву',
               2: 'Пароль должен содержать хотя бы 1 цифру'}
     if not len(password) >= 8:
-        raise_error(errors[0])
+        return raise_error(errors[0])
     if password.isdigit():
-        raise_error(errors[1])
+        return raise_error(errors[1])
     if password.isalpha():
-        raise_error(errors[2])
+        return raise_error(errors[2])
     return True
 
 
 def find_by_id(id, session, status=0):
     user = session.query(User).get(id)
     if not user:
-        raise_error(f"Пользователь не найден", session)
+        return raise_error(f"Пользователь не найден", session)
     if user.status >= status or status < 1:
-        raise_error("У вас недостаточно прав для этого", session)
+        return raise_error("У вас недостаточно прав для этого", session)
     return user, session
 
 
 def edit_admin(args):
     count, f = 0, False
     if not all(args[key] is not None for key in ['admin_email', 'action']):
-        raise_error("Отсутствуют важные параметры")
+        return raise_error("Отсутствуют важные параметры")
     admin, session = check_admin(args['admin_email'])
     if args["action"] == "get":
         session.close()
@@ -65,7 +65,7 @@ def edit_admin(args):
             count += 1
             if key == 'email':
                 if session.query(User).filter(User.email == args["email"]).first():
-                    raise_error("Этот email уже занят", session)
+                    return raise_error("Этот email уже занят", session)
                 admin.email = args['email']
             if key == 'name':
                 admin.name = args["name"]
@@ -73,7 +73,7 @@ def edit_admin(args):
                 admin.surname = args["surname"]
         if args["change_password"]:
             if not admin.check_password(args["check_admin_password"]):
-                raise_error("Пароль не совпадает с текущим паролем", session)
+                return raise_error("Пароль не совпадает с текущим паролем", session)
             check_password(args['new_admin_password'])
             admin.set_password(args['new_admin_password'])
             f, count = True, count + 1

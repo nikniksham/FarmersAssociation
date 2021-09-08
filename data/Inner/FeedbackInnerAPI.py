@@ -11,24 +11,24 @@ from data.Inner.main_file import raise_error, check_admin_status
 def check_code(session, email, code):
     ch_code = session.query(ConfirmationCode).filter(ConfirmationCode.email == email).first()
     if not ch_code:
-        raise_error("Срок действия кода истёк", session)
+        return raise_error("Срок действия кода истёк", session)
     if (datetime.datetime.now() - ch_code.created_date).total_seconds() > 180:
-        raise_error("Срок действия кода истёк", session)
+        return raise_error("Срок действия кода истёк", session)
     if not ch_code.check_code(code):
-        raise_error("Проверьте правильность написания кода", session)
+        return raise_error("Проверьте правильность написания кода", session)
     return ch_code
 
 
 def find_by_id(id, session):
     feedback = session.query(Feedback).get(id)
     if not feedback:
-        raise_error(f"Отзыв не найден", session)
+        return raise_error(f"Отзыв не найден", session)
     return feedback, session
 
 
 def edit_feedback(args):
     if not all(args[key] is not None for key in ['admin_email', 'action']):
-        raise_error('Пропущены некоторые важные аргументы')
+        return raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args['admin_email'])
     if args['action'] == "get":
         feedback, session = find_by_id(args["feedback_id"], session)
@@ -53,7 +53,7 @@ def edit_feedback(args):
                      admin, datetime.datetime.now())
         session.close()
         return {"success": f"Отзыв {feedback.heading} от пользователя {feedback.fullname} успешно удален"}
-    raise_error("Неизвестный метод", session)
+    return raise_error("Неизвестный метод", session)
 
 
 def feedback_edit_image(feedback_id, code, args):
@@ -74,7 +74,7 @@ def feedback_edit_image(feedback_id, code, args):
 def create_feedback(args):
     session = db_session.create_session()
     if not all(args[key] is not None for key in ['fullname', 'heading', 'email', 'text', 'code']):
-        raise_error('Пропущены некоторые аргументы, необходимые для оставления отзыва', session)
+        return raise_error('Пропущены некоторые аргументы, необходимые для оставления отзыва', session)
     ch_code = check_code(session, args["email"], args["code"])
     new_feedback = Feedback()
     new_feedback.code = args["code"]
