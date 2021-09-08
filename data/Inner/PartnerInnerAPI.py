@@ -12,7 +12,7 @@ def find_by_id(id, session):
     return partner, session
 
 
-def put(partner_id, args):
+def edit_partner(partner_id, args):
     count = 0
     if not all(args[key] is not None for key in ['admin_email', 'action']):
         raise_error('Пропущены некоторые важные аргументы')
@@ -62,7 +62,7 @@ def put(partner_id, args):
     raise_error("Неизвестный метод", session)
 
 
-def get_partner_ususal(partner_id):
+def get_partner_usual(partner_id):
     session = db_session.create_session()
     partner, session = find_by_id(partner_id, session)
     session.close()
