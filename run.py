@@ -45,6 +45,7 @@ from data.Inner.NewspageInnerAPI import get_newspage_list, get_newspage_link, ge
     get_newspage_ususal, edit_newspage, create_newspage
 from data.Inner.ContentInnerAPI import edit_content, create_content, get_content_list, get_content_usual
 from data.Inner.AddressInnerAPI import get_address_list, edit_address
+from data.Inner.SmartpageInnerAPI import edit_smartpage, get_smartpage_list, get_smartpage_usual, get_smartpage_link, create_smartpage
 load_new_footer_params, load_new_params, load_seo_params = True, True, True
 link_website = "http://127.0.0.1:8000/"
 link_website_heroku = "https://farmersassociation.herokuapp.com/"
@@ -195,7 +196,8 @@ def set_other_params():
     for ind, member in enumerate(members):
         members[ind]["ratio"] = get_ratio(member['logo'].split("//")[0])
     special_params['member'] = members
-    special_params["smartpages"] = get(f"{link_website}api/smartpage").json()
+    special_params["smartpages"] = get_smartpage_list() # abc
+    # special_params["smartpages"] = get(f"{link_website}api/smartpage").json()
     special_params["worker"] = get(f"{link_website}api/worker").json()
     special_params["text"] = get(f"{link_website}api/text").json()
     special_params["partner"] = get(f"{link_website}api/partner").json()  # teleport
@@ -1197,7 +1199,8 @@ def admin_list_smartpage(page_id):
         return redirect("/login")
     if current_user.status > 0:
         delete_folder(f"tmp/{current_user.email}")
-        smartpagelist, contentdict = get(f"{link_website}api/smartpage").json(), {}
+        smartpagelist, contentdict = get_smartpage_list(), {}
+        # smartpagelist, contentdict = get(f"{link_website}api/smartpage").json(), {}
         contentlist = get_content_list()
         for page in smartpagelist:
             for content in contentlist:

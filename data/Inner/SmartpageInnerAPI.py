@@ -14,7 +14,7 @@ def find_by_id(id, session):
     return smartpage, session
 
 
-def put(smartpage_id, args):
+def edit_smartpage(smartpage_id, args):
     count = 0
     if not all(args[key] is not None for key in ['admin_email', 'action']):
         raise_error('Пропущены некоторые важные аргументы')
@@ -75,7 +75,7 @@ def get_smartpage_usual(smartpage_id):
     return smartpage.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id'))
 
 
-def get_newspage_link(link):
+def get_smartpage_link(link):
     session = db_session.create_session()
     smartpage = session.query(Smartpage).filter(Smartpage.link == link).first()
     session.close()
@@ -84,7 +84,7 @@ def get_newspage_link(link):
     raise_error("Страница не найдена")
 
 
-def get_newspage_list():
+def get_smartpage_list():
     session = db_session.create_session()
     smartpages = session.query(Smartpage).all()
     session.close()
