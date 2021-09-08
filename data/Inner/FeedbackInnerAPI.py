@@ -11,12 +11,12 @@ from data.Inner.main_file import raise_error, check_admin_status
 def check_code(session, email, code):
     ch_code = session.query(ConfirmationCode).filter(ConfirmationCode.email == email).first()
     if not ch_code:
-        return raise_error("Срок действия кода истёк", session)
+        return raise_error("Срок действия кода истёк", session), session
     if (datetime.datetime.now() - ch_code.created_date).total_seconds() > 180:
-        return raise_error("Срок действия кода истёк", session)
+        return raise_error("Срок действия кода истёк", session), session
     if not ch_code.check_code(code):
-        return raise_error("Проверьте правильность написания кода", session)
-    return ch_code
+        return raise_error("Проверьте правильность написания кода", session), session
+    return ch_code, session
 
 
 def find_by_id(id, session):
@@ -81,7 +81,9 @@ def create_feedback(args):
     session = db_session.create_session()
     if not all(args[key] is not None for key in ['fullname', 'heading', 'email', 'text', 'code']):
         return raise_error('Пропущены некоторые аргументы, необходимые для оставления отзыва', session)
-    ch_code = check_code(session, args["email"], args["code"])
+    ch_code, session = check_code(session, args["email"], args["code"])
+    if type(ch_code) == dict:
+        return ch_code
     new_feedback = Feedback()
     new_feedback.code = args["code"]
     new_feedback.fullname = args["fullname"]
