@@ -28,15 +28,18 @@ def trans_link(text):
 def find_by_id(id, session):
     newspage = session.query(Newspage).get(id)
     if not newspage:
-        raise_error(f"Страница не найдена", session)
+        return raise_error(f"Страница не найдена", session), 1
     return newspage, session
 
 
 def edit_newspage(newspage_id, args):
     if not all(args[key] is not None for key in ['admin_email', 'action']):
-        raise_error('Пропущены некоторые важные аргументы')
+        return raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args['admin_email'])
+    print(newspage_id, session)
     newspage, session = find_by_id(newspage_id, session)
+    if type(newspage) == dict:
+        return newspage
     if args["action"] == "get":
         news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date', 'author_id'))
         news_dict["mini_text"] = mini_text(newspage.text)
@@ -53,7 +56,9 @@ def edit_newspage(newspage_id, args):
     elif args["action"] == "put":
         count_params = 0
         page_dict = newspage.to_dict(only=('heading', 'text', 'image', 'tags'))
+        print('lol', args)
         keys = list(filter(lambda key: args[key] is not None and key in page_dict and args[key] != page_dict[key], list(args.keys())))
+        print('loll')
         for key in keys:
             count_params += 1
             if key == 'image':
@@ -73,22 +78,29 @@ def edit_newspage(newspage_id, args):
                 newspage.text = args["text"]
             if key == "tags":
                 newspage.tags = args["tags"]
+        print('lolllll')
         if count_params == 0:
             return raise_error("Пустой запрос", session)
+        print('die')
         page_dict_2 = newspage.to_dict(only=('heading', 'text', 'image', 'tags'))
         list_chang = [f'изменяет {key} с {page_dict[key]} на {page_dict_2[key]}' if key != "image" else "изменяет изображения" for key in keys]
         session.commit()
         add_auditlog("Изменение",
                      f"{admin.name} {admin.surname} изменяет новостную страницу {newspage.heading}: {', '.join(list_chang)}",
                      admin, datetime.datetime.now())
+        print('уже нечему ломаться')
         session.close()
         return {"success": f"Новостная страница {newspage.heading} успешно изменена"}
-    raise_error("Неизвестный метод", session)
+    return raise_error("Неизвестный метод", session)
 
 
 def get_newspage_ususal(newspage_id):
     session = db_session.create_session()
     newspage, session = find_by_id(newspage_id, session)
+    if type(newspage) == dict:
+        return newspage
+    if type(newspage) == dict:
+        return newspage
     session.close()
     news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
     news_dict["mini_text"] = mini_text(newspage.text)
@@ -105,7 +117,7 @@ def get_newspage_link(link):
         news_dict["mini_text"] = mini_text(newspage.text)
         news_dict["text_render"] = text_transform(newspage.text, newspage.image.split("//"), path)
         return news_dict
-    raise_error("Новость не найдена")
+    return raise_error("Новость не найдена")
 
 
 def get_newspage_from_to(start_id, end_id):
@@ -164,8 +176,9 @@ def get_newspage_list():
 
 
 def create_newspage(args):
+    print(args)
     if not all(args[key] is not None for key in ['heading', 'text', 'tags', 'admin_email']):
-        raise_error('Пропущены некоторые аргументы, необходимые для создания новостной страницы')
+        return raise_error('Пропущены некоторые аргументы, необходимые для создания новостной страницы')
     admin, session = check_admin_status(args['admin_email'])
     new_newspage = Newspage()
     new_newspage.heading = args["heading"]
@@ -185,9 +198,12 @@ def create_newspage(args):
     session.merge(admin)
     session.commit()
     params_dict = new_newspage.to_dict(only=('id', 'heading', 'text', 'link', 'tags', 'created_date', 'author_id'))
+    print('adsasda')
     params_dict["image"] = f'кол-во изображений: {len(args["image"].split("//"))}'
+    print(1)
     add_auditlog("Создание",
                  f"{admin.name} {admin.surname} создаёт новостную страницу {new_newspage.heading}: {params_dict}",
                  admin, datetime.datetime.now())
+    print(2)
     session.close()
     return {'id': new_newspage.id, 'success': f'Новостная страница {new_newspage.heading} создана'}

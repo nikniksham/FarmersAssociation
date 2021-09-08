@@ -8,13 +8,15 @@ from data.Inner.main_file import raise_error, check_admin_status
 def find_by_id(id, session):
     seo = session.query(Seo).get(id)
     if not seo:
-        raise_error(f"Seo настройка не найдена", session)
+        return raise_error(f"Seo настройка не найдена", session), 1
     return seo, session
 
 
 def get_seo_usual(seo_id):
     session = db_session.create_session()
     seo, session = find_by_id(seo_id, session)
+    if type(seo) == dict:
+        return seo
     session.close()
     return seo.to_dict(only=('id', 'title', 'description', 'tags'))
 
@@ -22,9 +24,11 @@ def get_seo_usual(seo_id):
 def edit_seo(seo_id, args):
     count = 0
     if not all(args[key] is not None for key in ['admin_email', 'action']):
-        raise_error('Пропущены некоторые важные аргументы')
+        return raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args['admin_email'])
     seo, session = find_by_id(seo_id, session)
+    if type(seo) == dict:
+        return seo
     if args['action'] == "get":
         session.close()
         return seo.to_dict(only=('id', 'title', 'description', 'tags'))

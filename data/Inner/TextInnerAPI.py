@@ -9,7 +9,7 @@ from data.Inner.main_file import raise_error, check_admin_status
 def find_by_id(id, session):
     text = session.query(Text).get(id)
     if not text:
-        raise_error(f"Текст не найден", session)
+        return raise_error(f"Текст не найден", session), 1
     return text, session
 
 
@@ -22,9 +22,11 @@ def get_text_list():
 
 def edit_text(text_id, args):
     if not all(args[key] is not None for key in ['admin_email', 'action']):
-        raise_error('Пропущены некоторые важные аргументы')
+        return raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args['admin_email'])
     text, session = find_by_id(text_id, session)
+    if type(text) == dict:
+        return text
     if args['action'] == "get":
         session.close()
         return text.to_dict(only=('id', 'heading', 'description'))
@@ -54,12 +56,12 @@ def edit_text(text_id, args):
                                   f" {', '.join(list_chang)}", admin, datetime.datetime.now())
         session.close()
         return {"success": f"Текст на главной странице {text.heading} успешно изменен"}
-    raise_error("Неизвестный метод", session)
+    return raise_error("Неизвестный метод", session)
 
 
 def create_text(args):
     if not all(args[key] is not None for key in ['heading', 'description', "admin_email"]):
-        raise_error('Пропущены некоторые аргументы, необходимые для добавления нового текста')
+        return raise_error('Пропущены некоторые аргументы, необходимые для добавления нового текста')
     admin, session = check_admin_status(args['admin_email'])
     new_text = Text()
     new_text.description = args["description"]

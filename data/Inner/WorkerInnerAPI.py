@@ -8,16 +8,18 @@ from data.Inner.main_file import raise_error, check_admin_status
 def find_by_id(id, session):
     worker = session.query(Worker).get(id)
     if not worker:
-        raise_error(f"Сотрудник не найден", session)
+        return raise_error(f"Сотрудник не найден", session), 1
     return worker, session
 
 
 def edit_worker(worker_id, args):
     count = 0
     if not all(args[key] is not None for key in ['admin_email', 'action']):
-        raise_error('Пропущены некоторые важные аргументы')
+        return raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args['admin_email'])
     worker, session = find_by_id(worker_id, session)
+    if type(worker) == dict:
+        return worker
     if args['action'] == "get":
         session.close()
         return worker.to_dict(only=('id', 'image', 'name', 'profession', 'phone', 'email', 'created_date'))
@@ -53,12 +55,14 @@ def edit_worker(worker_id, args):
                      datetime.datetime.now())
         session.close()
         return {"success": f"Сотрудник {name} успешно изменен"}
-    raise_error("Неизвестный метод", session)
+    return raise_error("Неизвестный метод", session)
 
 
 def get_worker_usual(worker_id):
     session = db_session.create_session()
     worker, session = find_by_id(worker_id, session)
+    if type(worker) == dict:
+        return worker
     session.close()
     return worker.to_dict(only=('id', 'image', 'name', 'profession', 'phone', 'email', 'created_date'))
 
@@ -72,7 +76,7 @@ def get_worker_list():
 
 def create_worker(args):
     if not all(args[key] is not None for key in ['image', 'name', 'profession', 'phone', 'email', 'admin_email']):
-        raise_error('Пропущены некоторые аргументы, необходимые для создания партнёра')
+        return raise_error('Пропущены некоторые аргументы, необходимые для создания партнёра')
     admin, session = check_admin_status(args['admin_email'])
     new_worker = Worker()
     new_worker.image = args["image"]

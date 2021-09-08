@@ -10,22 +10,24 @@ from data.Inner.main_file import raise_error, check_admin_status
 def find_by_id(id, session):
     smartpage = session.query(Smartpage).get(id)
     if not smartpage:
-        raise_error(f"Страница не найдена", session)
+        return raise_error(f"Страница не найдена", session), 1
     return smartpage, session
 
 
 def edit_smartpage(smartpage_id, args):
     count = 0
     if not all(args[key] is not None for key in ['admin_email', 'action']):
-        raise_error('Пропущены некоторые важные аргументы')
+        return raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args['admin_email'])
     smartpage, session = find_by_id(smartpage_id, session)
+    if type(smartpage) == dict:
+        return smartpage
     if args['action'] == "get":
         session.close()
         return smartpage.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id'))
     elif args['action'] == 'delete':
         if smartpage.id < 7:
-            raise_error("У вас недостаточно прав для этого", session)
+            return raise_error("У вас недостаточно прав для этого", session)
         contentlist = session.query(Content).filter(Content.smartpage_id == smartpage.id).all()
         for content in contentlist:
             add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет блок контента на позиции: {content.position}, с типом данных: {content.type}",
@@ -46,7 +48,7 @@ def edit_smartpage(smartpage_id, args):
                 smartpage.image = args['image']
             if key == 'heading':
                 if session.query(Smartpage).filter(Smartpage.heading == args["heading"]).first() is not None:
-                    raise_error("Этот заголовок уже занят")
+                    return raise_error("Этот заголовок уже занят")
                 smartpage.heading = args["heading"]
                 link, count = trans_link(args["heading"]), 0
                 while session.query(Smartpage).filter(Smartpage.link == link).first() is not None:
@@ -65,12 +67,14 @@ def edit_smartpage(smartpage_id, args):
                      admin, datetime.datetime.now())
         session.close()
         return {"success": f"Страница {smartpage.heading} успешно изменена"}
-    raise_error("Неизвестный метод", session)
+    return raise_error("Неизвестный метод", session)
 
 
 def get_smartpage_usual(smartpage_id):
     session = db_session.create_session()
     smartpage, session = find_by_id(smartpage_id, session)
+    if type(smartpage) == dict:
+        return smartpage
     session.close()
     return smartpage.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id'))
 
@@ -81,7 +85,7 @@ def get_smartpage_link(link):
     session.close()
     if smartpage:
         return smartpage.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id'))
-    raise_error("Страница не найдена")
+    return raise_error("Страница не найдена")
 
 
 def get_smartpage_list():
@@ -93,10 +97,10 @@ def get_smartpage_list():
 
 def create_smartpage(args):
     if not all(args[key] is not None for key in ['heading', 'admin_email']):
-        raise_error('Пропущены некоторые аргументы, необходимые для создания страницы')
+        return raise_error('Пропущены некоторые аргументы, необходимые для создания страницы')
     admin, session = check_admin_status(args['admin_email'])
     if session.query(Smartpage).filter(Smartpage.heading == args["heading"]).first() is not None:
-        raise_error("Этот заголовок уже занят", session)
+        return raise_error("Этот заголовок уже занят", session)
     new_smartpage = Smartpage()
     new_smartpage.heading = args["heading"]
     link, count = trans_link(args["heading"]), 0

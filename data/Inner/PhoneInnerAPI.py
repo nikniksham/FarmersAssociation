@@ -8,7 +8,7 @@ from data.Inner.main_file import raise_error, check_admin_status
 def find_by_id(id, session):
     phone = session.query(Phone).get(id)
     if not phone:
-        raise_error(f"Номер телефона не найден", session)
+        return raise_error(f"Номер телефона не найден", session), 1
     return phone, session
 
 
@@ -21,9 +21,11 @@ def get_phone_list():
 
 def edit_phone(phone_id, args):
     if not all(args[key] is not None for key in ['admin_email', 'action']):
-        raise_error('Пропущены некоторые важные аргументы')
+        return raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args['admin_email'])
     phone, session = find_by_id(phone_id, session)
+    if type(phone) == dict:
+        return phone
     if args['action'] == "get":
         session.close()
         return phone.to_dict(only=('id', 'number'))
@@ -53,15 +55,15 @@ def edit_phone(phone_id, args):
                                   f" {', '.join(list_chang)}", admin, datetime.datetime.now())
         session.close()
         return {"success": f"Номер телефона {phone.number} успешно изменён"}
-    raise_error("Неизвестный метод", session)
+    return raise_error("Неизвестный метод", session)
 
 
 def create_phone(args):
     if not all(args[key] is not None for key in ['number', 'admin_email']):
-        raise_error('Пропущены некоторые аргументы, необходимые для добавления нового номера телефона')
+        return raise_error('Пропущены некоторые аргументы, необходимые для добавления нового номера телефона')
     admin, session = check_admin_status(args['admin_email'])
     if session.query(Phone).filter(Phone.number == args['number']).first():
-        raise_error("Этот номер телефона уже существует", session)
+        return raise_error("Этот номер телефона уже существует", session)
     new_phone = Phone()
     new_phone.number = args["number"]
     session.add(new_phone)

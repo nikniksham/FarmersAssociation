@@ -8,7 +8,7 @@ from data.Inner.main_file import raise_error, check_admin_status
 def find_by_id(id, session):
     email = session.query(Email).get(id)
     if not email:
-        raise_error(f"Электронная почта не найдена", session)
+        return raise_error(f"Электронная почта не найдена", session), 1
     return email, session
 
 
@@ -22,9 +22,11 @@ def get_email_list():
 def edit_email(email_id, args):
     count = 0
     if not all(args[key] is not None for key in ['admin_email', 'action']):
-        raise_error('Пропущены некоторые важные аргументы')
+        return raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args['admin_email'])
     email, session = find_by_id(email_id, session)
+    if type(email) == dict:
+        return email
     if args['action'] == "get":
         session.close()
         return email.to_dict(only=('id', 'email_address'))
@@ -37,6 +39,8 @@ def edit_email(email_id, args):
         return {"success": f"Электроная почта {email.email_address} успешно удалена"}
     elif args['action'] == 'put':
         email, session = find_by_id(email_id, session)
+        if type(email) == dict:
+            return email
         email_dict = email.to_dict(only=('email_address',))
         keys = list(filter(lambda key: args[key] is not None and key in email_dict and args[key] != email_dict[key], args.keys()))
         for key in keys:
@@ -54,15 +58,15 @@ def edit_email(email_id, args):
                                   f" {', '.join(list_chang)}", admin, datetime.datetime.now())
         session.close()
         return {"success": f"Электронная почта {email.email_address} успешно изменена"}
-    raise_error("Неизвестный метод", session)
+    return raise_error("Неизвестный метод", session)
 
 
 def create_email(args):
     if not all(args[key] is not None for key in ['email_address', 'admin_email']):
-        raise_error('Пропущены некоторые аргументы, необходимые для создания нового адреса электронной почты')
+        return raise_error('Пропущены некоторые аргументы, необходимые для создания нового адреса электронной почты')
     admin, session = check_admin_status(args['admin_email'])
     if session.query(Email).filter(Email.email_address == args['email_address']).first():
-        raise_error("Этот адрес электронной почты уже существует", session)
+        return raise_error("Этот адрес электронной почты уже существует", session)
     new_email = Email()
     new_email.email_address = args["email_address"]
     session.add(new_email)

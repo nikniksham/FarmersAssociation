@@ -8,16 +8,18 @@ from data.Inner.main_file import raise_error, check_admin_status
 def find_by_id(id, session):
     partner = session.query(Partner).get(id)
     if not partner:
-        raise_error(f"Партнёр не найден", session)
+        return raise_error(f"Партнёр не найден", session), 1
     return partner, session
 
 
 def edit_partner(partner_id, args):
     count = 0
     if not all(args[key] is not None for key in ['admin_email', 'action']):
-        raise_error('Пропущены некоторые важные аргументы')
+        return raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args['admin_email'])
     partner, session = find_by_id(partner_id, session)
+    if type(partner) == dict:
+        return partner
     if args['action'] == "get":
         session.close()
         return partner.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link', "socialmedia"))
@@ -59,12 +61,14 @@ def edit_partner(partner_id, args):
                      admin, datetime.datetime.now())
         session.close()
         return {"success": f"Партнёр {name} успешно изменен"}
-    raise_error("Неизвестный метод", session)
+    return raise_error("Неизвестный метод", session)
 
 
 def get_partner_usual(partner_id):
     session = db_session.create_session()
     partner, session = find_by_id(partner_id, session)
+    if type(partner) == dict:
+        return partner
     session.close()
     return partner.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link', "socialmedia"))
 
@@ -78,7 +82,7 @@ def get_partner_list():
 
 def create_partner(args):
     if not all(args[key] is not None for key in ['image', 'logo', 'name', 'info', 'preferences', 'address', 'link', "socialmedia", 'admin_email']):
-        raise_error('Пропущены некоторые аргументы, необходимые для создания партнёра')
+        return raise_error('Пропущены некоторые аргументы, необходимые для создания партнёра')
     admin, session = check_admin_status(args['admin_email'])
     new_partner = Partner()
     new_partner.name = args["name"]

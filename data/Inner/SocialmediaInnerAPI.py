@@ -8,7 +8,7 @@ from data.Inner.main_file import raise_error, check_admin_status
 def find_by_id(id, session):
     socialmedia = session.query(Socialmedia).get(id)
     if not socialmedia:
-        raise_error(f"Ссылка на соцсеть не найдена", session)
+        return raise_error(f"Ссылка на соцсеть не найдена", session), 1
     return socialmedia, session
 
 
@@ -21,9 +21,13 @@ def get_socialmedia_list():
 
 def edit_socialmedia(socialmedia_id, args):
     if not all(args[key] is not None for key in ['admin_email', 'action']):
-        raise_error('Пропущены некоторые важные аргументы')
+        return raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args['admin_email'])
     socialmedia, session = find_by_id(socialmedia_id, session)
+    if type(socialmedia) == dict:
+        return socialmedia
+    if type(socialmedia) == dict:
+        return socialmedia
     if args['action'] == "get":
         session.close()
         return socialmedia.to_dict(only=('id', 'icon_type', 'link'))
@@ -44,7 +48,7 @@ def edit_socialmedia(socialmedia_id, args):
                 socialmedia.icon_type = args["icon_type"]
             if key == 'link':
                 if session.query(Socialmedia).filter(Socialmedia.link == args['link']).first():
-                    raise_error("Эта ссылка уже существует")
+                    return raise_error("Эта ссылка уже существует")
                 socialmedia.link = args["link"]
         if count == 0:
             return raise_error("Пустой запрос", session)
@@ -55,15 +59,15 @@ def edit_socialmedia(socialmedia_id, args):
                                   f" {', '.join(list_chang)}", admin, datetime.datetime.now())
         session.close()
         return {"success": f"Ссылка на соцсеть {socialmedia.link} успешно изменена"}
-    raise_error("Неизвестный метод", session)
+    return raise_error("Неизвестный метод", session)
 
 
 def create_socialmedia(args):
     if not all(args[key] is not None for key in ['icon_type', "link", "admin_email"]):
-        raise_error('Пропущены некоторые аргументы, необходимые для добавления новой ссылки на соцсеть')
+        return raise_error('Пропущены некоторые аргументы, необходимые для добавления новой ссылки на соцсеть')
     admin, session = check_admin_status(args['admin_email'])
     if session.query(Socialmedia).filter(Socialmedia.link == args['link']).first():
-        raise_error("Эта ссылка уже существует", session)
+        return raise_error("Эта ссылка уже существует", session)
     new_socialmedia = Socialmedia()
     new_socialmedia.icon_type = args["icon_type"]
     new_socialmedia.link = args["link"]

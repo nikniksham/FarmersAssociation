@@ -22,7 +22,7 @@ def check_code(session, email, code):
 def find_by_id(id, session):
     feedback = session.query(Feedback).get(id)
     if not feedback:
-        return raise_error(f"Отзыв не найден", session)
+        return raise_error(f"Отзыв не найден", session), 1
     return feedback, session
 
 
@@ -32,6 +32,8 @@ def edit_feedback(args):
     admin, session = check_admin_status(args['admin_email'])
     if args['action'] == "get":
         feedback, session = find_by_id(args["feedback_id"], session)
+        if type(feedback) == dict:
+            return feedback
         news_dict = feedback.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
         news_dict["text_render"] = text_transform(feedback.text, feedback.image.split("//"), path)
         session.close()
@@ -47,6 +49,8 @@ def edit_feedback(args):
         return dict_list
     elif args['action'] == 'delete':
         feedback, session = find_by_id(args["feedback_id"], session)
+        if type(feedback) == dict:
+            return feedback
         session.delete(feedback)
         session.commit()
         add_auditlog("Удаление", f"{admin.name} {admin.surname} удаляет отзыв {feedback.heading} от пользователя {feedback.fullname}",
@@ -59,6 +63,8 @@ def edit_feedback(args):
 def feedback_edit_image(feedback_id, code, args):
     session = db_session.create_session()
     feedback, session = find_by_id(feedback_id, session)
+    if type(feedback) == dict:
+        return feedback
     if not feedback.code:
         return raise_error("невозмоно менять повторно", session)
     if feedback.code != code:
