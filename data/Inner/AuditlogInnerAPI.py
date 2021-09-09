@@ -4,10 +4,10 @@ from data.Inner.main_file import raise_error, check_admin_status
 
 
 def find_by_id(id, session):
-    content = session.query(AuditLog).get(id)
-    if not content:
+    auditlog = session.query(AuditLog).get(id)
+    if not auditlog:
         return raise_error(f"Запись в журнале не найдена", session), 1
-    return content, session
+    return auditlog, session
 
 
 def edit_auditlog(args):
@@ -21,9 +21,9 @@ def edit_auditlog(args):
         session.close()
         return content.to_dict(only=('id', 'event', 'info', 'user', 'created_date'))
     elif args['action'] == 'getlist':
-        contents = session.query(AuditLog).order_by(AuditLog.created_date).all()[::-1]
+        auditlogs = session.query(AuditLog).order_by(AuditLog.created_date).all()[::-1]
         session.close()
-        return [item.to_dict(only=('id', 'event', 'info', 'user', 'created_date')) for item in contents]
+        return [item.to_dict(only=('id', 'event', 'info', 'user', 'created_date')) for item in auditlogs]
 
 
 def add_auditlog(event, info, user, datetime):
