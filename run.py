@@ -1667,7 +1667,6 @@ def admin_delete_member(id):
                 if "success" in message:
                     result = True
                     delete_folder(f"member/member_{id}")
-                    containerManager.delete_container(f"member_{id}")
                     set_other_params()
                 message = list(message.values())[0]
         else:
@@ -1696,24 +1695,18 @@ def admin_create_partner():
         return redirect("/login")
     if current_user.status > 0:
         form = PartnerForm()
-        cont_name_logo, cont_name_image = f"tmp/partner/partner_{current_user.email}/logo", f"tmp/partner/partner_{current_user.email}/image"
-        containerManager.delete_container(cont_name_logo)
-        containerManager.delete_container(cont_name_image)
+        path_image, path_logo = get_path("/image"), get_path("/logo")
         message, result, filenames2, filenames1 = None, False, [], []
         if request.method == 'POST':
-            filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
+            filenames2, filenames1 = save_image_test(request.files, path_image, f"{current_user.email}/image"), save_image_test(request.files, path_logo, f"{current_user.email}/logo", logo=True)
             message = create_partner({"name": form.name.data, "image": "//".join(filenames2), "info": form.info.data,
                            "preferences": form.preferences.data, "address": form.address.data, "link": form.link.data, "admin_email": current_user.email,
                            "logo": "//".join(filenames1), "socialmedia": form.socialmedia.data})
             if "success" in message:
-                filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{message['id']}/logo", filenames1), \
-                                         transport_images(cont_name_image, f"partner/partner_{message['id']}/image", filenames2)
+                filenames1, filenames2 = transport_images(filenames1, f"partner/partner_{message['id']}/logo"), transport_images(filenames2, f"partner/partner_{message['id']}/image")
                 m = edit_partner(message['id'], {"image": "//".join(filenames2), "logo": "//".join(filenames1), "admin_email": current_user.email, "action": "put"})
-                containerManager.delete_container(cont_name_image)
-                containerManager.delete_container(cont_name_logo)
                 result = True
                 # filenames1, filenames2 = [], []
-                delete_folder(f"partner/partner_{current_user.email}")
                 set_other_params()
             message = list(message.values())[-1]
         return get_render_template('form/admin-form-partner.html', title='Добавление партнёра', message=message, form=form,
@@ -1728,22 +1721,21 @@ def admin_edit_partner(id):
         return redirect("/login")
     if current_user.status > 0:
         form = PartnerForm()
-        cont_name_logo, cont_name_image = f"tmp/partner/partner_{current_user.email}/logo", f"tmp/partner/partner_{current_user.email}/image"
+        path_image, path_logo = get_path("/image"), get_path("/logo")
         partner = edit_partner(id, {"admin_email": current_user.email, "action": "get"})
         message, result, filenames1, filenames2 = None, False, [], []
         if "message" not in partner:
             if request.method == 'POST':
-                filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo)
+                filenames2, filenames1 = save_image_test(request.files, path_image, f"{current_user.email}/image"), save_image_test(request.files, path_logo, f"{current_user.email}/logo", logo=True)
                 message = edit_partner(id, {"preferences": form.preferences.data, "name": form.name.data,
                                                                        "address": form.address.data, "link": form.link.data, "info": form.info.data,
                                                                        "image": '//'.join(filenames2), "logo": '//'.join(filenames1), "action": "put",
                                                                        "admin_email": current_user.email,
                                                                        "socialmedia": form.socialmedia.data})
                 if "success" in message:
-                    filenames1, filenames2 = transport_images(cont_name_logo, f"partner/partner_{id}/logo", filenames1), \
-                                             transport_images(cont_name_image, f"partner/partner_{id}/image", filenames2)
-                    m = edit_partner(id, {"image": '//'.join(filenames2), "action": "put",
-                                                                    "admin_email": current_user.email, "logo": '//'.join(filenames1)})
+                    filenames1, filenames2 = transport_images(filenames1, f"partner/partner_{id}/logo"), transport_images(filenames2, f"partner/partner_{id}/image")
+
+                    m = edit_partner(id, {"image": '//'.join(filenames2), "action": "put", "admin_email": current_user.email, "logo": '//'.join(filenames1)})
                     result = True
                     set_other_params()
                 message = list(message.values())[-1]
@@ -1754,10 +1746,16 @@ def admin_edit_partner(id):
                 form.info.data = partner["info"]
                 form.link.data = partner["link"]
                 form.socialmedia.data = partner["socialmedia"]
-                filenames1 = copy_files(f"partner/partner_{id}/logo", cont_name_logo, partner["logo"].split("//"))
-                filenames2 = copy_files(f"partner/partner_{id}/image", cont_name_image, partner["image"].split("//"))
-                containerManager.add_container(cont_name_image, filenames2)
-                containerManager.add_container(cont_name_logo, filenames1)
+                if get_files_from(path_logo) == []:
+                    filenames1 = copy_files(f"partner/partner_{id}/logo", path_logo, partner["logo"].split("//"))
+                    admin_images[f"{current_user.email}/logo"] = [_.split("/")[-1] for _ in filenames1]
+                else:
+                    filenames1 = get_files_from(path_logo)
+                if get_files_from(path_image) == []:
+                    filenames2 = copy_files(f"partner/partner_{id}/image", path_image, partner["image"].split("//"))
+                    admin_images[f"{current_user.email}/image"] = [_.split("/")[-1] for _ in filenames2]
+                else:
+                    filenames2 = get_files_from(path_image)
         else:
             message = list(partner.values())[-1]
         return get_render_template('form/admin-form-partner.html', title='Редактирование партнёра', message=message,
@@ -1781,7 +1779,6 @@ def admin_delete_partner(id):
                 if "success" in message:
                     result = True
                     delete_folder(f"partner/partner_{id}")
-                    containerManager.delete_container(f"partner_{id}")
                     set_other_params()
                 message = list(message.values())[-1]
         return get_render_template('form/admin-form-delete.html', title='Удаление участника', message=message, form=form,
