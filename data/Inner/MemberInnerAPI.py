@@ -97,6 +97,7 @@ def create_member(args):
     new_member.coord = args["coord"]
     new_member.province = args['province']
     new_member.occupation = args["occupation"]
+    new_member.socialmedia = args["socialmedia"]
     new_member.created_date = datetime.datetime.now()
     admin.member.append(new_member)
     session.merge(admin)

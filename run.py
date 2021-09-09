@@ -175,8 +175,8 @@ def get_render_template(template, **kwargs):
     return render_template(template, special_params=get_special_params(), **kwargs)
 
 
-def get_path(between=""):
-    return f"tmp/{between}{current_user.email}"
+def get_path(end=""):
+    return f"tmp/{current_user.email}{end}"
 
 
 def clear_old_files(key, path):
@@ -216,7 +216,10 @@ def set_other_params():
     special_params["news"] = get_newspage_from_to(0, 9)
     members = get_member_list()
     for ind, member in enumerate(members):
-        members[ind]["ratio"] = get_ratio(member['logo'].split("//")[0])
+        if os.path.exists(application.config["UPLOAD_FOLDER"]+member['logo'].split("//")[0]) and member['logo'].split("//")[0] != "":
+            members[ind]["ratio"] = get_ratio(member['logo'].split("//")[0])
+        else:
+            members[ind]["ratio"] = 1
     special_params['member'] = members
     special_params["smartpages"] = get_smartpage_list() # abc
     special_params["worker"] = get_worker_list()
@@ -295,6 +298,8 @@ def save_image_multithreading(filename, file, feedback=False):
     if not os.path.exists(path):
         os.makedirs(path)
     file.save(filename)
+    print(filename, "CYKA")
+    print(os.path.exists(filename))
     image = Image.open(filename)
     if image.size[0] > size[0] or image.size[1] > size[1]:
         image.thumbnail(size)
@@ -347,7 +352,7 @@ def delete_folder(folder_name, path=application.config['UPLOAD_FOLDER']):
     if os.path.exists(path+folder_name):
         for filename in os.listdir(path + folder_name):
             if os.path.isdir(f"{path}{folder_name}/{filename}"):
-                delete_folder(f"{path}{folder_name}/{filename}")
+                delete_folder(f"{folder_name}/{filename}")
             else:
                 os.remove(f"{path}{folder_name}/{filename}")
         os.rmdir(path+folder_name)
@@ -379,7 +384,7 @@ def save_image_test(files, path, email, r_img=False, gif=True, logo=False, feedb
     # print(files, list(files), dict(files))
     print(files)
     print(list(files))
-    old_files, new_files, img_list = [], [], list(files)
+    old_files, new_files, img_list, s = [], [], list(files), 0
     dict = feedback_images if feedback else admin_images
     print(dict)
     if email in dict:
@@ -389,33 +394,41 @@ def save_image_test(files, path, email, r_img=False, gif=True, logo=False, feedb
         if max_image and index > max_image:
             print("А, ок")
             break
-        ind, file = int("".join(list(filter(lambda x: x.isdigit(), list(elem))))) - 1, files[elem]
+        ind, file = "".join(list(filter(lambda x: x.isdigit(), list(elem)))), files[elem]
+        if not ind.isdigit() and not logo:
+            continue
+        ind = int(ind) - 1 if ind.isdigit() else 0
         print(files[elem], ind, index)
         print(file.filename, "222222222222")
         if files[elem].filename != "" and allowed_file(file.filename, feedback):
-                gif_i = True if file.filename.split(".")[-1] == "gif" else False
-                mp4 = True if file.filename.split(".")[-1] == "mp4" else False
-                png = True if file.filename.split(".")[-1] == "png" else False
-                print("add new image", f"gif: {gif_i} mp4: {mp4} png: {png}")
-                if logo:
-                    if "icon" in img_list[ind]:
-                        filename = secure_filename(create_new_image_name(logo=png))
-                        save_image(f"{path}/" + filename, file)
-                        new_files.append(filename)
+            gif_i = True if file.filename.split(".")[-1] == "gif" else False
+            mp4 = True if file.filename.split(".")[-1] == "mp4" else False
+            png = True if file.filename.split(".")[-1] == "png" else False
+            print("add new image", f"gif: {gif_i} mp4: {mp4} png: {png}")
+            print(img_list[ind])
+            if logo:
+                print("Near logo")
+                if "icon" in img_list[ind]:
+                    print("save logo!!!!")
+                    filename = secure_filename(create_new_image_name(logo=png))
+                    save_image(f"{path}/" + filename, file)
+                    new_files.append(filename)
+                    break
+            else:
+                print("save image (((")
+                if mp4:
+                    file.save(f'{application.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
+                    for filename in give_me_gif_filenames(f"tmp/gif_{current_user.email}.mp4", path):
+                        new_files.append(path + "/" + filename)
                 else:
-                    if mp4:
-                        file.save(f'{application.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
-                        for filename in give_me_gif_filenames(f"tmp/gif_{current_user.email}.mp4", path):
-                            new_files.append(path + "/" + filename)
+                    if gif_i:
+                        filename = secure_filename(create_new_image_name(gif=gif))
                     else:
-                        if gif_i:
-                            filename = secure_filename(create_new_image_name(gif=gif))
-                        else:
-                            filename = secure_filename(create_new_image_name())
-                        save_image(f"{path}/"+filename, file, feedback)
-                        new_files.append(filename)
+                        filename = secure_filename(create_new_image_name())
+                    save_image(f"{path}/"+filename, file, feedback)
+                    new_files.append(filename)
         elif ind < len(old_files):
-            print("add old file")
+            print("add old file:", old_files[ind], ind)
             new_files.append(old_files[ind])
     for file in old_files:
         if file not in new_files:
@@ -431,7 +444,7 @@ def save_image_test(files, path, email, r_img=False, gif=True, logo=False, feedb
     dict[email] = new_files
     new_files = [f"{path}/"+_ for _ in new_files]
     delete_everything_except(path, new_files)
-    print(new_files, "333333333")
+    print(new_files, "333333333\n\n\n\n")
     return new_files
 
 
@@ -1541,6 +1554,8 @@ def admin_list_member():
         return redirect("/login")
     if current_user.status > 0:
         clear_old_files(current_user.email, get_path())
+        clear_folder(get_path("/logo"))
+        clear_folder(get_path("/image"))
         memberlist = get_member_list()
         return get_render_template('list/admin-list-member.html', title='Участники', memberlist=memberlist)
     return you_dont_have_permission()
@@ -1553,28 +1568,23 @@ def admin_create_member():
         return redirect("/login")
     if current_user.status > 0:
         form = MemberForm()
-        cont_name_logo, cont_name_image = f"tmp/member/member_{current_user.email}/logo", f"tmp/member/member_{current_user.email}/image"
-        containerManager.delete_container(cont_name_image)
-        containerManager.delete_container(cont_name_logo)
+        path_image, path_logo = get_path("/image"), get_path("/logo")
         message, result, filenames1, filenames2 = None, False, [], []
         if request.method == 'POST':
             coord = get_coord(form.address.data)
             if "success" in coord:
-                filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo, auto_delete=True)
+                filenames2, filenames1 = save_image_test(request.files, path_image, f"{current_user.email}/image"), save_image_test(request.files, path_logo, f"{current_user.email}/logo", logo=True)
+                print(filenames1, filenames2)
                 message = create_member({"name": form.name.data, "logo": "//".join(filenames1),
                                "image": "//".join(filenames2), "text": form.text.data, "link": form.link.data,
                                "coord": coord['success'][0], "occupation": "//".join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]),
                                "address": form.address.data, "province": coord["success"][1], "admin_email": current_user.email,
                                "socialmedia": form.socialmedia.data})
                 if "success" in message:
-                    filenames1, filenames2 = transport_images(cont_name_logo, f"member/member_{message['id']}/logo", filenames1), \
-                                                     transport_images(cont_name_image, f"member/member_{message['id']}/image", filenames2)
+                    filenames1, filenames2 = transport_images(filenames1, f"member/member_{message['id']}/logo"), transport_images(filenames2, f"member/member_{message['id']}/image")
+                    print(filenames1, filenames2)
                     m = edit_member(message['id'], {"image": "//".join(filenames2),
                             'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put"})
-                    containerManager.delete_container(cont_name_image)
-                    containerManager.delete_container(cont_name_logo)
-                    delete_folder(f"member/member_{current_user.email}")
-                    # filenames1, filenames2 = [], []
                     result = True
                     set_other_params()
                 message = list(message.values())[-1]
@@ -1592,14 +1602,14 @@ def admin_edit_member(id):
         return redirect("/login")
     if current_user.status > 0:
         form = MemberForm()
-        cont_name_logo, cont_name_image = f"tmp/member/member_{current_user.email}/logo", f"tmp/member/member_{current_user.email}/image"
+        path_image, path_logo = get_path("/image"), get_path("/logo")
         member = edit_member(id, {"admin_email": current_user.email, "action": "get"})
         message, result, filenames1, filenames2 = None, False, [], []
         if "message" not in member:
             if request.method == 'POST':
                 coord = get_coord(form.address.data) if form.address.data != member["address"] else {"success": [None, None]}
                 if "success" in coord:
-                    filenames2, filenames1 = save_images(cont_name_image, request.files, r_img=True, logo=True, cont_logo=cont_name_logo)
+                    filenames2, filenames1 = save_image_test(request.files, path_image, f"{current_user.email}/image"), save_image_test(request.files, path_logo, f"{current_user.email}/logo", logo=True)
                     if coord["success"] == [None, None]:
                         coord["success"] = [member["coord"], member["province"]]
                     message = edit_member(id, {"name": form.name.data, "image": "//".join(filenames2),
@@ -1608,10 +1618,9 @@ def admin_edit_member(id):
                                   "occupation": '//'.join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]), "action": "put",
                                   "socialmedia": form.socialmedia.data})
                     if "success" in message:
-                        filenames1, filenames2 = transport_images(cont_name_logo, f"member/member_{id}/logo", filenames1), \
-                                                 transport_images(cont_name_image, f"member/member_{id}/image", filenames2)
-                        m = edit_member(id, {"image": "//".join(filenames2),
-                                'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put"})
+                        filenames1, filenames2 = transport_images(filenames1, f"member/member_{id}/logo"), transport_images(filenames2, f"member/member_{id}/image")
+
+                        m = edit_member(id, {"image": "//".join(filenames2), 'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put"})
                         result = True
                         set_other_params()
                     message = list(message.values())[0]
@@ -1624,10 +1633,16 @@ def admin_edit_member(id):
                 form.socialmedia.data = member["socialmedia"]
                 form.address.data = member["address"]
                 form.occupation.data = ", ".join(member["occupation"].split("//"))
-                filenames1 = copy_files(f"member/member_{id}/logo", cont_name_logo, member["logo"].split("//"))
-                filenames2 = copy_files(f"member/member_{id}/image", cont_name_image, member["image"].split("//"))
-                containerManager.add_container(cont_name_image, filenames2)
-                containerManager.add_container(cont_name_logo, filenames1)
+                if get_files_from(path_logo) == []:
+                    filenames1 = copy_files(f"member/member_{id}/logo", path_logo, member["logo"].split("//"))
+                    admin_images[f"{current_user.email}/logo"] = [_.split("/")[-1] for _ in filenames1]
+                else:
+                    filenames1 = get_files_from(path_logo)
+                if get_files_from(path_image) == []:
+                    filenames2 = copy_files(f"member/member_{id}/image", path_image, member["image"].split("//"))
+                    admin_images[f"{current_user.email}/image"] = [_.split("/")[-1] for _ in filenames2]
+                else:
+                    filenames2 = get_files_from(path_image)
         else:
             message = list(member.values())[0]
         return get_render_template('form/admin-form-member.html', title='Редактирование участника', message=message, form=form,
@@ -1886,8 +1901,7 @@ def partners():
     page = get_smartpage_usual(3)
     content, flag_map = get_content_usual(page['id']), False
     flag_map = any([True if cont['type'] == "Map" else flag_map for cont in content])
-    return get_render_template('partners.html', title=page["heading"], page=page, content=content,
-                           special_params=get_special_params(), flag_map=flag_map)
+    return get_render_template('partners.html', title=page["heading"], page=page, content=content, flag_map=flag_map)
 
 
 @application.route("/all_news")

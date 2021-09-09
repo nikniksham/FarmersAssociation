@@ -13,6 +13,7 @@
             {% endif %}
             {% endif %}
 
+            {{ form.hidden_tag() }}
             {{ form.name.label }}<br>
             {{ form.name(class="form-control") }}<br>
             {% for error in form.name.errors %}
