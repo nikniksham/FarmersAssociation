@@ -31,7 +31,8 @@ class ContentForm(StartForm):
                                        ("Image", "С картинками"), ("Partner", "Партнёры"), ("Map", "Карта")])
     heading = StringField('Название', validators=[DataRequired()])
     display_type = SelectField('Тип отображения партнёров', choices=[("0", "Бегущая строка"), ("1", "Блоки")])
-    display_type_member = SelectField('Тип отображения членов организации', choices=[("0", "Бегущая строка"), ("1", "Блоки")])
+    display_type_member = SelectField('Тип отображения членов организации', choices=[("0", "Бегущая строка"),
+                                                                                     ("1", "Блоки")])
     text = TextAreaField('Текст')
 
 
@@ -107,3 +108,8 @@ class PartnerForm(StartForm):
     preferences = TextAreaField("Преференции", validators=[DataRequired()])
     address = StringField("Адрес", validators=[DataRequired()])
     socialmedia = StringField("Социальные сети (через пробел)", validators=[DataRequired()])
+
+
+class YesNoForm(StartForm):
+    cancel = SubmitField("Отмена")
+    yes = SubmitField("Подтвердить")

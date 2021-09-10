@@ -39,3 +39,7 @@ body {
     text-align: center;
     margin: 0;
 }
+
+.logout {
+    margin: 10px 15px;
+}
