@@ -35,7 +35,7 @@ from data.API.TextAPI.TextResource import TextListRecourse, CreateTextResource, 
 from data.API.SeoAPI.SeoResource import SeoGetRecourse, AdminResourceSeo"""
 
 from data.user import User
-from main import ManagerContainer, text_transform, get_coord, PasswordManager, write_log
+from main import text_transform, get_coord
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm, \
     StartForm, PhoneForm, AddressForm, EmailForm, SocialmediaForm, WorkerForm, SeoForm, TextForm, MemberForm
 from werkzeug.utils import secure_filename
@@ -67,7 +67,6 @@ let = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890"
 application = Flask(__name__)
 application.config.from_object(config)
 api = Api(application)
-password_manager = PasswordManager()
 api.add_resource(NewspageListRecourseId, "/api/newspage/<int:start_id>/<int:end_id>")
 api.add_resource(NewspageListRecourseTags, "/api/newspage/<int:start_id>/<int:end_id>/<string:text>")
 """# Подключаем api
@@ -156,7 +155,6 @@ api.add_resource(AdminResourceText, "/api/text/<int:text_id>")"""
 db_session.global_init("db/FarmersAssociation.sqlite")
 login_manager = LoginManager()
 login_manager.init_app(application)
-containerManager = ManagerContainer()
 formatting_text_instruction = \
     ["<br> новая строка - Указывается в месте переноса на новую строку",
      "<p></p> Текст между тэгов будет курсивным", "<b></b> Текст между тэгов будет жирным",
@@ -332,10 +330,6 @@ def get_ratio(filename, path=application.config['UPLOAD_FOLDER']):
     return ratio
 
 
-def check_user():
-    return not password_manager.user_is_authed(current_user.email)
-
-
 def clear_folder(folder_name, path=application.config['UPLOAD_FOLDER']):
     delete_folder(folder_name, path=path)
     os.makedirs(path+folder_name)
@@ -501,18 +495,12 @@ def page_not_found():
 
 @application.route('/login', methods=['GET', 'POST'])
 def login():
-    if not current_user.is_anonymous:
-        if password_manager.user_is_authed(current_user.email) is False:
-            logout_user()
-        else:
-            return redirect("/")
     form = AdminForm()
     if request.method == 'POST':
         session = db_session.create_session()
         user = session.query(User).filter(User.email == form.email.data).first()
         session.close()
         if user and user.check_password(form.password.data):
-            password_manager.add_user(form.email.data, form.password.data)
             login_user(user, remember=True)
             # write_log(f"User login {password_manager.user_is_authed(current_user.email)} {current_user.email}")
             return redirect("/admin")
@@ -523,7 +511,7 @@ def login():
 @application.route("/admin")
 @login_required
 def admin():
-    if check_user():
+    if not current_user.is_anonymous:
         return redirect("/login")
     return get_render_template('admin-panel.html', title='админка')
 
@@ -532,8 +520,6 @@ def admin():
 @login_required
 def admin_footer_settings():
     set_footer_params()
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = StartForm()
         message, result = "", False
@@ -544,8 +530,6 @@ def admin_footer_settings():
 @application.route("/admin-seo-settings", methods=['GET', 'POST'])
 @login_required
 def admin_seo_settings():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = SeoForm()
         seoparams = get_seo_usual(1)
@@ -597,14 +581,11 @@ def admin_seo_settings():
 @application.route("/admin-create-text", methods=['GET', 'POST'])
 @login_required
 def admin_create_text():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = TextForm()
         message, result = None, False
         if request.method == 'POST':
             if form.submit.data:
-                write_log(f"{current_user.email} {password_manager.user_is_authed(current_user.email)} {password_manager.get_password(current_user.email)} {password_manager}")
                 message = create_text({"heading": form.heading.data, "description": form.description.data,
                                                                 "admin_email": current_user.email})
                 if "success" in message:
@@ -618,8 +599,6 @@ def admin_create_text():
 @application.route("/admin-edit-text/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_text(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = TextForm()
         message, result = None, False
@@ -645,8 +624,6 @@ def admin_edit_text(id):
 @application.route("/admin-delete-text/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_text(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = DeleteForm()
         message, result, name = None, False, "текст не найден"
@@ -667,8 +644,6 @@ def admin_delete_text(id):
 @application.route("/admin-create-phone", methods=['GET', 'POST'])
 @login_required
 def admin_create_phone():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = PhoneForm()
         message, result = None, False
@@ -687,8 +662,6 @@ def admin_create_phone():
 @application.route("/admin-edit-phone/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_phone(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = PhoneForm()
         message, result = None, False
@@ -713,8 +686,6 @@ def admin_edit_phone(id):
 @application.route("/admin-delete-phone/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_phone(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = DeleteForm()
         message, result, name = None, False, "телефон не найден"
@@ -735,8 +706,6 @@ def admin_delete_phone(id):
 @application.route("/admin-create-email", methods=['GET', 'POST'])
 @login_required
 def admin_create_email():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = EmailForm()
         message, result = None, False
@@ -755,8 +724,6 @@ def admin_create_email():
 @application.route("/admin-edit-email/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_email(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = EmailForm()
         message, result = None, False
@@ -781,8 +748,6 @@ def admin_edit_email(id):
 @application.route("/admin-delete-email/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_email(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = DeleteForm()
         message, result, name = None, False, "почтовый адрес не найден"
@@ -803,8 +768,6 @@ def admin_delete_email(id):
 @application.route("/admin-create-socialmedia", methods=['GET', 'POST'])
 @login_required
 def admin_create_socialmedia():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = SocialmediaForm()
         message, result = None, False
@@ -824,8 +787,6 @@ def admin_create_socialmedia():
 @application.route("/admin-edit-socialmedia/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_socialmedia(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = SocialmediaForm()
         message, result = None, False
@@ -851,8 +812,6 @@ def admin_edit_socialmedia(id):
 @application.route("/admin-delete-socialmedia/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_socialmedia(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = DeleteForm()
         message, result, name = None, False, "ссылка на соцсеть на найдена"
@@ -873,8 +832,6 @@ def admin_delete_socialmedia(id):
 @application.route("/admin-edit-address/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_address(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = AddressForm()
         message, result = None, False
@@ -886,7 +843,7 @@ def admin_edit_address(id):
                     if "success" in res:
                         special_params["our_coord"] = res
                         message = edit_address(id, {"coord": res["success"][0], "admin_email": current_user.email,
-                                                    "action": "put", "admin_password": password_manager.get_password(current_user.email), "place": form.address.data})
+                                                    "action": "put", "place": form.address.data})
                         if "success" in message:
                             result = True
                             set_footer_params()
@@ -905,8 +862,6 @@ def admin_edit_address(id):
 @application.route("/admin-list-news")
 @login_required
 def admin_list_news():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         clear_old_files(current_user.email, get_path())
         newslist = get_newspage_list()
@@ -917,8 +872,6 @@ def admin_list_news():
 @application.route("/admin-create-news", methods=['GET', 'POST'])
 @login_required
 def admin_create_news():  # teleport
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = NewspageForm()
         message, result, preview_text, path = None, False, None, get_path()
@@ -950,8 +903,6 @@ def admin_create_news():  # teleport
 @application.route("/admin-edit-news/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_news(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = NewspageForm()
         message, result, filenames, preview_text, path = None, False, [], None, get_path()
@@ -994,8 +945,6 @@ def admin_edit_news(id):
 @application.route("/admin-delete-news/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_news(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = DeleteForm()
         message, result, name = None, False, "новость не найдена"
@@ -1017,10 +966,8 @@ def admin_delete_news(id):
 @application.route("/admin-list-admin")
 @login_required
 def admin_list_admin():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
-        adminlist = edit_admin({"admin_email": current_user.email, "action": "get_list", "admin_password": password_manager.get_password(current_user.email)})
+        adminlist = edit_admin({"admin_email": current_user.email, "action": "get_list"})
         return get_render_template('list/admin-list-admin.html', title='Новости', adminlist=adminlist, status=current_user.status,
                                current_id=current_user.id, flag=(current_user.status > 0))
     return you_dont_have_permission()
@@ -1029,8 +976,6 @@ def admin_list_admin():
 @application.route("/admin-change-password/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_change_password(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 1:
         form = AdminForm()
         if current_user.id == id:
@@ -1051,7 +996,6 @@ def admin_change_password(id):
                                       "new_admin_password": form.password.data, "action": "put", "change_password": True,
                                       "check_admin_password": form.password_current.data})
                     if "success" in message:
-                        password_manager.add_user(admin["email"], form.password.data)
                         result = True
                     message = list(message.values())[0]
                 else:
@@ -1066,8 +1010,6 @@ def admin_change_password(id):
 @application.route("/admin-create-admin", methods=['GET', 'POST'])
 @login_required
 def admin_create_admin():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 1:
         form = AdminForm()
         message, result = None, False
@@ -1076,10 +1018,9 @@ def admin_create_admin():
                 form.status.data = int(form.status.data)
                 message = create_admin({"name": form.name.data, "surname": form.surname.data,
                                "email": form.email.data, "status": form.status.data, "admin_email": current_user.email,
-                               "admin_password": password_manager.get_password(current_user.email), "new_admin_password": form.password.data})
+                               "new_admin_password": form.password.data})
                 form.status.data = str(form.status.data)
                 if "success" in message:
-                    password_manager.add_user(form.email.data, form.password)
                     result = True
                 message = list(message.values())[0]
             else:
@@ -1093,16 +1034,14 @@ def admin_create_admin():
 @application.route("/admin-edit-admin/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_admin(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 1:
         form = AdminForm()
         if current_user.id == id:
             f = False
-            admin = edit_admin({"admin_email": current_user.email, "action": "get", "admin_password": password_manager.get_password(current_user.email)})
+            admin = edit_admin({"admin_email": current_user.email, "action": "get"})
         else:
             f = True
-            admin = edit_admin_admin(id, {"admin_email": current_user.email, "action": "get", "admin_password": password_manager.get_password(current_user.email)})
+            admin = edit_admin_admin(id, {"admin_email": current_user.email, "action": "get"})
         form.stat = current_user.status
         message, result, admin_status = None, False, 0
         if "message" not in admin:
@@ -1110,16 +1049,15 @@ def admin_edit_admin(id):
             if request.method == 'POST':
                 if current_user.id == id:
                     message = edit_admin({"name": form.name.data, "surname": form.surname.data, "email": form.email.data,
-                                  "admin_email": current_user.email, "action": "put", "admin_password": password_manager.get_password(current_user.email)})
+                                  "admin_email": current_user.email, "action": "put"})
                 else:
                     message = edit_admin_admin(id, {"name": form.name.data, "surname": form.surname.data, "email": form.email.data,
-                                  "status": int(form.status.data), "admin_email": current_user.email, "action": "put", "admin_password": password_manager.get_password(current_user.email)})
+                                  "status": int(form.status.data), "admin_email": current_user.email, "action": "put"})
                 if "success" in message:
                     if f:
                         admin_status = int(form.status.data)
                     if admin["email"] != form.email.data:
-                        password_manager.update_email(admin["email"], form.email.data)
-                    result = True
+                        result = True
                 message = list(message.values())[0]
             else:
                 admin_status = admin["status"]
@@ -1138,18 +1076,15 @@ def admin_edit_admin(id):
 @application.route("/admin-delete-admin/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_admin(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 1:
         form = DeleteForm()
         message, name, result = None, "пользователь не найден", False
-        admin = edit_admin_admin(id, {"admin_email": current_user.email, "action": "get", "admin_password": password_manager.get_password(current_user.email)})
+        admin = edit_admin_admin(id, {"admin_email": current_user.email, "action": "get"})
         if "message" not in admin:
             name = "админа " + f"{admin['name']} {admin['surname']}"
             if admin["status"] < current_user.status:
                 if request.method == 'POST':
-                    message = edit_admin_admin(id, {"admin_email": current_user.email,
-                                                                         "action": "delete", "admin_password": password_manager.get_password(current_user.email)})
+                    message = edit_admin_admin(id, {"admin_email": current_user.email, "action": "delete"})
                     if "success" in message:
                         result = True
                     message = list(message.values())[0]
@@ -1165,8 +1100,6 @@ def admin_delete_admin(id):
 @application.route("/admin-list-smartpage/<int:page_id>")
 @login_required
 def admin_list_smartpage(page_id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         clear_old_files(current_user.email, get_path())
         smartpagelist, contentdict = get_smartpage_list(), {}
@@ -1187,8 +1120,6 @@ def admin_list_smartpage(page_id):
 @application.route("/admin-create-smartpage", methods=['GET', 'POST'])
 @login_required
 def admin_create_smartpage():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = SmartpageForm()
         message, result, filenames = None, False, []
@@ -1211,8 +1142,6 @@ def admin_create_smartpage():
 @application.route("/admin-edit-smartpage/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_smartpage(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = SmartpageForm()
         smartpage = edit_smartpage(id, {"admin_email": current_user.email, "action": "get"})
@@ -1247,8 +1176,6 @@ def admin_edit_smartpage(id):
 @application.route("/admin-delete-smartpage/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_smartpage(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result = "", "страница не найдена", False
@@ -1273,8 +1200,6 @@ def admin_delete_smartpage(id):
 @application.route("/admin-create-content/<int:page_id>", methods=['GET', 'POST'])
 @login_required
 def admin_create_content(page_id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = ContentForm()
         path = get_path()
@@ -1300,8 +1225,6 @@ def admin_create_content(page_id):
 @application.route("/admin-edit-content-move-up/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_content_move_up(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         content, page_id = edit_content(id, {"admin_email": current_user.email, "action": "get"}), 0
         if "message" not in content:
@@ -1314,8 +1237,6 @@ def admin_content_move_up(id):
 @application.route("/admin-edit-content-move-down/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_content_move_down(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         content, page_id = edit_content(id, {"admin_email": current_user.email, "action": "get"}), 0
         if "message" not in content:
@@ -1328,8 +1249,6 @@ def admin_content_move_down(id):
 @application.route("/admin-edit-content/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_content(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = ContentForm()
         content = edit_content(id, {"admin_email": current_user.email, "action": "get"})
@@ -1371,8 +1290,6 @@ def admin_edit_content(id):
 @application.route("/admin-delete-content/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_content(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result, page_id = "", "контент не найден", False, 0
@@ -1394,8 +1311,6 @@ def admin_delete_content(id):
 @application.route("/admin-list-worker")
 @login_required
 def admin_list_worker():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         clear_old_files(current_user.email, get_path())
         workerlist = get_worker_list()
@@ -1406,8 +1321,6 @@ def admin_list_worker():
 @application.route("/admin-create-worker", methods=['GET', 'POST'])
 @login_required
 def admin_create_worker():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form, path = WorkerForm(), get_path()
         message, result, filenames = None, False, []
@@ -1430,8 +1343,6 @@ def admin_create_worker():
 @application.route("/admin-edit-worker/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_worker(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form, path = WorkerForm(), get_path()
         worker = edit_worker(id, {"admin_email": current_user.email, "action": "get"})
@@ -1469,8 +1380,6 @@ def admin_edit_worker(id):
 @application.route("/admin-delete-worker/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_worker(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result, path = "", "сотрудник не найден", False, get_path()
@@ -1492,8 +1401,6 @@ def admin_delete_worker(id):
 @application.route("/admin-list-member")
 @login_required
 def admin_list_member():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         clear_old_files(current_user.email, get_path())
         clear_folder(get_path("/logo"))
@@ -1506,8 +1413,6 @@ def admin_list_member():
 @application.route("/admin-create-member", methods=['GET', 'POST'])
 @login_required
 def admin_create_member():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = MemberForm()
         path_image, path_logo = get_path("/image"), get_path("/logo")
@@ -1540,8 +1445,6 @@ def admin_create_member():
 @application.route("/admin-edit-member/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_member(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = MemberForm()
         path_image, path_logo = get_path("/image"), get_path("/logo")
@@ -1596,8 +1499,6 @@ def admin_edit_member(id):
 @application.route("/admin-delete-member/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_member(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result = "", "участник не найден", False
@@ -1621,8 +1522,6 @@ def admin_delete_member(id):
 @application.route("/admin-list-partner")
 @login_required
 def admin_list_partner():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         clear_old_files(current_user.email, get_path())
         partnerlist = get_partner_list()
@@ -1633,8 +1532,6 @@ def admin_list_partner():
 @application.route("/admin-create-partner", methods=['GET', 'POST'])
 @login_required
 def admin_create_partner():
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = PartnerForm()
         path_image, path_logo = get_path("/image"), get_path("/logo")
@@ -1659,8 +1556,6 @@ def admin_create_partner():
 @application.route("/admin-edit-partner/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_edit_partner(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = PartnerForm()
         path_image, path_logo = get_path("/image"), get_path("/logo")
@@ -1706,8 +1601,6 @@ def admin_edit_partner(id):
 @application.route("/admin-delete-partner/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_partner(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result = "", "сотрудник не найден", False
@@ -1729,8 +1622,6 @@ def admin_delete_partner(id):
 @application.route("/admin-list-auditlog")
 @login_required
 def admin_auditlog():
-    if check_user():
-        return redirect("/login")
     auditlogs = edit_auditlog({"admin_email": current_user.email, "action": "getlist"})
     return get_render_template('list/admin-list-auditlog.html', title='Журнал аудита', auditlogs=auditlogs)
 
@@ -1738,8 +1629,6 @@ def admin_auditlog():
 @application.route("/admin-list-feedback")
 @login_required
 def admin_feedback():
-    if check_user():
-        return redirect("/login")
     feedbacks = edit_feedback({"admin_email": current_user.email, "action": "getlist"})
     return get_render_template('list/admin-list-feedback.html', title='Отзывы', feedbacks=feedbacks)
 
@@ -1747,8 +1636,6 @@ def admin_feedback():
 @application.route("/view-feedback/<int:id>", methods=['GET', 'POST'])
 @login_required
 def view_feedback(id):
-    if check_user():
-        return redirect("/login")
     feedback = edit_feedback({"admin_email": current_user.email, "action": "get", "feedback_id": id})
     if "message" in feedback:
         return page_not_found()
@@ -1758,8 +1645,6 @@ def view_feedback(id):
 @application.route("/admin-delete-feedback/<int:id>", methods=['GET', 'POST'])
 @login_required
 def admin_delete_feedback(id):
-    if check_user():
-        return redirect("/login")
     if current_user.status > 0:
         form = DeleteForm()
         message, name, result = "", "отзыв не найден", False
@@ -1920,7 +1805,6 @@ def member_page(id):
 @application.route('/logout')
 @login_required
 def logout():
-    password_manager.delete_user(current_user.email)
     logout_user()
     return redirect("/")
 
