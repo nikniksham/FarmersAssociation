@@ -37,7 +37,7 @@ from data.API.SeoAPI.SeoResource import SeoGetRecourse, AdminResourceSeo"""
 from data.user import User
 from main import text_transform, get_coord
 from data.forms import NewspageForm, AdminForm, FeedbackForm, ContentForm, PartnerForm, SmartpageForm, DeleteForm, \
-    StartForm, PhoneForm, AddressForm, EmailForm, SocialmediaForm, WorkerForm, SeoForm, TextForm, MemberForm
+    StartForm, PhoneForm, AddressForm, EmailForm, SocialmediaForm, WorkerForm, SeoForm, TextForm, MemberForm, YesNoForm
 from werkzeug.utils import secure_filename
 from PIL import Image
 import config
@@ -1799,11 +1799,17 @@ def member_page(id):
     return get_render_template('member.html', title=member["name"], member=member, social=get_icons_links(member['socialmedia']))
 
 
-@application.route('/logout')
+@application.route('/logout', methods=['GET', 'POST'])
 @login_required
 def logout():
-    logout_user()
-    return redirect("/")
+    form = YesNoForm()
+    if request.method == 'POST':
+        if form.submit.data:
+            logout_user()
+            return redirect("/")
+        else:
+            return redirect("/admin")
+    return get_render_template('logout.html', title='Выход с аккаунта', form=form)
 
 
 if __name__ == '__main__':
