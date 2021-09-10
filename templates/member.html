@@ -8,7 +8,7 @@
 {% block pageblock %}
 <div class="container">
     <div class="member-header">
-        <div class="member-header-logo"><img src="/static/img/{{partner['logo']}}" alt=""></div>
+        <div class="member-header-logo"><img src="/static/img/{{member['logo']}}" alt=""></div>
         <p>{{member['name']}}</p>
     </div>
     <div class="carousel image-block">
@@ -25,14 +25,16 @@
         {{line}}<br>
         {% endfor %}
     </p>
-    <p class="member-text">Адресс: {{member["adress"]}}</p>
+    <p class="member-text">Адресс: {{member["address"]}}</p>
     <div class="member-link">
+        {% if social|length > 0 %}
         <div class="social">
             <p class="footer-title">Мы в соц. сетях:</p>
             {% for socialmedia in social %}
             <a href="{{socialmedia['link']}}" target="_blank"><img src="/static/img/{{socialmedia['icon']}}" alt="socialmedia"></a>
             {% endfor %}
         </div>
+        {% endif %}
         {% if member["link"] != "" %}
         <a href={{member["link"]}}>На сайт фермы</a>
         {% endif %}

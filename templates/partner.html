@@ -25,18 +25,12 @@
         {{line}}<br>
         {% endfor %}
     </p>
-    <p class="member-text">Адресс: {{partner["adress"]}}</p>
+    <p class="member-text">Адресс: {{partner["address"]}}</p>
     <p class="member-text"><b>Преференции:</b> {% for line in partner["preferences"].split('\n') %}
         {{line}}<br>
         {% endfor %}
     </p>
     <div class="member-link">
-        <div class="social">
-            <p class="footer-title">Мы в соц. сетях:</p>
-            {% for socialmedia in social %}
-            <a href="{{socialmedia['link']}}" target="_blank"><img src="/static/img/{{socialmedia['icon']}}" alt="socialmedia"></a>
-            {% endfor %}
-        </div>
         {% if partner["link"] != "" %}
         <a href={{partner["link"]}}>На сайт партнёра</a>
         {% endif %}

@@ -298,8 +298,8 @@ def save_image_multithreading(filename, file, feedback=False):
     if not os.path.exists(path):
         os.makedirs(path)
     file.save(filename)
-    print(filename, "CYKA")
-    print(os.path.exists(filename))
+    # print(filename, "CYKA")
+    # print(os.path.exists(filename))
     image = Image.open(filename)
     if image.size[0] > size[0] or image.size[1] > size[1]:
         image.thumbnail(size)
@@ -380,42 +380,42 @@ def transport_images(filenames, new_folder, path=application.config['UPLOAD_FOLD
     return new_filenames
 
 
-def save_image_test(files, path, email, r_img=False, gif=True, logo=False, feedback=False, max_image=None):  # teleport
+def save_images(files, path, email, r_img=False, gif=True, logo=False, feedback=False, max_image=None):  # teleport
     # print(files, list(files), dict(files))
-    print(files)
-    print(list(files))
+    # print(files)
+    # print(list(files))
     old_files, new_files, img_list, s = [], [], list(files), 0
     dict = feedback_images if feedback else admin_images
-    print(dict)
+    # print(dict)
     if email in dict:
         old_files = dict[email]
-    print(old_files)
+    # print(old_files)
     for index, elem in enumerate(list(files) if max_image and len(files) == max_image else list(files)[:-1]):
         if max_image and index > max_image:
-            print("А, ок")
+            # print("А, ок")
             break
         ind, file = "".join(list(filter(lambda x: x.isdigit(), list(elem)))), files[elem]
         if not ind.isdigit() and not logo:
             continue
         ind = int(ind) - 1 if ind.isdigit() else 0
-        print(files[elem], ind, index)
-        print(file.filename, "222222222222")
+        # print(files[elem], ind, index)
+        # print(file.filename, "222222222222")
         if files[elem].filename != "" and allowed_file(file.filename, feedback):
             gif_i = True if file.filename.split(".")[-1] == "gif" else False
             mp4 = True if file.filename.split(".")[-1] == "mp4" else False
             png = True if file.filename.split(".")[-1] == "png" else False
-            print("add new image", f"gif: {gif_i} mp4: {mp4} png: {png}")
-            print(img_list[ind])
+            # print("add new image", f"gif: {gif_i} mp4: {mp4} png: {png}")
+            # print(img_list[ind])
             if logo:
-                print("Near logo")
+                # print("Near logo")
                 if "icon" in img_list[ind]:
-                    print("save logo!!!!")
+                    # print("save logo!!!!")
                     filename = secure_filename(create_new_image_name(logo=png))
                     save_image(f"{path}/" + filename, file)
                     new_files.append(filename)
                     break
             else:
-                print("save image (((")
+                # print("save image (((")
                 if mp4:
                     file.save(f'{application.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
                     for filename in give_me_gif_filenames(f"tmp/gif_{current_user.email}.mp4", path):
@@ -428,11 +428,11 @@ def save_image_test(files, path, email, r_img=False, gif=True, logo=False, feedb
                     save_image(f"{path}/"+filename, file, feedback)
                     new_files.append(filename)
         elif ind < len(old_files):
-            print("add old file:", old_files[ind], ind)
+            # print("add old file:", old_files[ind], ind)
             new_files.append(old_files[ind])
     for file in old_files:
         if file not in new_files:
-            print("delete file:", file)
+            # print("delete file:", file)
             delete_img(file)
     if len(new_files) == 0 and r_img:
         r_name = f"{create_random_name(50)}.jpg"
@@ -444,66 +444,8 @@ def save_image_test(files, path, email, r_img=False, gif=True, logo=False, feedb
     dict[email] = new_files
     new_files = [f"{path}/"+_ for _ in new_files]
     delete_everything_except(path, new_files)
-    print(new_files, "333333333\n\n\n\n")
+    # print(new_files, "333333333\n\n\n\n")
     return new_files
-
-
-def save_images(cont_name, files, r_img=True, max_image=None, auto_delete=False, logo=False, cont_logo=None, gif=True, icon=False, feedback=False):
-    filenames, filenames2, img_list, cont, cont2 = [], [], list(files), containerManager.get_container(cont_name), containerManager.get_container(cont_logo)
-    for ind, name in enumerate(files):
-        if max_image and len(filenames) >= max_image:
-            break
-        file = files[name]
-        if file.filename != "" and allowed_file(file.filename, feedback):
-            gif_i, mp4 = False, False
-            if file.filename.split(".")[-1] == "gif":
-                gif_i = gif
-            if file.filename.split(".")[-1] == "mp4":
-                mp4 = True
-            if logo and img_list[ind] in ["icon", "iconInput"]:
-                if gif_i:
-                    filename = f"{cont_logo}/" + secure_filename(create_new_image_name(gif=gif_i))
-                else:
-                    filename = f"{cont_logo}/" + secure_filename(create_new_image_name(logo=True))
-                save_image(filename, file)
-                filenames2.append(filename)
-            else:
-                if mp4:
-                    file.save(f'{application.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
-                    for filename in give_me_gif_filenames(f"tmp/gif_{current_user.email}.mp4", cont_name):
-                        filenames.append(cont_name+"/"+filename)
-                    if os.path.exists(f'{application.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4'):
-                        os.remove(f'{application.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
-                else:
-                    filename = f"{cont_name}/" + secure_filename(create_new_image_name(gif=gif_i))
-                    save_image(filename, file)
-                    filenames.append(filename)
-        else:
-            if logo and img_list[ind] in ["icon", "iconInput"] and "image1" in cont2:
-                filenames2.append(cont2["image1"])
-            elif icon and img_list[ind] in ["icon1", "iconInput1"] and "image1" in cont:
-                filenames.append(cont["image1"])
-            elif img_list[ind] in cont:
-                filenames.append(cont[img_list[ind]])
-    if r_img:
-        r_name = f"{create_random_name(50)}.png"
-        img = Image.open(f"{application.config['UPLOAD_FOLDER']}standard.png")
-        if logo and len(filenames2) == 0:
-            if not os.path.exists(f"{application.config['UPLOAD_FOLDER']}{cont_logo}"):
-                os.makedirs(f"{application.config['UPLOAD_FOLDER']}{cont_logo}")
-            img.save(f"{application.config['UPLOAD_FOLDER']}{cont_logo}/{r_name}")
-            filenames2 = [f"{cont_logo}/{r_name}"]
-        if len(filenames) == 0:
-            if not os.path.exists(f"{application.config['UPLOAD_FOLDER']}{cont_name}"):
-                os.makedirs(f"{application.config['UPLOAD_FOLDER']}{cont_name}")
-            img.save(f"{application.config['UPLOAD_FOLDER']}{cont_name}/{r_name}")
-            filenames = [f"{cont_name}/{r_name}"]
-    if logo:
-        containerManager.add_container(cont_logo, filenames2, auto_delete)
-    containerManager.add_container(cont_name, filenames, auto_delete)
-    if logo:
-        return filenames, filenames2
-    return filenames
 
 
 def get_special_params():
@@ -981,7 +923,7 @@ def admin_create_news():  # teleport
         form = NewspageForm()
         message, result, preview_text, path = None, False, None, get_path()
         if request.method == 'POST':
-            filenames = save_image_test(request.files, path, current_user.email)
+            filenames = save_images(request.files, path, current_user.email)
             text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
             if form.submit.data:
                 if text_trans[:5] != "Error":
@@ -1016,7 +958,7 @@ def admin_edit_news(id):
         news = edit_newspage(id, {"admin_email": current_user.email, "action": "get"}) # teleport
         if "message" not in list(news):
             if request.method == 'POST':
-                filenames = save_image_test(request.files, path, current_user.email)
+                filenames = save_images(request.files, path, current_user.email)
                 text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
                 if form.submit.data:
                     if text_trans[:5] != "Error":
@@ -1252,7 +1194,7 @@ def admin_create_smartpage():
         message, result, filenames = None, False, []
         if request.method == 'POST':
             path = get_path()
-            filenames = save_image_test(request.files, path, current_user.email, r_img=True)
+            filenames = save_images(request.files, path, current_user.email, r_img=True)
             message = create_smartpage({"heading": form.heading.data, "image": "//".join(filenames),
                                                                  "admin_email": current_user.email})
             if "success" in message:
@@ -1277,7 +1219,7 @@ def admin_edit_smartpage(id):
         message, result, filenames, path = None, False, [], get_path()
         if "message" not in smartpage:
             if request.method == 'POST':
-                filenames = save_image_test(request.files, path, current_user.email, r_img=True)
+                filenames = save_images(request.files, path, current_user.email, r_img=True)
                 message = edit_smartpage(id, {"heading": form.heading.data, "image": "//".join(filenames),
                               "admin_email": current_user.email, "action": "put"})
                 if "success" in message:
@@ -1338,7 +1280,7 @@ def admin_create_content(page_id):
         path = get_path()
         message, result, filenames, filename = None, False, [], None
         if request.method == 'POST':
-            filenames = save_image_test(request.files, path, current_user.email)
+            filenames = save_images(request.files, path, current_user.email)
             image = "" if len(filenames) == 0 else "//".join(filenames)
             message = create_content({"type": form.type.data, "text": form.text.data, "page_id": page_id, "display_type":
                                       form.display_type.data, "display_type_member": form.display_type_member.data, "heading": form.heading.data,
@@ -1396,7 +1338,7 @@ def admin_edit_content(id):
         if "message" not in content:
             page_id = content["smartpage_id"]
             if request.method == 'POST':
-                filenames = save_image_test(request.files, path, current_user.email)
+                filenames = save_images(request.files, path, current_user.email)
                 message = edit_content(id, {"type": form.type.data, "text": form.text.data, "heading": form.heading.data,
                                             "image": '//'.join(filenames), "action": "put", "display_type": form.display_type.data,
                                             "admin_email": current_user.email, "display_type_member": form.display_type_member.data})
@@ -1470,7 +1412,7 @@ def admin_create_worker():
         form, path = WorkerForm(), get_path()
         message, result, filenames = None, False, []
         if request.method == 'POST':
-            filenames = save_image_test(request.files, path, current_user.email, max_image=1)
+            filenames = save_images(request.files, path, current_user.email, max_image=1)
             message = create_worker({"name": form.name.data, "image": "//".join(filenames), "profession": form.profession.data,
                                      "phone": form.phone.data, "email": form.email.data, "admin_email": current_user.email})
             if "success" in message:
@@ -1496,7 +1438,7 @@ def admin_edit_worker(id):
         message, result, filenames = None, False, []
         if "message" not in worker:
             if request.method == 'POST':
-                filenames = save_image_test(request.files, path, current_user.email, max_image=1)
+                filenames = save_images(request.files, path, current_user.email, max_image=1)
                 message = edit_worker(id, {"profession": form.profession.data, "name": form.name.data,
                                            "email": form.email.data, "phone": form.phone.data,
                                            "image": '//'.join(filenames), "action": "put", "admin_email": current_user.email})
@@ -1516,7 +1458,7 @@ def admin_edit_worker(id):
                     admin_images[current_user.email] = [_.split("/")[-1] for _ in filenames]
                 else:
                     filenames = get_files_from(path)
-                print(filenames)
+                # print(filenames)
         else:
             message = list(worker.values())[-1]
         return get_render_template('form/admin-form-worker.html', title='Редактирование сотрудника', message=message,
@@ -1573,8 +1515,8 @@ def admin_create_member():
         if request.method == 'POST':
             coord = get_coord(form.address.data)
             if "success" in coord:
-                filenames2, filenames1 = save_image_test(request.files, path_image, f"{current_user.email}/image"), save_image_test(request.files, path_logo, f"{current_user.email}/logo", logo=True)
-                print(filenames1, filenames2)
+                filenames2, filenames1 = save_images(request.files, path_image, f"{current_user.email}/image"), save_images(request.files, path_logo, f"{current_user.email}/logo", logo=True)
+                # print(filenames1, filenames2)
                 message = create_member({"name": form.name.data, "logo": "//".join(filenames1),
                                "image": "//".join(filenames2), "text": form.text.data, "link": form.link.data,
                                "coord": coord['success'][0], "occupation": "//".join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]),
@@ -1582,7 +1524,7 @@ def admin_create_member():
                                "socialmedia": form.socialmedia.data})
                 if "success" in message:
                     filenames1, filenames2 = transport_images(filenames1, f"member/member_{message['id']}/logo"), transport_images(filenames2, f"member/member_{message['id']}/image")
-                    print(filenames1, filenames2)
+                    # print(filenames1, filenames2)
                     m = edit_member(message['id'], {"image": "//".join(filenames2),
                             'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put"})
                     result = True
@@ -1609,7 +1551,7 @@ def admin_edit_member(id):
             if request.method == 'POST':
                 coord = get_coord(form.address.data) if form.address.data != member["address"] else {"success": [None, None]}
                 if "success" in coord:
-                    filenames2, filenames1 = save_image_test(request.files, path_image, f"{current_user.email}/image"), save_image_test(request.files, path_logo, f"{current_user.email}/logo", logo=True)
+                    filenames2, filenames1 = save_images(request.files, path_image, f"{current_user.email}/image"), save_images(request.files, path_logo, f"{current_user.email}/logo", logo=True)
                     if coord["success"] == [None, None]:
                         coord["success"] = [member["coord"], member["province"]]
                     message = edit_member(id, {"name": form.name.data, "image": "//".join(filenames2),
@@ -1698,10 +1640,10 @@ def admin_create_partner():
         path_image, path_logo = get_path("/image"), get_path("/logo")
         message, result, filenames2, filenames1 = None, False, [], []
         if request.method == 'POST':
-            filenames2, filenames1 = save_image_test(request.files, path_image, f"{current_user.email}/image"), save_image_test(request.files, path_logo, f"{current_user.email}/logo", logo=True)
+            filenames2, filenames1 = save_images(request.files, path_image, f"{current_user.email}/image"), save_images(request.files, path_logo, f"{current_user.email}/logo", logo=True)
             message = create_partner({"name": form.name.data, "image": "//".join(filenames2), "info": form.info.data,
                            "preferences": form.preferences.data, "address": form.address.data, "link": form.link.data, "admin_email": current_user.email,
-                           "logo": "//".join(filenames1), "socialmedia": form.socialmedia.data})
+                           "logo": "//".join(filenames1)})
             if "success" in message:
                 filenames1, filenames2 = transport_images(filenames1, f"partner/partner_{message['id']}/logo"), transport_images(filenames2, f"partner/partner_{message['id']}/image")
                 m = edit_partner(message['id'], {"image": "//".join(filenames2), "logo": "//".join(filenames1), "admin_email": current_user.email, "action": "put"})
@@ -1726,12 +1668,11 @@ def admin_edit_partner(id):
         message, result, filenames1, filenames2 = None, False, [], []
         if "message" not in partner:
             if request.method == 'POST':
-                filenames2, filenames1 = save_image_test(request.files, path_image, f"{current_user.email}/image"), save_image_test(request.files, path_logo, f"{current_user.email}/logo", logo=True)
+                filenames2, filenames1 = save_images(request.files, path_image, f"{current_user.email}/image"), save_images(request.files, path_logo, f"{current_user.email}/logo", logo=True)
                 message = edit_partner(id, {"preferences": form.preferences.data, "name": form.name.data,
                                                                        "address": form.address.data, "link": form.link.data, "info": form.info.data,
                                                                        "image": '//'.join(filenames2), "logo": '//'.join(filenames1), "action": "put",
-                                                                       "admin_email": current_user.email,
-                                                                       "socialmedia": form.socialmedia.data})
+                                                                       "admin_email": current_user.email})
                 if "success" in message:
                     filenames1, filenames2 = transport_images(filenames1, f"partner/partner_{id}/logo"), transport_images(filenames2, f"partner/partner_{id}/image")
 
@@ -1745,7 +1686,6 @@ def admin_edit_partner(id):
                 form.name.data = partner["name"]
                 form.info.data = partner["info"]
                 form.link.data = partner["link"]
-                form.socialmedia.data = partner["socialmedia"]
                 if get_files_from(path_logo) == []:
                     filenames1 = copy_files(f"partner/partner_{id}/logo", path_logo, partner["logo"].split("//"))
                     admin_images[f"{current_user.email}/logo"] = [_.split("/")[-1] for _ in filenames1]
@@ -1845,7 +1785,7 @@ def write_feedback(code):
     form = FeedbackForm()
     message, result, filenames, preview_text, path = None, False, [], None, f"tmp/feedback/feedback_{code}"
     if request.method == 'POST':
-        filenames = save_image_test(request.files, path, code, r_img=False, max_image=5, gif=False, feedback=True)
+        filenames = save_images(request.files, path, code, r_img=False, max_image=5, gif=False, feedback=True)
         text_trans = text_transform(form.text.data, filenames, application.config["UPLOAD_FOLDER"])
         if form.submit.data:
             if text_trans[:5] != "Error":
