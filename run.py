@@ -270,6 +270,7 @@ def create_random_name(name_len):
 
 def convert_video_to_gif_multithreading(gif, path):
     gif.write_gif(path, fps=10, verbose=False, logger=None)
+    # print("convert")
     gif.close()
 
 
@@ -282,10 +283,10 @@ def give_me_gif_filenames(filename, cont, path="static/img/"):
             filename = f"{create_random_name(50)}.gif"
             filenames.append(filename)
             gif = video.subclip(7 * i, duration if (i + 1) * 7 > duration else (i + 1) * 7)
-            t1 = threading.Thread(target=convert_video_to_gif_multithreading, args=(gif, f"{path}{cont}/{filename}"))
-            t1.start()
-            t1.join()
+            convert_video_to_gif_multithreading(gif, f"{path}{cont}/{filename}")
+            # print(f"{path}{cont}/{filename}")
         video.close()
+        # print(filenames)
         return filenames
     return []
 
@@ -296,8 +297,8 @@ def save_image_multithreading(filename, file, feedback=False):
     if not os.path.exists(path):
         os.makedirs(path)
     file.save(filename)
-    print(filename, "CYKA")
-    print(os.path.exists(filename))
+    # print(filename, "CYKA")
+    # print(os.path.exists(filename))
     image = Image.open(filename)
     if image.size[0] > size[0] or image.size[1] > size[1]:
         image.thumbnail(size)
@@ -376,44 +377,45 @@ def transport_images(filenames, new_folder, path=application.config['UPLOAD_FOLD
 
 def save_image_test(files, path, email, r_img=False, gif=True, logo=False, feedback=False, max_image=None):  # teleport
     # print(files, list(files), dict(files))
-    print(files)
-    print(list(files))
+    # print(files)
+    # print(list(files))
     old_files, new_files, img_list, s = [], [], list(files), 0
     dict = feedback_images if feedback else admin_images
-    print(dict)
+    # print(dict)
     if email in dict:
         old_files = dict[email]
-    print(old_files)
+    # print(old_files)
     for index, elem in enumerate(list(files) if max_image and len(files) == max_image else list(files)[:-1]):
         if max_image and index > max_image:
-            print("А, ок")
+            # print("А, ок")
             break
         ind, file = "".join(list(filter(lambda x: x.isdigit(), list(elem)))), files[elem]
         if not ind.isdigit() and not logo:
             continue
         ind = int(ind) - 1 if ind.isdigit() else 0
-        print(files[elem], ind, index)
-        print(file.filename, "222222222222")
+        # print(files[elem], ind, index)
+        # print(file.filename, "222222222222")
         if files[elem].filename != "" and allowed_file(file.filename, feedback):
             gif_i = True if file.filename.split(".")[-1] == "gif" else False
             mp4 = True if file.filename.split(".")[-1] == "mp4" else False
             png = True if file.filename.split(".")[-1] == "png" else False
-            print("add new image", f"gif: {gif_i} mp4: {mp4} png: {png}")
-            print(img_list[ind])
+            # print("add new image", f"gif: {gif_i} mp4: {mp4} png: {png}")
+            # print(img_list[ind])
             if logo:
-                print("Near logo")
+                # print("Near logo")
                 if "icon" in img_list[ind]:
-                    print("save logo!!!!")
+                    # print("save logo!!!!")
                     filename = secure_filename(create_new_image_name(logo=png))
                     save_image(f"{path}/" + filename, file)
                     new_files.append(filename)
                     break
             else:
-                print("save image (((")
+                # print("save image (((")
                 if mp4:
                     file.save(f'{application.config["UPLOAD_FOLDER"]}tmp/gif_{current_user.email}.mp4')
                     for filename in give_me_gif_filenames(f"tmp/gif_{current_user.email}.mp4", path):
-                        new_files.append(path + "/" + filename)
+                        new_files.append(filename)
+                    delete_img(f"tmp/gif_{current_user.email}.mp4")
                 else:
                     if gif_i:
                         filename = secure_filename(create_new_image_name(gif=gif))
@@ -422,11 +424,11 @@ def save_image_test(files, path, email, r_img=False, gif=True, logo=False, feedb
                     save_image(f"{path}/"+filename, file, feedback)
                     new_files.append(filename)
         elif ind < len(old_files):
-            print("add old file:", old_files[ind], ind)
+            # print("add old file:", old_files[ind], ind)
             new_files.append(old_files[ind])
     for file in old_files:
         if file not in new_files:
-            print("delete file:", file)
+            # print("delete file:", file)
             delete_img(file)
     if len(new_files) == 0 and r_img:
         r_name = f"{create_random_name(50)}.jpg"
@@ -438,7 +440,7 @@ def save_image_test(files, path, email, r_img=False, gif=True, logo=False, feedb
     dict[email] = new_files
     new_files = [f"{path}/"+_ for _ in new_files]
     delete_everything_except(path, new_files)
-    print(new_files, "333333333\n\n\n\n")
+    # print(new_files, "333333333\n\n\n\n")
     return new_files
 
 
@@ -1144,12 +1146,14 @@ def admin_edit_smartpage(id):
         if "message" not in smartpage:
             if request.method == 'POST':
                 filenames = save_image_test(request.files, path, current_user.email, r_img=True)
+                # print(filenames)
                 message = edit_smartpage(id, {"heading": form.heading.data, "image": "//".join(filenames),
                               "admin_email": current_user.email, "action": "put"})
                 if "success" in message:
                     filenames = transport_images(filenames, f"smartpage/smartpage_{id}")
-                    m = edit_smartpage(id, {"image": "//".join(filenames),
-                            "admin_email": current_user.email, "action": "put"})
+                    # print(filenames)
+                    m = edit_smartpage(id, {"image": "//".join(filenames), "admin_email": current_user.email, "action": "put"})
+                    # print(m)
                     result = True
                     delete_folder(f"tmp/smartpage/smartpage_{current_user.email}")
                     set_other_params()
@@ -1364,7 +1368,7 @@ def admin_edit_worker(id):
                     admin_images[current_user.email] = [_.split("/")[-1] for _ in filenames]
                 else:
                     filenames = get_files_from(path)
-                print(filenames)
+                # print(filenames)
         else:
             message = list(worker.values())[-1]
         return get_render_template('form/admin-form-worker.html', title='Редактирование сотрудника', message=message,
@@ -1416,7 +1420,7 @@ def admin_create_member():
             coord = get_coord(form.address.data)
             if "success" in coord:
                 filenames2, filenames1 = save_image_test(request.files, path_image, f"{current_user.email}/image"), save_image_test(request.files, path_logo, f"{current_user.email}/logo", logo=True)
-                print(filenames1, filenames2)
+                # print(filenames1, filenames2)
                 message = create_member({"name": form.name.data, "logo": "//".join(filenames1),
                                "image": "//".join(filenames2), "text": form.text.data, "link": form.link.data,
                                "coord": coord['success'][0], "occupation": "//".join([oc.strip().capitalize() for oc in form.occupation.data.split(',')]),
@@ -1424,7 +1428,7 @@ def admin_create_member():
                                "socialmedia": form.socialmedia.data})
                 if "success" in message:
                     filenames1, filenames2 = transport_images(filenames1, f"member/member_{message['id']}/logo"), transport_images(filenames2, f"member/member_{message['id']}/image")
-                    print(filenames1, filenames2)
+                    # print(filenames1, filenames2)
                     m = edit_member(message['id'], {"image": "//".join(filenames2),
                             'logo': "//".join(filenames1), "admin_email": current_user.email, "action": "put"})
                     result = True
@@ -1813,6 +1817,6 @@ def logout():
 
 
 if __name__ == '__main__':
-    print("http://127.0.0.1:8000/admin")
-    print("http://127.0.0.1:8000/login")
+    # print("http://127.0.0.1:8000/admin")
+    # print("http://127.0.0.1:8000/login")
     main()
