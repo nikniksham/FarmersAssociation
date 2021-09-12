@@ -3,23 +3,6 @@ from data.user import User
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
 from data.Inner.main_file import raise_error, check_admin_status, check_admin
 
-"""
-   Не трогай этот файл
-   Не трогай этот файл
-   Не трогай этот файл
-   Не трогай этот файл
-   Не трогай этот файл
-   Не трогай этот файл
-   Не трогай этот файл
-   Не трогай этот файл
-   Не трогай этот файл
-   Не трогай этот файл
-   Не трогай этот файл
-   Не трогай этот файл
-   Не трогай этот файл
-   ok
-"""
-
 
 def check_password(password):
     errors = {0: 'Пароль должен быть в длину 8 или более символов', 1: 'Пароль должен содержать хотя бы 1 букву',

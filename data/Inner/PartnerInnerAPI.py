@@ -83,7 +83,7 @@ def get_partner_list():
 
 
 def create_partner(args):
-    if not all(args[key] is not None for key in ['image', 'logo', 'name', 'info', 'preferences', 'address', 'link', "socialmedia", 'admin_email']):
+    if not all(args[key] is not None for key in ['image', 'logo', 'name', 'info', 'preferences', 'address', 'link', 'admin_email']):
         return raise_error('Пропущены некоторые аргументы, необходимые для создания партнёра')
     admin, session = check_admin_status(args['admin_email'])
     new_partner = Partner()
@@ -94,7 +94,7 @@ def create_partner(args):
     new_partner.address = args["address"]
     new_partner.info = args["info"]
     new_partner.logo = args['logo']
-    new_partner.socialmedia = args["socialmedia"]
+    # new_partner.socialmedia = args["socialmedia"]
     session.add(new_partner)
     session.commit()
     params_dict = new_partner.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link', "socialmedia"))
