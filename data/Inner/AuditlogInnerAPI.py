@@ -15,12 +15,12 @@ def edit_auditlog(args):
         return raise_error('Пропущены некоторые важные аргументы')
     admin, session = check_admin_status(args["admin_email"])
     if args['action'] == "get":
-        content, session = find_by_id(args["id"], session)
-        if type(content) == dict:
+        auditlog, session = find_by_id(args["id"], session)
+        if type(auditlog) == dict:
             session.close()
-            return content
+            return auditlog
         session.close()
-        return content.to_dict(only=('id', 'event', 'info', 'user', 'created_date'))
+        return auditlog.to_dict(only=('id', 'event', 'info', 'user', 'created_date'))
     elif args['action'] == 'getlist':
         auditlogs = session.query(AuditLog).order_by(AuditLog.created_date).all()[::-1]
         session.close()

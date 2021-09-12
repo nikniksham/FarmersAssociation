@@ -101,9 +101,6 @@ def get_newspage_ususal(newspage_id):
     if type(newspage) == dict:
         session.close()
         return newspage
-    if type(newspage) == dict:
-        session.close()
-        return newspage
     session.close()
     news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
     news_dict["mini_text"] = mini_text(newspage.text)

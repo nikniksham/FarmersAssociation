@@ -27,9 +27,6 @@ def edit_socialmedia(socialmedia_id, args):
     if type(socialmedia) == dict:
         session.close()
         return socialmedia
-    if type(socialmedia) == dict:
-        session.close()
-        return socialmedia
     if args['action'] == "get":
         session.close()
         return socialmedia.to_dict(only=('id', 'icon_type', 'link'))
