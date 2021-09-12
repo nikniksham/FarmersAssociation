@@ -20,6 +20,7 @@ def edit_content(content_id, args):
     admin, session = check_admin_status(args['admin_email'])
     content, session = find_by_id(content_id, session)
     if type(content) == dict:
+        session.close()
         return content
     if args['action'] == "get":
         session.close()

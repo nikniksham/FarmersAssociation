@@ -19,6 +19,7 @@ def edit_address(address_id, args):
     admin, session = check_admin_status(args["admin_email"], 1)
     address, session = find_by_id(address_id, session)
     if type(address) == dict:
+        session.close()
         return address
     if args['action'] == "get":
         session.close()

@@ -21,6 +21,7 @@ def edit_smartpage(smartpage_id, args):
     admin, session = check_admin_status(args['admin_email'])
     smartpage, session = find_by_id(smartpage_id, session)
     if type(smartpage) == dict:
+        session.close()
         return smartpage
     if args['action'] == "get":
         session.close()
@@ -74,6 +75,7 @@ def get_smartpage_usual(smartpage_id):
     session = db_session.create_session()
     smartpage, session = find_by_id(smartpage_id, session)
     if type(smartpage) == dict:
+        session.close()
         return smartpage
     session.close()
     return smartpage.to_dict(only=('id', 'link', 'heading', 'image', 'created_date', 'author_id'))

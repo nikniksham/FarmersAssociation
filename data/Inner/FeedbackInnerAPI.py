@@ -33,6 +33,7 @@ def edit_feedback(args):
     if args['action'] == "get":
         feedback, session = find_by_id(args["feedback_id"], session)
         if type(feedback) == dict:
+            session.close()
             return feedback
         news_dict = feedback.to_dict(only=('id', 'fullname', 'heading', 'email', 'image', 'text', 'created_date'))
         news_dict["text_render"] = text_transform(feedback.text, feedback.image.split("//"), path)
@@ -50,6 +51,7 @@ def edit_feedback(args):
     elif args['action'] == 'delete':
         feedback, session = find_by_id(args["feedback_id"], session)
         if type(feedback) == dict:
+            session.close()
             return feedback
         session.delete(feedback)
         session.commit()
@@ -64,6 +66,7 @@ def feedback_edit_image(feedback_id, code, args):
     session = db_session.create_session()
     feedback, session = find_by_id(feedback_id, session)
     if type(feedback) == dict:
+        session.close()
         return feedback
     if not feedback.code:
         return raise_error("невозмоно менять повторно", session)
@@ -83,6 +86,7 @@ def create_feedback(args):
         return raise_error('Пропущены некоторые аргументы, необходимые для оставления отзыва', session)
     ch_code, session = check_code(session, args["email"], args["code"])
     if type(ch_code) == dict:
+        session.close()
         return ch_code
     new_feedback = Feedback()
     new_feedback.code = args["code"]

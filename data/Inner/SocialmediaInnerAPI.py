@@ -25,8 +25,10 @@ def edit_socialmedia(socialmedia_id, args):
     admin, session = check_admin_status(args['admin_email'])
     socialmedia, session = find_by_id(socialmedia_id, session)
     if type(socialmedia) == dict:
+        session.close()
         return socialmedia
     if type(socialmedia) == dict:
+        session.close()
         return socialmedia
     if args['action'] == "get":
         session.close()

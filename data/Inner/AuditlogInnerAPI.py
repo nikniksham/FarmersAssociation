@@ -17,6 +17,7 @@ def edit_auditlog(args):
     if args['action'] == "get":
         content, session = find_by_id(args["id"], session)
         if type(content) == dict:
+            session.close()
             return content
         session.close()
         return content.to_dict(only=('id', 'event', 'info', 'user', 'created_date'))

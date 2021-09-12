@@ -39,6 +39,7 @@ def edit_newspage(newspage_id, args):
     print(newspage_id, session)
     newspage, session = find_by_id(newspage_id, session)
     if type(newspage) == dict:
+        session.close()
         return newspage
     if args["action"] == "get":
         news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date', 'author_id'))
@@ -98,8 +99,10 @@ def get_newspage_ususal(newspage_id):
     session = db_session.create_session()
     newspage, session = find_by_id(newspage_id, session)
     if type(newspage) == dict:
+        session.close()
         return newspage
     if type(newspage) == dict:
+        session.close()
         return newspage
     session.close()
     news_dict = newspage.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))

@@ -25,6 +25,7 @@ def edit_phone(phone_id, args):
     admin, session = check_admin_status(args['admin_email'])
     phone, session = find_by_id(phone_id, session)
     if type(phone) == dict:
+        session.close()
         return phone
     if args['action'] == "get":
         session.close()

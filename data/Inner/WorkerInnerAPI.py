@@ -19,6 +19,7 @@ def edit_worker(worker_id, args):
     admin, session = check_admin_status(args['admin_email'])
     worker, session = find_by_id(worker_id, session)
     if type(worker) == dict:
+        session.close()
         return worker
     if args['action'] == "get":
         session.close()
@@ -62,6 +63,7 @@ def get_worker_usual(worker_id):
     session = db_session.create_session()
     worker, session = find_by_id(worker_id, session)
     if type(worker) == dict:
+        session.close()
         return worker
     session.close()
     return worker.to_dict(only=('id', 'image', 'name', 'profession', 'phone', 'email', 'created_date'))

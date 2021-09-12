@@ -26,6 +26,7 @@ def edit_text(text_id, args):
     admin, session = check_admin_status(args['admin_email'])
     text, session = find_by_id(text_id, session)
     if type(text) == dict:
+        session.close()
         return text
     if args['action'] == "get":
         session.close()

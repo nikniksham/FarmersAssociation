@@ -19,6 +19,7 @@ def edit_member(member_id, args):
     admin, session = check_admin_status(args['admin_email'])
     member, session = find_by_id(member_id, session)
     if type(member) == dict:
+        session.close()
         return member
     if args['action'] == "get":
         session.close()
@@ -71,6 +72,7 @@ def get_member_usual(member_id):
     session = db_session.create_session()
     member, session = find_by_id(member_id, session)
     if type(member) == dict:
+        session.close()
         return member
     session.close()
     return member.to_dict(only=('id', 'name', 'logo', 'image', 'text', 'address', 'coord', 'province', 'occupation', 'link', "socialmedia"))

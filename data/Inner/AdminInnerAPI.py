@@ -96,6 +96,7 @@ def edit_admin_admin(user_id, args):
     admin, session = check_admin_status(args['admin_email'], 1)
     user, session = find_by_id(user_id, session, admin.status)
     if type(user) == dict:
+        session.close()
         return user
     if args["action"] == "get":
         session.close()

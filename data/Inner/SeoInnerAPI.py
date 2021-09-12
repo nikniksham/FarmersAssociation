@@ -16,6 +16,7 @@ def get_seo_usual(seo_id):
     session = db_session.create_session()
     seo, session = find_by_id(seo_id, session)
     if type(seo) == dict:
+        session.close()
         return seo
     session.close()
     return seo.to_dict(only=('id', 'title', 'description', 'tags'))
@@ -28,6 +29,7 @@ def edit_seo(seo_id, args):
     admin, session = check_admin_status(args['admin_email'])
     seo, session = find_by_id(seo_id, session)
     if type(seo) == dict:
+        session.close()
         return seo
     if args['action'] == "get":
         session.close()

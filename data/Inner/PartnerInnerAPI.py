@@ -19,6 +19,7 @@ def edit_partner(partner_id, args):
     admin, session = check_admin_status(args['admin_email'])
     partner, session = find_by_id(partner_id, session)
     if type(partner) == dict:
+        session.close()
         return partner
     if args['action'] == "get":
         session.close()
@@ -68,6 +69,7 @@ def get_partner_usual(partner_id):
     session = db_session.create_session()
     partner, session = find_by_id(partner_id, session)
     if type(partner) == dict:
+        session.close()
         return partner
     session.close()
     return partner.to_dict(only=('id', 'logo', 'image', 'name', 'info', 'preferences', 'address', 'link', "socialmedia"))

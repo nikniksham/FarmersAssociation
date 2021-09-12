@@ -26,6 +26,7 @@ def edit_email(email_id, args):
     admin, session = check_admin_status(args['admin_email'])
     email, session = find_by_id(email_id, session)
     if type(email) == dict:
+        session.close()
         return email
     if args['action'] == "get":
         session.close()
@@ -40,6 +41,7 @@ def edit_email(email_id, args):
     elif args['action'] == 'put':
         email, session = find_by_id(email_id, session)
         if type(email) == dict:
+            session.close()
             return email
         email_dict = email.to_dict(only=('email_address',))
         keys = list(filter(lambda key: args[key] is not None and key in email_dict and args[key] != email_dict[key], args.keys()))
