@@ -68,7 +68,7 @@ application = Flask(__name__)
 application.config.from_object(config)
 api = Api(application)
 api.add_resource(NewspageListRecourseId, "/api/newspage/<int:start_id>/<int:end_id>")
-api.add_resource(NewspageListRecourseTags, "/api/newspage/<int:start_id>/<int:end_id>/<string:text>")
+api.add_resource(NewspageListRecourseTags, "/api/newspage/find/<int:start_id>/<int:end_id>")
 """# Подключаем api
 
 # AdminApi

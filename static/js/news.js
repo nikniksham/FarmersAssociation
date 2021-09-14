@@ -5,11 +5,12 @@ var search_text = ""
 var delete_load_button = false
 
 function add_news() {
-    var req = link_website+"api/newspage/"+loaded_news+"/"+(loaded_news + load_news);
-    if (search_text !== "") {
-        req += "/"+search_text
-    }
-    $.get( req, function( data ) {
+    var req = link_website+"api/newspage/find/"+loaded_news+"/"+(loaded_news + load_news);
+    console.log(search_text);
+    $.post( req, {
+         canvas_data: JSON.stringify({
+            text: search_text
+        })}, function( data ) {
         console.log(data);
         console.log(loaded_news+"/"+(loaded_news + load_news));
         loaded_news += load_news

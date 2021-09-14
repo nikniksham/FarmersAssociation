@@ -1,5 +1,7 @@
 import datetime
-from flask import jsonify
+import json
+
+from flask import jsonify, request
 from flask_restful import Resource
 from data import db_session
 from data.API.AuditlogAPI.AuditlogResource import add_auditlog
@@ -8,6 +10,7 @@ from data.API.NewspageAPI.parser_newspage import parser_newspage
 from main import mini_text, text_transform
 from config import UPLOAD_FOLDER as path
 from data.API.main_file import raise_error, check_admin_status
+from main import write_log
 
 
 def trans_link(text):
@@ -134,7 +137,7 @@ class NewspageListRecourseId(Resource):
 
 
 class NewspageListRecourseTags(Resource):
-    def get(self, start_id, end_id, text):
+    def post(self, start_id, end_id):
         """
         session = db_session.create_session()
         pages, newspages = session.query(Newspage).order_by(Newspage.created_date)[::-1], []
@@ -160,8 +163,11 @@ class NewspageListRecourseTags(Resource):
             news_list.append(news_dict)
         """
         dick = {}
+        params = json.loads(request.form['canvas_data'])
+        text = params["text"]
+        write_log(text)
         session = db_session.create_session()
-        news_pages = session.query(Newspage).order_by(Newspage.created_date)
+        news_pages = session.query(Newspage).order_by(Newspage.created_date).all()
         if text:
             for news_page in news_pages:
                 for word in text.split():
@@ -195,10 +201,12 @@ class NewspageListRecourseTags(Resource):
         if end_id > len(news_list):
             end_id = len(news_list)
         newspages, news_list = news_list[start_id:end_id], []
+        write_log(f"I am here")
         for item in newspages:
             news_dict = item.to_dict(only=('id', 'heading', 'text', 'link', 'image', 'tags', 'created_date'))
             news_dict["mini_text"] = mini_text(item.text)
             news_dict["text_render"] = text_transform(item.text, item.image.split("//"), path)
+            write_log(f"Add news {news_dict['heading']}")
             news_list.append(news_dict)
         return jsonify(news_list)
 
