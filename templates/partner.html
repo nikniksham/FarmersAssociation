@@ -11,6 +11,7 @@
         <div class="member-header-logo"><img src="/static/img/{{partner['logo']}}" alt=""></div>
         <p>{{partner['name']}}</p>
     </div>
+    {% if partner['image'] != "" %}
     <div class="carousel image-block">
         {% for src in partner['image'].split('//') %}
             <div class="on-nushen">
@@ -20,6 +21,7 @@
             </div>
         {% endfor %}
     </div>
+    {% endif %}
     <p class="member-text">
         {% for line in partner["info"].split('\n') %}
         {{line}}<br>

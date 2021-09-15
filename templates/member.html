@@ -11,6 +11,7 @@
         <div class="member-header-logo"><img src="/static/img/{{member['logo']}}" alt=""></div>
         <p>{{member['name']}}</p>
     </div>
+    {% if member['image'] != "" %}
     <div class="carousel image-block">
         {% for src in member['image'].split('//') %}
             <div class="on-nushen">
@@ -20,6 +21,7 @@
             </div>
         {% endfor %}
     </div>
+    {% endif %}
     <p class="member-text">
         {% for line in member["text"].split('\n') %}
         {{line}}<br>

@@ -2,4 +2,4 @@ SECRET_KEY = '\xbdg?\x98\x8c\xbf\xc9\xa2\xfe\x821\x17\xed\xdd\xcc\x9db\xdb&\xf7\
 DEBUG = False
 TESTING = False
 UPLOAD_FOLDER = "static/img/"  # static/img/
-DATABASE = "db/.sqlite"
+DATABASE = "db/FarmersAssociation.sqlite"
