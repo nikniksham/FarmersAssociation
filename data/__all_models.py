@@ -1,1 +1,1 @@
-from . import user, member, newspage, smartpage, content, auditlog, feedback, confirmationcode
+from . import address, auditlog, bot, confirmationcode, content, email, feedback, member, newspage, partner, phone, seo, smartpage, socialmedia, text, user, worker

@@ -1,4 +1,3 @@
-from flask_restful import abort
 from data.user import User
 from data import db_session
 
